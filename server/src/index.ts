@@ -1,0 +1,75 @@
+import express from 'express';
+import cors from 'cors';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
+import dotenv from 'dotenv';
+import path from 'path';
+import fs from 'fs';
+
+import projectRoutes from './routes/project';
+import versionRoutes from './routes/version';
+import { initDatabase } from './database/init';
+import { setupSocketHandlers } from './socket/handlers';
+
+dotenv.config();
+
+const app = express();
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  },
+});
+
+const PORT = process.env.PORT || 3001;
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Ensure directories exist
+const uploadDir = path.join(__dirname, '..', 'uploads');
+const projectsDir = path.join(__dirname, '..', 'projects');
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+if (!fs.existsSync(projectsDir)) fs.mkdirSync(projectsDir, { recursive: true });
+
+// Initialize database
+initDatabase();
+
+// Clean up all collaborators on server start (all connections are stale)
+import { db } from './database/init';
+(async () => {
+  await db.read();
+  db.data.collaborators = [];
+  await db.write();
+  console.log('🧹 Cleared all stale collaborators');
+})();
+
+// Routes
+app.use('/api/projects', projectRoutes);
+app.use('/api/versions', versionRoutes);
+
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Setup Socket.io for real-time collaboration
+setupSocketHandlers(io);
+
+// Error handling middleware
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error('Error:', err);
+  res.status(err.status || 500).json({
+    error: err.message || 'Internal server error',
+  });
+});
+
+httpServer.listen(PORT, () => {
+  console.log(`🚀 ColDaw server running on port ${PORT}`);
+  console.log(`📁 Upload directory: ${uploadDir}`);
+  console.log(`💾 Projects directory: ${projectsDir}`);
+});
+
+export { io };
