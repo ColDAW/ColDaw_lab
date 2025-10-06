@@ -50,6 +50,7 @@ router.post('/register', async (req, res) => {
       id: uuidv4(),
       email: email.toLowerCase(),
       password: hashedPassword,
+      username: email.split('@')[0], // Generate username from email
       name: name || email.split('@')[0],
       created_at: Date.now(),
     };

@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { Volume2, Maximize2 } from 'lucide-react';
+import { Volume2 } from 'lucide-react';
 
 const Container = styled.div`
   flex: 1;
