@@ -66,15 +66,22 @@ export interface PendingChange {
 }
 
 class PostgresDatabase {
-  private pool: Pool;
+  private pool: Pool | null = null;
 
   constructor() {
-    this.pool = getPgPool();
+    // Pool will be initialized lazily
+  }
+
+  private getPool(): Pool {
+    if (!this.pool) {
+      this.pool = getPgPool();
+    }
+    return this.pool;
   }
 
   // User methods
   async getUserByEmail(email: string): Promise<User | null> {
-    const result = await this.pool.query<User>(
+    const result = await this.getPool().query<User>(
       'SELECT * FROM users WHERE email = $1',
       [email.toLowerCase()]
     );
@@ -82,7 +89,7 @@ class PostgresDatabase {
   }
 
   async getUserByUsername(username: string): Promise<User | null> {
-    const result = await this.pool.query<User>(
+    const result = await this.getPool().query<User>(
       'SELECT * FROM users WHERE username = $1',
       [username]
     );
@@ -90,7 +97,7 @@ class PostgresDatabase {
   }
 
   async getUserById(id: string): Promise<User | null> {
-    const result = await this.pool.query<User>(
+    const result = await this.getPool().query<User>(
       'SELECT * FROM users WHERE id = $1',
       [id]
     );
@@ -98,7 +105,7 @@ class PostgresDatabase {
   }
 
   async insertUser(user: User): Promise<User> {
-    const result = await this.pool.query<User>(
+    const result = await this.getPool().query<User>(
       `INSERT INTO users (id, email, password, username, name, created_at, last_login)
        VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING *`,
@@ -108,7 +115,7 @@ class PostgresDatabase {
   }
 
   async updateUserLastLogin(id: string): Promise<void> {
-    await this.pool.query(
+    await this.getPool().query(
       'UPDATE users SET last_login = $1 WHERE id = $2',
       [Date.now(), id]
     );
@@ -116,14 +123,14 @@ class PostgresDatabase {
 
   // Project methods
   async getProjects(): Promise<Project[]> {
-    const result = await this.pool.query<Project>(
+    const result = await this.getPool().query<Project>(
       'SELECT * FROM projects ORDER BY updated_at DESC'
     );
     return result.rows;
   }
 
   async getProjectById(id: string): Promise<Project | null> {
-    const result = await this.pool.query<Project>(
+    const result = await this.getPool().query<Project>(
       'SELECT * FROM projects WHERE id = $1',
       [id]
     );
@@ -131,7 +138,7 @@ class PostgresDatabase {
   }
 
   async getProjectsByUserId(userId: string): Promise<Project[]> {
-    const result = await this.pool.query<Project>(
+    const result = await this.getPool().query<Project>(
       'SELECT * FROM projects WHERE user_id = $1 ORDER BY updated_at DESC',
       [userId]
     );
@@ -139,7 +146,7 @@ class PostgresDatabase {
   }
 
   async insertProject(project: Project): Promise<Project> {
-    const result = await this.pool.query<Project>(
+    const result = await this.getPool().query<Project>(
       `INSERT INTO projects (id, name, user_id, created_at, updated_at, current_branch)
        VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING *`,
@@ -169,7 +176,7 @@ class PostgresDatabase {
     if (fields.length === 0) return null;
 
     values.push(id);
-    const result = await this.pool.query<Project>(
+    const result = await this.getPool().query<Project>(
       `UPDATE projects SET ${fields.join(', ')} WHERE id = $${paramCount} RETURNING *`,
       values
     );
@@ -177,12 +184,12 @@ class PostgresDatabase {
   }
 
   async deleteProject(id: string): Promise<void> {
-    await this.pool.query('DELETE FROM projects WHERE id = $1', [id]);
+    await this.getPool().query('DELETE FROM projects WHERE id = $1', [id]);
   }
 
   // Version methods
   async getVersion(id: string): Promise<Version | null> {
-    const result = await this.pool.query<Version>(
+    const result = await this.getPool().query<Version>(
       'SELECT * FROM versions WHERE id = $1',
       [id]
     );
@@ -199,12 +206,12 @@ class PostgresDatabase {
     }
 
     query += ' ORDER BY timestamp DESC';
-    const result = await this.pool.query<Version>(query, params);
+    const result = await this.getPool().query<Version>(query, params);
     return result.rows;
   }
 
   async insertVersion(version: Version): Promise<Version> {
-    const result = await this.pool.query<Version>(
+    const result = await this.getPool().query<Version>(
       `INSERT INTO versions (id, project_id, branch, message, user_id, parent_id, timestamp, files)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
@@ -215,7 +222,7 @@ class PostgresDatabase {
 
   // Branch methods
   async getBranch(projectId: string, name: string): Promise<Branch | null> {
-    const result = await this.pool.query<Branch>(
+    const result = await this.getPool().query<Branch>(
       'SELECT * FROM branches WHERE project_id = $1 AND name = $2',
       [projectId, name]
     );
@@ -223,7 +230,7 @@ class PostgresDatabase {
   }
 
   async getBranchesByProject(projectId: string): Promise<Branch[]> {
-    const result = await this.pool.query<Branch>(
+    const result = await this.getPool().query<Branch>(
       'SELECT * FROM branches WHERE project_id = $1 ORDER BY created_at DESC',
       [projectId]
     );
@@ -231,7 +238,7 @@ class PostgresDatabase {
   }
 
   async insertBranch(branch: Branch): Promise<Branch> {
-    const result = await this.pool.query<Branch>(
+    const result = await this.getPool().query<Branch>(
       `INSERT INTO branches (id, project_id, name, created_at, created_by)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING *`,
@@ -242,7 +249,7 @@ class PostgresDatabase {
 
   // Collaborator methods
   async getCollaboratorsByProject(projectId: string): Promise<Collaborator[]> {
-    const result = await this.pool.query<Collaborator>(
+    const result = await this.getPool().query<Collaborator>(
       'SELECT * FROM collaborators WHERE project_id = $1',
       [projectId]
     );
@@ -250,7 +257,7 @@ class PostgresDatabase {
   }
 
   async getCollaboratorBySocket(socketId: string): Promise<Collaborator | null> {
-    const result = await this.pool.query<Collaborator>(
+    const result = await this.getPool().query<Collaborator>(
       'SELECT * FROM collaborators WHERE socket_id = $1',
       [socketId]
     );
@@ -258,7 +265,7 @@ class PostgresDatabase {
   }
 
   async insertCollaborator(collaborator: Collaborator): Promise<Collaborator> {
-    const result = await this.pool.query<Collaborator>(
+    const result = await this.getPool().query<Collaborator>(
       `INSERT INTO collaborators (id, project_id, user_id, socket_id, joined_at, last_activity)
        VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING *`,
@@ -280,7 +287,7 @@ class PostgresDatabase {
     if (fields.length === 0) return null;
 
     values.push(id);
-    const result = await this.pool.query<Collaborator>(
+    const result = await this.getPool().query<Collaborator>(
       `UPDATE collaborators SET ${fields.join(', ')} WHERE id = $${paramCount} RETURNING *`,
       values
     );
@@ -288,23 +295,23 @@ class PostgresDatabase {
   }
 
   async deleteCollaborator(id: string): Promise<void> {
-    await this.pool.query('DELETE FROM collaborators WHERE id = $1', [id]);
+    await this.getPool().query('DELETE FROM collaborators WHERE id = $1', [id]);
   }
 
   async deleteCollaboratorsByUserAndProject(userId: string, projectId: string): Promise<void> {
-    await this.pool.query(
+    await this.getPool().query(
       'DELETE FROM collaborators WHERE user_id = $1 AND project_id = $2',
       [userId, projectId]
     );
   }
 
   async clearAllCollaborators(): Promise<void> {
-    await this.pool.query('DELETE FROM collaborators');
+    await this.getPool().query('DELETE FROM collaborators');
   }
 
   // Project Collaborator methods
   async getProjectCollaboratorsByUser(userId: string): Promise<ProjectCollaborator[]> {
-    const result = await this.pool.query<ProjectCollaborator>(
+    const result = await this.getPool().query<ProjectCollaborator>(
       'SELECT * FROM project_collaborators WHERE user_id = $1',
       [userId]
     );
@@ -312,7 +319,7 @@ class PostgresDatabase {
   }
 
   async insertProjectCollaborator(data: ProjectCollaborator): Promise<ProjectCollaborator> {
-    const result = await this.pool.query<ProjectCollaborator>(
+    const result = await this.getPool().query<ProjectCollaborator>(
       `INSERT INTO project_collaborators (id, project_id, user_id, role, added_at)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING *`,
@@ -323,7 +330,7 @@ class PostgresDatabase {
 
   // Pending Changes methods
   async getPendingChangesForProject(projectId: string): Promise<PendingChange[]> {
-    const result = await this.pool.query<PendingChange>(
+    const result = await this.getPool().query<PendingChange>(
       'SELECT * FROM pending_changes WHERE project_id = $1 ORDER BY timestamp ASC',
       [projectId]
     );
@@ -331,7 +338,7 @@ class PostgresDatabase {
   }
 
   async getPendingChange(id: string): Promise<PendingChange | null> {
-    const result = await this.pool.query<PendingChange>(
+    const result = await this.getPool().query<PendingChange>(
       'SELECT * FROM pending_changes WHERE id = $1',
       [id]
     );
@@ -339,7 +346,7 @@ class PostgresDatabase {
   }
 
   async insertPendingChange(change: PendingChange): Promise<PendingChange> {
-    const result = await this.pool.query<PendingChange>(
+    const result = await this.getPool().query<PendingChange>(
       `INSERT INTO pending_changes (id, project_id, user_id, changes, timestamp)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING *`,
@@ -349,7 +356,7 @@ class PostgresDatabase {
   }
 
   async deletePendingChange(id: string): Promise<void> {
-    await this.pool.query('DELETE FROM pending_changes WHERE id = $1', [id]);
+    await this.getPool().query('DELETE FROM pending_changes WHERE id = $1', [id]);
   }
 
   // Legacy method aliases for backward compatibility
