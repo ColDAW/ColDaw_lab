@@ -1,0 +1,32 @@
+{
+  "name": "coldaw-app",
+  "version": "1.0.0",
+  "description": "ColDaw - Collaborative DAW Application",
+  "main": "server/dist/index.js",
+  "scripts": {
+    "build": "cd server && npm install && npm run build",
+    "start": "cd server && npm run start",
+    "dev": "bash start.sh",
+    "install:server": "cd server && npm install",
+    "install:client": "cd client && npm install",
+    "build:client": "cd client && npm install && npm run build",
+    "build:server": "cd server && npm install && npm run build"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yifandeng2002/ColDaw_lab"
+  },
+  "keywords": [
+    "daw",
+    "collaboration",
+    "music",
+    "audio",
+    "web-app"
+  ],
+  "author": "Yifan Deng",
+  "license": "MIT"
+}
