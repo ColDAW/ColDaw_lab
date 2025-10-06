@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { dbHelpers, User } from '../database/init';
+import { db, User } from '../database/init';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
@@ -37,7 +37,7 @@ router.post('/register', async (req, res) => {
     }
 
     // Check if user already exists
-    const existingUser = await dbHelpers.getUserByEmail(email);
+    const existingUser = await db.getUserByEmail(email);
     if (existingUser) {
       return res.status(409).json({ error: 'User with this email already exists' });
     }
@@ -55,7 +55,7 @@ router.post('/register', async (req, res) => {
       created_at: Date.now(),
     };
 
-    await dbHelpers.insertUser(newUser);
+    await db.insertUser(newUser);
 
     // Generate JWT token
     const token = generateToken(newUser.id);
@@ -86,7 +86,7 @@ router.post('/login', async (req, res) => {
     }
 
     // Find user from database
-    const user = await dbHelpers.getUserByEmail(email);
+    const user = await db.getUserByEmail(email);
 
     if (!user) {
       return res.status(401).json({ error: 'Invalid email or password' });
@@ -148,7 +148,7 @@ router.get('/verify', async (req, res) => {
       // Verify JWT
       const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
       
-      const user = await dbHelpers.getUserById(decoded.userId);
+      const user = await db.getUserById(decoded.userId);
       if (!user) {
         return res.status(401).json({ error: 'User not found' });
       }
@@ -188,7 +188,7 @@ export async function requireAuth(req: any, res: any, next: any) {
     const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
     
     // Get user info
-    const user = await dbHelpers.getUserById(decoded.userId);
+    const user = await db.getUserById(decoded.userId);
     
     if (!user) {
       return res.status(401).json({ error: 'User not found' });

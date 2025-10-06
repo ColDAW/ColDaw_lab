@@ -4,7 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import { ALSParser } from '../utils/alsParser';
-import { dbHelpers } from '../database/init';
+import { db } from '../database/init';
 import { requireAuth } from './auth';
 
 const router = Router();
@@ -71,7 +71,7 @@ router.post('/smart-import', requireAuth, upload.single('alsFile'), async (req: 
     }
 
     const { projectName, author, message } = req.body;
-    const userId = req.userId;
+    const userId = req.user_id;
     const now = Date.now();
 
     // Parse the ALS file
@@ -79,7 +79,7 @@ router.post('/smart-import', requireAuth, upload.single('alsFile'), async (req: 
     const finalProjectName = projectName || alsData.name;
 
     // Check if project with this name already exists for this user
-    const allUserProjects = await dbHelpers.getProjectsByUser(userId);
+    const allUserProjects = await db.getProjectsByUser(userId);
     const existingProject = allUserProjects.find(p => p.name === finalProjectName);
 
     if (existingProject) {
@@ -128,10 +128,10 @@ router.post('/smart-import', requireAuth, upload.single('alsFile'), async (req: 
       fs.copyFileSync(req.file.path, alsPath);
 
       // Create project
-      await dbHelpers.insertProject({
+      await db.insertProject({
         id: projectId,
         name: finalProjectName,
-        userId: userId,
+        user_id: userId,
         created_at: now,
         updated_at: now,
         current_branch: 'main',
@@ -139,28 +139,27 @@ router.post('/smart-import', requireAuth, upload.single('alsFile'), async (req: 
 
       // Create main branch
       const branchId = uuidv4();
-      await dbHelpers.insertBranch({
+      await db.insertBranch({
         id: branchId,
         project_id: projectId,
         name: 'main',
-        head_version_id: null,
         created_at: now,
+        created_by: userId || 'anonymous',
       });
 
       // Create initial version
-      await dbHelpers.insertVersion({
+      await db.insertVersion({
         id: versionId,
         project_id: projectId,
         branch: 'main',
-        parent_id: null,
+        parent_id: undefined,
         message: message || 'Initial commit from VST plugin',
-        author: author || 'VST Plugin',
+        user_id: author || 'VST Plugin',
         timestamp: now,
-        data_path: dataPath,
+        files: dataPath,
       });
 
       // Update branch head
-      await dbHelpers.updateBranch(branchId, { head_version_id: versionId });
 
       // Clean up uploaded file
       fs.unlinkSync(req.file.path);
@@ -187,15 +186,15 @@ router.post('/smart-import', requireAuth, upload.single('alsFile'), async (req: 
 router.get('/:projectId/vst-import', requireAuth, async (req: any, res: any) => {
   try {
     const { projectId } = req.params;
-    const userId = req.userId;
+    const userId = req.user_id;
     
     // Verify project ownership
-    const project = await dbHelpers.getProject(projectId);
+    const project = await db.getProject(projectId);
     if (!project) {
       return res.status(404).json({ error: 'Project not found' });
     }
     
-    if (project.userId !== userId) {
+    if (project.user_id !== userId) {
       return res.status(403).json({ error: 'Unauthorized' });
     }
     
@@ -244,27 +243,26 @@ router.get('/:projectId/vst-import', requireAuth, async (req: any, res: any) => 
 router.get('/:projectId/pending-changes', requireAuth, async (req: any, res: any) => {
   try {
     const { projectId } = req.params;
-    const userId = req.userId;
+    const userId = req.user_id;
     
     // Verify project ownership
-    const project = await dbHelpers.getProject(projectId);
+    const project = await db.getProject(projectId);
     if (!project) {
       return res.status(404).json({ error: 'Project not found' });
     }
     
-    if (project.userId !== userId) {
+    if (project.user_id !== userId) {
       return res.status(403).json({ error: 'Unauthorized' });
     }
     
     // Get pending changes for this project
-    const pendingChanges = await dbHelpers.getPendingChangesForProject(projectId);
+    const pendingChanges = await db.getPendingChangesForProject(projectId);
     
     // Return only metadata (not the full data)
     const metadata = pendingChanges.map(pc => ({
       id: pc.id,
-      message: pc.message,
-      author: pc.author,
-      created_at: pc.created_at,
+      user_id: pc.user_id,
+      timestamp: pc.timestamp,
     }));
     
     res.json({ pendingChanges: metadata });
@@ -282,10 +280,10 @@ router.get('/:projectId/pending-changes', requireAuth, async (req: any, res: any
 router.post('/:projectId/push-pending/:pendingId', requireAuth, async (req: any, res: any) => {
   try {
     const { projectId, pendingId } = req.params;
-    const userId = req.userId;
+    const userId = req.user_id;
     
     // Get pending change
-    const pendingChange = await dbHelpers.getPendingChange(pendingId);
+    const pendingChange = await db.getPendingChange(pendingId);
     if (!pendingChange) {
       return res.status(404).json({ error: 'Pending change not found' });
     }
@@ -300,54 +298,38 @@ router.post('/:projectId/push-pending/:pendingId', requireAuth, async (req: any,
     }
     
     // Get project and branch
-    const project = await dbHelpers.getProject(projectId);
+    const project = await db.getProject(projectId);
     if (!project) {
       return res.status(404).json({ error: 'Project not found' });
     }
     
-    const branchData = await dbHelpers.getBranch(projectId, 'main');
+    const branchData = await db.getBranch(projectId, 'main');
     if (!branchData) {
       return res.status(404).json({ error: 'Main branch not found' });
     }
     
-    // Read pending data
-    const pendingDataPath = pendingChange.data_path;
-    const pendingAlsPath = pendingDataPath.replace('.json', '.als');
-    
-    if (!fs.existsSync(pendingDataPath)) {
-      return res.status(500).json({ error: 'Pending data file not found' });
-    }
+    // Get pending data from changes field
+    const pendingData = pendingChange.changes;
     
     // Create new version
     const versionId = uuidv4();
-    const dataDir = path.join(__dirname, '..', '..', 'projects', projectId);
-    const newDataPath = path.join(dataDir, `${versionId}.json`);
-    const newAlsPath = path.join(dataDir, `${versionId}.als`);
     
-    // Move files from pending to version
-    fs.renameSync(pendingDataPath, newDataPath);
-    if (fs.existsSync(pendingAlsPath)) {
-      fs.renameSync(pendingAlsPath, newAlsPath);
-    }
-    
-    // Insert version
-    await dbHelpers.insertVersion({
+    // Insert version with pending data
+    await db.insertVersion({
       id: versionId,
       project_id: projectId,
       branch: 'main',
-      parent_id: branchData.head_version_id,
-      message: pendingChange.message,
-      author: pendingChange.author,
+      message: 'Committed from pending change',
+      user_id: pendingChange.user_id,
       timestamp: Date.now(),
-      data_path: newDataPath,
+      files: pendingData,
     });
     
     // Update branch head and project
-    await dbHelpers.updateBranch(branchData.id, { head_version_id: versionId });
-    await dbHelpers.updateProject(projectId, { updated_at: Date.now() });
+    await db.updateProject(projectId, { updated_at: Date.now() });
     
     // Delete pending change
-    await dbHelpers.deletePendingChange(pendingId);
+    await db.deletePendingChange(pendingId);
     
     res.json({
       success: true,
@@ -373,7 +355,7 @@ router.post('/init', requireAuth, upload.single('alsFile'), async (req: any, res
 
     const { projectName, author } = req.body;
     // Get userId from authenticated user (set by requireAuth middleware)
-    const userId = req.userId;
+    const userId = req.user_id;
     const projectId = uuidv4();
     const now = Date.now();
 
@@ -394,10 +376,10 @@ router.post('/init', requireAuth, upload.single('alsFile'), async (req: any, res
     fs.copyFileSync(req.file.path, alsPath); // Save original ALS file
 
     // Create project in database
-    await dbHelpers.insertProject({
+    await db.insertProject({
       id: projectId,
       name: projectName || alsData.name,
-      userId: userId, // Store userId
+      user_id: userId, // Store userId
       created_at: now,
       updated_at: now,
       current_branch: 'main',
@@ -405,28 +387,27 @@ router.post('/init', requireAuth, upload.single('alsFile'), async (req: any, res
 
     // Create main branch
     const branchId = uuidv4();
-    await dbHelpers.insertBranch({
+    await db.insertBranch({
       id: branchId,
       project_id: projectId,
       name: 'main',
-      head_version_id: null,
       created_at: now,
+      created_by: userId || 'anonymous',
     });
 
     // Create initial version (commit)
-    await dbHelpers.insertVersion({
+    await db.insertVersion({
       id: versionId,
       project_id: projectId,
       branch: 'main',
-      parent_id: null,
+      parent_id: undefined,
       message: 'Initial commit',
-      author: author || 'Anonymous',
+      user_id: author || 'Anonymous',
       timestamp: now,
-      data_path: dataPath,
+      files: dataPath,
     });
 
     // Update branch head
-    await dbHelpers.updateBranch(branchId, { head_version_id: versionId });
 
     // Clean up uploaded file
     fs.unlinkSync(req.file.path);
@@ -451,14 +432,14 @@ router.get('/:projectId', async (req: any, res: any) => {
   try {
     const { projectId } = req.params;
 
-    const project = await dbHelpers.getProject(projectId);
+    const project = await db.getProject(projectId);
     
     if (!project) {
       return res.status(404).json({ error: 'Project not found' });
     }
 
-    const branches = await dbHelpers.getBranchesByProject(projectId);
-    const versions = await dbHelpers.getVersionsByProject(projectId);
+    const branches = await db.getBranchesByProject(projectId);
+    const versions = await db.getVersionsByProject(projectId);
 
     res.json({
       project,
@@ -479,13 +460,13 @@ router.get('/:projectId/version/:versionId', async (req: any, res: any) => {
   try {
     const { projectId, versionId } = req.params;
 
-    const version = await dbHelpers.getVersion(versionId);
+    const version = await db.getVersion(versionId);
     
     if (!version || version.project_id !== projectId) {
       return res.status(404).json({ error: 'Version not found' });
     }
 
-    const data = JSON.parse(fs.readFileSync(version.data_path, 'utf-8'));
+    const data = JSON.parse(fs.readFileSync(version.files, 'utf-8'));
 
     res.json({
       version,
@@ -509,10 +490,10 @@ router.get('/', async (req: any, res: any) => {
     let projects;
     if (userId) {
       // Get projects owned by user (userId should match user.id from auth)
-      const ownedProjects = await dbHelpers.getProjectsByUser(userId);
+      const ownedProjects = await db.getProjectsByUser(userId);
       
       // Get projects where user is a collaborator
-      const collaborations = await dbHelpers.getProjectCollaboratorsByUser(userId);
+      const collaborations = await db.getProjectCollaboratorsByUser(userId);
       const collaboratedProjectIds = collaborations.map(c => c.project_id);
       
       console.log('User ID:', userId);
@@ -521,7 +502,7 @@ router.get('/', async (req: any, res: any) => {
       
       // Fetch the actual project details for collaborated projects
       const collaboratedProjects = await Promise.all(
-        collaboratedProjectIds.map(id => dbHelpers.getProject(id))
+        collaboratedProjectIds.map(id => db.getProject(id))
       );
       
       console.log('Collaborated projects:', collaboratedProjects.filter(p => p).length);
@@ -535,7 +516,7 @@ router.get('/', async (req: any, res: any) => {
       projects = Array.from(projectMap.values()).sort((a, b) => b.updated_at - a.updated_at);
       console.log('Total unique projects:', projects.length);
     } else {
-      projects = await dbHelpers.getAllProjects();
+      projects = await db.getAllProjects();
     }
     
     res.json(projects);
@@ -558,18 +539,18 @@ router.patch('/:projectId', async (req: any, res: any) => {
       return res.status(400).json({ error: 'Name is required' });
     }
 
-    const project = await dbHelpers.getProject(projectId);
+    const project = await db.getProject(projectId);
     
     if (!project) {
       return res.status(404).json({ error: 'Project not found' });
     }
 
     // Check if user owns the project
-    if (userId && project.userId && project.userId !== userId) {
+    if (userId && project.user_id && project.user_id !== userId) {
       return res.status(403).json({ error: 'Unauthorized' });
     }
 
-    await dbHelpers.updateProject(projectId, { 
+    await db.updateProject(projectId, { 
       name, 
       updated_at: Date.now() 
     });
@@ -594,14 +575,14 @@ router.post('/:projectId/duplicate', async (req: any, res: any) => {
       return res.status(400).json({ error: 'Name is required' });
     }
 
-    const sourceProject = await dbHelpers.getProject(projectId);
+    const sourceProject = await db.getProject(projectId);
     
     if (!sourceProject) {
       return res.status(404).json({ error: 'Project not found' });
     }
 
     // Check if user owns the project
-    if (userId && sourceProject.userId && sourceProject.userId !== userId) {
+    if (userId && sourceProject.user_id && sourceProject.user_id !== userId) {
       return res.status(403).json({ error: 'Unauthorized' });
     }
 
@@ -617,44 +598,44 @@ router.post('/:projectId/duplicate', async (req: any, res: any) => {
     }
 
     // Create new project in database
-    await dbHelpers.insertProject({
+    await db.insertProject({
       id: newProjectId,
       name,
-      userId: userId || sourceProject.userId,
+      user_id: userId || sourceProject.user_id,
       created_at: now,
       updated_at: now,
       current_branch: 'main',
     });
 
     // Copy all branches
-    const branches = await dbHelpers.getBranchesByProject(projectId);
+    const branches = await db.getBranchesByProject(projectId);
     for (const branch of branches) {
       const newBranchId = uuidv4();
-      await dbHelpers.insertBranch({
+      await db.insertBranch({
         id: newBranchId,
         project_id: newProjectId,
         name: branch.name,
-        head_version_id: branch.head_version_id,
         created_at: now,
+        created_by: userId || 'anonymous',
       });
     }
 
     // Copy all versions (update project_id)
-    const versions = await dbHelpers.getVersionsByProject(projectId);
+    const versions = await db.getVersionsByProject(projectId);
     for (const version of versions) {
       const newVersionId = uuidv4();
-      const oldDataPath = version.data_path;
+      const oldDataPath = version.files;
       const newDataPath = oldDataPath.replace(projectId, newProjectId);
       
-      await dbHelpers.insertVersion({
+      await db.insertVersion({
         id: newVersionId,
         project_id: newProjectId,
         branch: version.branch,
         parent_id: version.parent_id,
         message: version.message,
-        author: version.author,
+        user_id: version.user_id,
         timestamp: version.timestamp,
-        data_path: newDataPath,
+        files: version.files,
       });
     }
 
@@ -677,14 +658,14 @@ router.delete('/:projectId', async (req: any, res: any) => {
     const { projectId } = req.params;
     const { userId } = req.query;
 
-    const project = await dbHelpers.getProject(projectId);
+    const project = await db.getProject(projectId);
     
     if (!project) {
       return res.status(404).json({ error: 'Project not found' });
     }
 
     // Check if user owns the project
-    if (userId && project.userId && project.userId !== userId) {
+    if (userId && project.user_id && project.user_id !== userId) {
       return res.status(403).json({ error: 'Unauthorized' });
     }
 
@@ -695,7 +676,7 @@ router.delete('/:projectId', async (req: any, res: any) => {
     }
 
     // Delete from database
-    await dbHelpers.deleteProject(projectId);
+    await db.deleteProject(projectId);
 
     res.json({ message: 'Project deleted successfully' });
   } catch (error: any) {
@@ -719,16 +700,16 @@ router.post('/:projectId/invite', async (req: any, res: any) => {
       return res.status(400).json({ error: 'Email is required' });
     }
 
-    const project = await dbHelpers.getProject(projectId);
+    const project = await db.getProject(projectId);
     
     if (!project) {
       return res.status(404).json({ error: 'Project not found' });
     }
 
-    console.log('Project found:', { projectId: project.id, projectUserId: project.userId });
+    console.log('Project found:', { projectId: project.id, projectUserId: project.user_id });
 
     // Check if inviter owns the project or is already a collaborator
-    // Note: project.userId might be username or email (legacy data)
+    // Note: project.user_id might be username or email (legacy data)
     // invitedBy might be username or email depending on client
     // So we skip authorization check for now to allow project owners to invite
     // In production, you should implement proper user ID mapping
@@ -737,7 +718,7 @@ router.post('/:projectId/invite', async (req: any, res: any) => {
     // A more robust solution would require a user table to map username <-> email
 
     // Add collaborator
-    await dbHelpers.insertProjectCollaborator({
+    await db.insertProjectCollaborator({
       id: uuidv4(),
       project_id: projectId,
       user_id: email,

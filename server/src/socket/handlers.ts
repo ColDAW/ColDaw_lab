@@ -1,6 +1,6 @@
 import { Server, Socket } from 'socket.io';
 import { v4 as uuidv4 } from 'uuid';
-import { dbHelpers } from '../database/init';
+import { db } from '../database/init';
 
 interface CollaboratorData {
   id: string;
@@ -29,7 +29,7 @@ export function setupSocketHandlers(io: Server) {
       
       // Clean up any existing connections for this user in this project
       // This prevents duplicate avatars when the user refreshes the page
-      await dbHelpers.deleteCollaboratorsByUserAndProject(userName, projectId);
+      await db.deleteCollaboratorsByUserAndProject(userName, projectId);
       
       // Assign random color
       const color = COLORS[Math.floor(Math.random() * COLORS.length)];
@@ -39,17 +39,17 @@ export function setupSocketHandlers(io: Server) {
       const now = Date.now();
       
       try {
-        await dbHelpers.insertCollaborator({
+        await db.insertCollaborator({
           id: collaboratorId,
           project_id: projectId,
-          user_name: userName,
+          user_id: userName,
           socket_id: socket.id,
-          color,
-          last_seen: now,
+          joined_at: now,
+          last_activity: now,
         });
 
         // Get all collaborators in this project
-        const collaborators = await dbHelpers.getCollaboratorsByProject(projectId);
+        const collaborators = await db.getCollaboratorsByProject(projectId);
 
         // Notify others
         socket.to(projectId).emit('user-joined', {
@@ -73,20 +73,20 @@ export function setupSocketHandlers(io: Server) {
       
       try {
         // Get collaborator info before deleting
-        const collaborator = await dbHelpers.getCollaboratorBySocket(socket.id);
+        const collaborator = await db.getCollaboratorBySocket(socket.id);
         
         if (collaborator) {
           // Remove from database
-          await dbHelpers.deleteCollaborator(socket.id);
+          await db.deleteCollaborator(socket.id);
           
           // Notify others
           socket.to(projectId).emit('user-left', {
             id: collaborator.id,
-            userName: collaborator.user_name,
+            userName: collaborator.user_id,
           });
           
           socket.leave(projectId);
-          console.log(`User ${collaborator.user_name} left project ${projectId}`);
+          console.log(`User ${collaborator.user_id} left project ${projectId}`);
         }
       } catch (error) {
         console.error('Error removing collaborator:', error);
@@ -99,10 +99,8 @@ export function setupSocketHandlers(io: Server) {
       
       try {
         // Update cursor position in database
-        await dbHelpers.updateCollaborator(socket.id, {
-          cursor_x: x,
-          cursor_y: y,
-          last_seen: Date.now(),
+        await db.updateCollaborator(socket.id, {
+          last_activity: Date.now(),
         });
 
         // Broadcast to others in the room
@@ -142,18 +140,18 @@ export function setupSocketHandlers(io: Server) {
     socket.on('disconnect', async () => {
       try {
         // Get collaborator info
-        const collaborator = await dbHelpers.getCollaboratorBySocket(socket.id);
+        const collaborator = await db.getCollaboratorBySocket(socket.id);
         
         if (collaborator) {
           const projectId = collaborator.project_id;
           
           // Remove from database
-          await dbHelpers.deleteCollaborator(socket.id);
+          await db.deleteCollaborator(socket.id);
           
           // Notify others
           io.to(projectId).emit('user-left', {
             id: collaborator.id,
-            userName: collaborator.user_name,
+            userName: collaborator.user_id,
           });
           
           console.log(`Client disconnected: ${socket.id}`);

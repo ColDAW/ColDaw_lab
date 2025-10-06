@@ -55,16 +55,8 @@ if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 if (!fs.existsSync(projectsDir)) fs.mkdirSync(projectsDir, { recursive: true });
 
 // Initialize database
+// Initialize database (includes clearing stale collaborators)
 initDatabase().catch(console.error);
-
-// Clean up all collaborators on server start (all connections are stale)
-import { db } from './database/init';
-(async () => {
-  await db.read();
-  db.data.collaborators = [];
-  await db.write();
-  console.log('🧹 Cleared all stale collaborators');
-})();
 
 // Routes
 app.use('/api/auth', authRoutes);
