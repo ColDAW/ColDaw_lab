@@ -4,8 +4,8 @@
   "description": "ColDaw - Collaborative DAW Application",
   "main": "server/dist/index.js",
   "scripts": {
-    "build": "cd server && npm install && npm run build",
-    "start": "cd server && npm run start",
+    "build": "echo 'Build handled in Dockerfile'",
+    "start": "node server/dist/index.js",
     "dev": "bash start.sh",
     "install:server": "cd server && npm install",
     "install:client": "cd client && npm install",

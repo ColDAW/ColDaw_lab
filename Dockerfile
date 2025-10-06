@@ -4,28 +4,22 @@ FROM node:18-alpine
 # Set working directory
 WORKDIR /app
 
-# Install bash (Alpine doesn't have bash by default)
-RUN apk add --no-cache bash
+# Copy server directory with all files
+COPY server ./server
 
-# Copy package files
-COPY package.json ./
-COPY server/package.json ./server/
-COPY client/package.json ./client/
+# Install dependencies and build
+WORKDIR /app/server
+RUN npm ci
+RUN npm run build
 
-# Install dependencies
-RUN npm run install:server
-
-# Copy all source code
-COPY . .
-
-# Build the server
-RUN cd server && npm run build
-
-# Expose port (Railway will set PORT environment variable)
-EXPOSE ${PORT:-3001}
+# Clean up dev dependencies to reduce image size
+RUN npm ci --only=production && npm cache clean --force
 
 # Set environment to production
 ENV NODE_ENV=production
 
-# Start the server directly (not using start.sh for production)
-CMD ["npm", "run", "start"]
+# Expose port (Railway will automatically set PORT)
+EXPOSE 3001
+
+# Start the application
+CMD ["npm", "start"]

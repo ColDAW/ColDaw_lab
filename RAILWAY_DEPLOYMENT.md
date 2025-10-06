@@ -14,6 +14,11 @@
 - **原因**: Railway容器环境中没有正确配置Node.js
 - **修复**: 创建Dockerfile确保正确的Node.js环境
 
+### 3. TypeScript编译问题 (2024-10-06 更新)
+- **问题**: `npm error command sh -c npm run build` 和 TypeScript显示帮助信息
+- **原因**: Docker构建时postinstall脚本在源码复制前就尝试编译
+- **修复**: 重新设计Dockerfile构建流程，先复制源码再编译
+
 ## 部署步骤
 
 ### 1. 推送代码到仓库
@@ -37,9 +42,12 @@ CLIENT_URL=https://your-frontend-url.railway.app
 
 Railway将自动：
 1. 检测到Dockerfile并使用它构建
-2. 安装Node.js 18
-3. 运行 `npm run build` 构建服务器
-4. 使用 `npm run start` 启动应用
+2. 安装Node.js 18 Alpine镜像
+3. 复制server目录到容器
+4. 安装依赖 (`npm ci`)
+5. 编译TypeScript (`npm run build`)
+6. 清理开发依赖
+7. 使用 `npm start` 启动应用
 
 ## 文件说明
 
