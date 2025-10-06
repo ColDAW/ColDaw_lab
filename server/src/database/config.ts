@@ -17,16 +17,20 @@ export const connectToDatabase = async (): Promise<Pool> => {
     console.log('🔌 Connecting to PostgreSQL...');
     
     const databaseUrl = getDatabaseUrl();
+    const isProduction = process.env.NODE_ENV === 'production';
     
-    // Railway PostgreSQL SSL configuration
-    // Railway requires SSL but with rejectUnauthorized: false
-    const sslConfig = process.env.NODE_ENV === 'production' 
-      ? { rejectUnauthorized: false }
-      : false;
+    console.log(`📊 Environment: ${process.env.NODE_ENV || 'not set'}`);
+    console.log(`🔐 SSL enabled: ${isProduction}`);
+    
+    // Railway PostgreSQL requires SSL with specific configuration
+    // Always use SSL in production environments like Railway
     
     pgPool = new Pool({
       connectionString: databaseUrl,
-      ssl: sslConfig,
+      // Railway needs SSL enabled but without certificate verification
+      ssl: isProduction ? {
+        rejectUnauthorized: false
+      } : false,
       // Connection pool settings
       max: 20,
       idleTimeoutMillis: 30000,
