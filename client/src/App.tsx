@@ -6,6 +6,7 @@ import { ThemeProvider } from 'styled-components';
 import { theme } from './styles/theme';
 import { AuthProvider } from './contexts/AuthContext';
 import { ModalProvider } from './contexts/ModalContext';
+import { ProtectedRoute } from './components/ProtectedRoute';
 
 function App() {
   return (
@@ -15,8 +16,22 @@ function App() {
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<HomePage />} />
-              <Route path="/project/:projectId" element={<ProjectPage />} />
-              <Route path="/account" element={<AccountPage />} />
+              <Route 
+                path="/project/:projectId" 
+                element={
+                  <ProtectedRoute>
+                    <ProjectPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/account" 
+                element={
+                  <ProtectedRoute>
+                    <AccountPage />
+                  </ProtectedRoute>
+                } 
+              />
             </Routes>
           </BrowserRouter>
         </ModalProvider>

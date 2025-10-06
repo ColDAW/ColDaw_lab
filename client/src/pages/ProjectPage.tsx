@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import styled from 'styled-components';
 import { useStore } from '../store/useStore';
 import { projectApi, versionApi } from '../api/api';
@@ -28,6 +28,18 @@ const Workspace = styled.div`
   overflow: hidden;
 `;
 
+const PendingChangesBar = styled.div`
+  background: ${({ theme }) => theme.colors.warning || '#ffa500'};
+  color: #fff;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+`;
+
 const Loading = styled.div`
   width: 100%;
   height: 100%;
@@ -41,17 +53,21 @@ const Loading = styled.div`
 function ProjectPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, isLoading: authLoading } = useAuth();
   const { showAlert, showConfirm, showPrompt } = useModal();
   const {
     currentProject,
     projectData,
+    hasPendingChanges,
     setCurrentProject,
     setProjectData,
     setBranches,
     setVersions,
     initSocket,
     disconnectSocket,
+    setPendingData,
+    setVSTTempFileName,
   } = useStore();
   
   const [isLoading, setIsLoading] = useState(true);
@@ -72,6 +88,14 @@ function ProjectPage() {
     }
 
     loadProject();
+    
+    // Check if this is a VST import
+    const fromVST = searchParams.get('from') === 'vst';
+    console.log('VST import check:', { fromVST, projectId, searchParams: searchParams.toString() });
+    if (fromVST && projectId) {
+      console.log('Loading VST import...');
+      loadVSTImport(projectId);
+    }
     
     // Use logged-in username
     const userName = user.username;
@@ -118,6 +142,28 @@ function ProjectPage() {
       await showAlert({ message: 'Failed to load project: ' + (error as Error).message, type: 'error' });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const loadVSTImport = async (projId: string) => {
+    try {
+      console.log('Loading VST import data for project:', projId);
+      const result = await projectApi.getVSTImport(projId);
+      console.log('VST import result:', result);
+      
+      if (result.success && result.data) {
+        // Set as pending data, just like web import
+        console.log('Setting pending data and temp file name:', result.tempFileName);
+        setPendingData(result.data);
+        setVSTTempFileName(result.tempFileName);
+        await showAlert({ 
+          message: 'VST import loaded! Review the changes and click Push to commit.', 
+          type: 'success' 
+        });
+      }
+    } catch (error) {
+      console.error('Error loading VST import:', error);
+      // Don't show error if no VST import found (it's optional)
     }
   };
 
@@ -208,6 +254,13 @@ function ProjectPage() {
         onVersionCommitted={handleVersionCommitted}
         currentVersionId={selectedVersionId || undefined}
       />
+      {hasPendingChanges && (
+        <PendingChangesBar>
+          <span>
+            You have pending changes. Click Push button in the menu bar to commit.
+          </span>
+        </PendingChangesBar>
+      )}
       <Workspace>
         {showVersionHistory ? (
           <VersionHistory

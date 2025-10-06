@@ -8,6 +8,7 @@ import fs from 'fs';
 
 import projectRoutes from './routes/project';
 import versionRoutes from './routes/version';
+import authRoutes from './routes/auth';
 import { initDatabase } from './database/init';
 import { setupSocketHandlers } from './socket/handlers';
 
@@ -48,6 +49,7 @@ import { db } from './database/init';
 })();
 
 // Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/versions', versionRoutes);
 

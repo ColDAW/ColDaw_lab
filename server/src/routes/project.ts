@@ -5,6 +5,7 @@ import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import { ALSParser } from '../utils/alsParser';
 import { dbHelpers } from '../database/init';
+import { requireAuth } from './auth';
 
 const router = Router();
 
@@ -57,16 +58,322 @@ router.post('/parse-als', upload.single('alsFile'), async (req: any, res: any) =
 });
 
 /**
- * POST /api/projects/init
- * Initialize a new project by uploading the first ALS file
+ * POST /api/projects/smart-import
+ * Smart import: Check if project exists by name for this user
+ * - If exists: Create new version (commit)
+ * - If not: Initialize new project
+ * Requires authentication
  */
-router.post('/init', upload.single('alsFile'), async (req: any, res: any) => {
+router.post('/smart-import', requireAuth, upload.single('alsFile'), async (req: any, res: any) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    const { projectName, author, userId } = req.body;
+    const { projectName, author, message } = req.body;
+    const userId = req.userId;
+    const now = Date.now();
+
+    // Parse the ALS file
+    const alsData = await ALSParser.parseFile(req.file.path);
+    const finalProjectName = projectName || alsData.name;
+
+    // Check if project with this name already exists for this user
+    const allUserProjects = await dbHelpers.getProjectsByUser(userId);
+    const existingProject = allUserProjects.find(p => p.name === finalProjectName);
+
+    if (existingProject) {
+      // Project exists - save file temporarily and return data for frontend
+      console.log(`Project "${finalProjectName}" exists, saving file temporarily...`);
+      
+      const projectId = existingProject.id;
+      const dataDir = path.join(__dirname, '..', '..', 'projects', projectId);
+      
+      // Save to temp location with user-specific name
+      const tempFileName = `vst_import_${userId}_${Date.now()}.als`;
+      const tempFilePath = path.join(dataDir, tempFileName);
+      
+      if (!fs.existsSync(dataDir)) {
+        fs.mkdirSync(dataDir, { recursive: true });
+      }
+      
+      fs.copyFileSync(req.file.path, tempFilePath);
+      
+      // Clean up uploaded file
+      fs.unlinkSync(req.file.path);
+
+      res.json({
+        projectId,
+        isNewProject: false,
+        hasPendingChanges: true,
+        tempFileName,
+        message: 'Project exists. File saved temporarily for import.',
+        data: alsData,
+      });
+    } else {
+      // Project doesn't exist - initialize new project
+      console.log(`Creating new project "${finalProjectName}"...`);
+      
+      const projectId = uuidv4();
+      const dataDir = path.join(__dirname, '..', '..', 'projects', projectId);
+      if (!fs.existsSync(dataDir)) {
+        fs.mkdirSync(dataDir, { recursive: true });
+      }
+
+      const versionId = uuidv4();
+      const dataPath = path.join(dataDir, `${versionId}.json`);
+      const alsPath = path.join(dataDir, `${versionId}.als`);
+      
+      fs.writeFileSync(dataPath, ALSParser.toJSON(alsData));
+      fs.copyFileSync(req.file.path, alsPath);
+
+      // Create project
+      await dbHelpers.insertProject({
+        id: projectId,
+        name: finalProjectName,
+        userId: userId,
+        created_at: now,
+        updated_at: now,
+        current_branch: 'main',
+      });
+
+      // Create main branch
+      const branchId = uuidv4();
+      await dbHelpers.insertBranch({
+        id: branchId,
+        project_id: projectId,
+        name: 'main',
+        head_version_id: null,
+        created_at: now,
+      });
+
+      // Create initial version
+      await dbHelpers.insertVersion({
+        id: versionId,
+        project_id: projectId,
+        branch: 'main',
+        parent_id: null,
+        message: message || 'Initial commit from VST plugin',
+        author: author || 'VST Plugin',
+        timestamp: now,
+        data_path: dataPath,
+      });
+
+      // Update branch head
+      await dbHelpers.updateBranch(branchId, { head_version_id: versionId });
+
+      // Clean up uploaded file
+      fs.unlinkSync(req.file.path);
+
+      res.json({
+        projectId,
+        versionId,
+        isNewProject: true,
+        message: 'Project initialized successfully',
+        data: alsData,
+      });
+    }
+  } catch (error: any) {
+    console.error('Error in smart import:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * GET /api/projects/:projectId/vst-import
+ * Get the most recent VST import data for this project
+ * Requires authentication
+ */
+router.get('/:projectId/vst-import', requireAuth, async (req: any, res: any) => {
+  try {
+    const { projectId } = req.params;
+    const userId = req.userId;
+    
+    // Verify project ownership
+    const project = await dbHelpers.getProject(projectId);
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+    
+    if (project.userId !== userId) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+    
+    // Find the most recent temp file for this user
+    const dataDir = path.join(__dirname, '..', '..', 'projects', projectId);
+    if (!fs.existsSync(dataDir)) {
+      return res.status(404).json({ error: 'No VST import data found' });
+    }
+    
+    const files = fs.readdirSync(dataDir);
+    const vstFiles = files
+      .filter(f => f.startsWith(`vst_import_${userId}_`))
+      .map(f => ({
+        name: f,
+        path: path.join(dataDir, f),
+        mtime: fs.statSync(path.join(dataDir, f)).mtime.getTime(),
+      }))
+      .sort((a, b) => b.mtime - a.mtime);
+    
+    if (vstFiles.length === 0) {
+      return res.status(404).json({ error: 'No VST import data found' });
+    }
+    
+    // Get the most recent file
+    const mostRecent = vstFiles[0];
+    
+    // Parse and return data
+    const alsData = await ALSParser.parseFile(mostRecent.path);
+    
+    res.json({
+      success: true,
+      data: alsData,
+      tempFileName: mostRecent.name,
+    });
+  } catch (error: any) {
+    console.error('Error getting VST import:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * GET /api/projects/:projectId/pending-changes
+ * Get pending changes for a project
+ * Requires authentication
+ */
+router.get('/:projectId/pending-changes', requireAuth, async (req: any, res: any) => {
+  try {
+    const { projectId } = req.params;
+    const userId = req.userId;
+    
+    // Verify project ownership
+    const project = await dbHelpers.getProject(projectId);
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+    
+    if (project.userId !== userId) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+    
+    // Get pending changes for this project
+    const pendingChanges = await dbHelpers.getPendingChangesForProject(projectId);
+    
+    // Return only metadata (not the full data)
+    const metadata = pendingChanges.map(pc => ({
+      id: pc.id,
+      message: pc.message,
+      author: pc.author,
+      created_at: pc.created_at,
+    }));
+    
+    res.json({ pendingChanges: metadata });
+  } catch (error: any) {
+    console.error('Error getting pending changes:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * POST /api/projects/:projectId/push-pending/:pendingId
+ * Push (commit) a pending change to the project
+ * Requires authentication
+ */
+router.post('/:projectId/push-pending/:pendingId', requireAuth, async (req: any, res: any) => {
+  try {
+    const { projectId, pendingId } = req.params;
+    const userId = req.userId;
+    
+    // Get pending change
+    const pendingChange = await dbHelpers.getPendingChange(pendingId);
+    if (!pendingChange) {
+      return res.status(404).json({ error: 'Pending change not found' });
+    }
+    
+    // Verify ownership
+    if (pendingChange.user_id !== userId) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+    
+    if (pendingChange.project_id !== projectId) {
+      return res.status(400).json({ error: 'Project ID mismatch' });
+    }
+    
+    // Get project and branch
+    const project = await dbHelpers.getProject(projectId);
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+    
+    const branchData = await dbHelpers.getBranch(projectId, 'main');
+    if (!branchData) {
+      return res.status(404).json({ error: 'Main branch not found' });
+    }
+    
+    // Read pending data
+    const pendingDataPath = pendingChange.data_path;
+    const pendingAlsPath = pendingDataPath.replace('.json', '.als');
+    
+    if (!fs.existsSync(pendingDataPath)) {
+      return res.status(500).json({ error: 'Pending data file not found' });
+    }
+    
+    // Create new version
+    const versionId = uuidv4();
+    const dataDir = path.join(__dirname, '..', '..', 'projects', projectId);
+    const newDataPath = path.join(dataDir, `${versionId}.json`);
+    const newAlsPath = path.join(dataDir, `${versionId}.als`);
+    
+    // Move files from pending to version
+    fs.renameSync(pendingDataPath, newDataPath);
+    if (fs.existsSync(pendingAlsPath)) {
+      fs.renameSync(pendingAlsPath, newAlsPath);
+    }
+    
+    // Insert version
+    await dbHelpers.insertVersion({
+      id: versionId,
+      project_id: projectId,
+      branch: 'main',
+      parent_id: branchData.head_version_id,
+      message: pendingChange.message,
+      author: pendingChange.author,
+      timestamp: Date.now(),
+      data_path: newDataPath,
+    });
+    
+    // Update branch head and project
+    await dbHelpers.updateBranch(branchData.id, { head_version_id: versionId });
+    await dbHelpers.updateProject(projectId, { updated_at: Date.now() });
+    
+    // Delete pending change
+    await dbHelpers.deletePendingChange(pendingId);
+    
+    res.json({
+      success: true,
+      versionId,
+      message: 'Pending change pushed successfully',
+    });
+  } catch (error: any) {
+    console.error('Error pushing pending change:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * POST /api/projects/init
+ * Initialize a new project by uploading the first ALS file
+ * Requires authentication
+ */
+router.post('/init', requireAuth, upload.single('alsFile'), async (req: any, res: any) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const { projectName, author } = req.body;
+    // Get userId from authenticated user (set by requireAuth middleware)
+    const userId = req.userId;
     const projectId = uuidv4();
     const now = Date.now();
 
@@ -194,7 +501,6 @@ router.get('/:projectId/version/:versionId', async (req: any, res: any) => {
  * GET /api/projects
  * List all projects (with optional userId filter)
  * Returns projects owned by the user and projects where user is a collaborator
- * Note: userId can be either username or email
  */
 router.get('/', async (req: any, res: any) => {
   try {
@@ -202,17 +508,16 @@ router.get('/', async (req: any, res: any) => {
     
     let projects;
     if (userId) {
-      // Get projects owned by user (by username - projects store userId as username)
+      // Get projects owned by user (userId should match user.id from auth)
       const ownedProjects = await dbHelpers.getProjectsByUser(userId);
       
-      // Get projects where user is a collaborator (by email or username - collaborators use email)
+      // Get projects where user is a collaborator
       const collaborations = await dbHelpers.getProjectCollaboratorsByUser(userId);
       const collaboratedProjectIds = collaborations.map(c => c.project_id);
       
-      console.log('User:', userId);
+      console.log('User ID:', userId);
       console.log('Owned projects:', ownedProjects.length);
       console.log('Collaborations found:', collaborations.length);
-      console.log('Collaborated project IDs:', collaboratedProjectIds);
       
       // Fetch the actual project details for collaborated projects
       const collaboratedProjects = await Promise.all(
@@ -436,9 +741,8 @@ router.post('/:projectId/invite', async (req: any, res: any) => {
       id: uuidv4(),
       project_id: projectId,
       user_id: email,
-      invited_by: invitedBy || 'unknown',
-      invited_at: Date.now(),
-      role: 'collaborator',
+      role: 'editor',
+      added_at: Date.now(),
     });
 
     console.log('Collaborator invited successfully:', email);

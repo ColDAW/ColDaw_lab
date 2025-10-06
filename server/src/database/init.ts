@@ -2,11 +2,12 @@ import { join } from 'path';
 import { Low } from 'lowdb';
 import { JSONFile } from 'lowdb/node';
 import * as fs from 'fs';
+import bcrypt from 'bcrypt';
 
 const dbDir = join(__dirname, '..', '..', 'projects');
 const dbPath = join(dbDir, 'db.json');
 
-interface Project {
+export interface Project {
   id: string;
   name: string;
   userId?: string; // User who created the project
@@ -48,10 +49,27 @@ interface Collaborator {
 interface ProjectCollaborator {
   id: string;
   project_id: string;
-  user_id: string; // Email or username of the invited user
-  invited_by: string; // Email or username of the inviter
-  invited_at: number;
-  role: 'owner' | 'collaborator';
+  user_id: string;
+  role: 'owner' | 'editor' | 'viewer';
+  added_at: number;
+}
+
+interface PendingChange {
+  id: string;
+  project_id: string;
+  user_id: string;
+  data_path: string; // Path to the temporary data file
+  message: string;
+  author: string;
+  created_at: number;
+}
+
+export interface User {
+  id: string;
+  email: string;
+  password: string; // In production, this should be hashed!
+  name: string;
+  created_at: number;
 }
 
 interface DatabaseSchema {
@@ -60,6 +78,8 @@ interface DatabaseSchema {
   branches: Branch[];
   collaborators: Collaborator[];
   projectCollaborators: ProjectCollaborator[];
+  users: User[];
+  pendingChanges: PendingChange[];
 }
 
 if (!fs.existsSync(dbDir)) {
@@ -73,22 +93,82 @@ export const db = new Low<DatabaseSchema>(adapter, {
   branches: [],
   collaborators: [],
   projectCollaborators: [],
+  users: [],
+  pendingChanges: [],
 });
 
-export async function initDatabase() {
+export async function initDatabase(): Promise<void> {
   await db.read();
   
-  // Initialize with default data if empty
-  db.data ||= {
-    projects: [],
-    versions: [],
-    branches: [],
-    collaborators: [],
-    projectCollaborators: [],
-  };
+  // Initialize db.data if it's completely empty
+  if (!db.data) {
+    db.data = {
+      projects: [],
+      versions: [],
+      branches: [],
+      collaborators: [],
+      projectCollaborators: [],
+      users: [],
+      pendingChanges: [],
+    };
+  }
   
+  // Backward compatibility: add missing fields if they don't exist
+  if (!db.data.users) {
+    db.data.users = [];
+  }
+  if (!db.data.versions) db.data.versions = [];
+  if (!db.data.branches) db.data.branches = [];
+  if (!db.data.collaborators) db.data.collaborators = [];
+  if (!db.data.projectCollaborators) db.data.projectCollaborators = [];
+  if (!db.data.pendingChanges) db.data.pendingChanges = [];
+
+  // Migrate existing passwords to bcrypt (if not already hashed)
+  await migratePasswords();
+
+  // Seed demo users if database is empty
+  if (db.data.users.length === 0) {
+    const demoUsers: User[] = [
+      {
+        id: crypto.randomUUID(),
+        email: 'demo@coldaw.com',
+        password: await bcrypt.hash('demo123', 10),
+        name: 'Demo User',
+        created_at: Date.now(),
+      },
+      {
+        id: crypto.randomUUID(),
+        email: 'test@coldaw.com',
+        password: await bcrypt.hash('test123', 10),
+        name: 'Test User',
+        created_at: Date.now(),
+      },
+    ];
+    
+    db.data.users.push(...demoUsers);
+  }
+
   await db.write();
   console.log('✅ Database initialized');
+}
+
+// Migrate existing plain-text passwords to bcrypt
+async function migratePasswords() {
+  if (!db.data.users) return;
+  
+  let migrated = 0;
+  for (const user of db.data.users) {
+    // Check if password is already hashed (bcrypt hashes start with $2b$)
+    if (user.password && !user.password.startsWith('$2b$')) {
+      user.password = await bcrypt.hash(user.password, 10);
+      migrated++;
+    }
+  }
+  
+  if (migrated > 0) {
+    await db.write();
+    console.log(`✅ Migrated ${migrated} user passwords to bcrypt`);
+  }
 }
 
 // Helper functions to mimic SQL operations
@@ -252,6 +332,76 @@ export const dbHelpers = {
       pc => !(pc.project_id === projectId && pc.user_id === userId)
     );
     await db.write();
+  },
+
+  // Users
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    await db.read();
+    if (!db.data || !db.data.users) {
+      return undefined;
+    }
+    return db.data.users.find(u => u.email.toLowerCase() === email.toLowerCase());
+  },
+
+  async getUserById(id: string): Promise<User | undefined> {
+    await db.read();
+    if (!db.data || !db.data.users) {
+      return undefined;
+    }
+    return db.data.users.find(u => u.id === id);
+  },
+
+  async insertUser(user: User): Promise<void> {
+    await db.read();
+    if (!db.data.users) {
+      db.data.users = [];
+    }
+    db.data.users.push(user);
+    await db.write();
+  },
+
+  // Pending Changes
+  async getPendingChange(pendingId: string): Promise<PendingChange | undefined> {
+    await db.read();
+    if (!db.data.pendingChanges) {
+      db.data.pendingChanges = [];
+    }
+    return db.data.pendingChanges.find(pc => pc.id === pendingId);
+  },
+
+  async getPendingChangesForProject(projectId: string): Promise<PendingChange[]> {
+    await db.read();
+    if (!db.data.pendingChanges) {
+      db.data.pendingChanges = [];
+    }
+    return db.data.pendingChanges.filter(pc => pc.project_id === projectId);
+  },
+
+  async insertPendingChange(change: PendingChange): Promise<void> {
+    await db.read();
+    if (!db.data.pendingChanges) {
+      db.data.pendingChanges = [];
+    }
+    // Remove existing pending change for same project/user
+    db.data.pendingChanges = db.data.pendingChanges.filter(
+      pc => !(pc.project_id === change.project_id && pc.user_id === change.user_id)
+    );
+    db.data.pendingChanges.push(change);
+    await db.write();
+  },
+
+  async deletePendingChange(pendingId: string): Promise<void> {
+    await db.read();
+    if (!db.data.pendingChanges) {
+      db.data.pendingChanges = [];
+    }
+    db.data.pendingChanges = db.data.pendingChanges.filter(pc => pc.id !== pendingId);
+    await db.write();
+  },
+
+  async getAllUsers(): Promise<User[]> {
+    await db.read();
+    return db.data?.users || [];
   },
 };
 

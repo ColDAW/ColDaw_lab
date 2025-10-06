@@ -24,8 +24,60 @@ const upload = multer({ storage });
 router.post('/:projectId/commit', upload.single('alsFile'), async (req: any, res: any) => {
   try {
     const { projectId } = req.params;
-    const { branch, message, author } = req.body;
+    const { branch, message, author, fromVST, tempFileName } = req.body;
 
+    // Check if this is a VST import commit
+    if (fromVST === 'true' && tempFileName) {
+      // Use temp file from VST import
+      const dataDir = path.join(__dirname, '..', '..', 'projects', projectId);
+      const tempFilePath = path.join(dataDir, tempFileName);
+      
+      if (!fs.existsSync(tempFilePath)) {
+        return res.status(404).json({ error: 'Temp file not found. Please re-import from VST.' });
+      }
+      
+      const project = await dbHelpers.getProject(projectId);
+      if (!project) {
+        return res.status(404).json({ error: 'Project not found' });
+      }
+
+      const branchData = await dbHelpers.getBranch(projectId, branch || 'main');
+      if (!branchData) {
+        return res.status(404).json({ error: 'Branch not found' });
+      }
+
+      const alsData = await ALSParser.parseFile(tempFilePath);
+      const versionId = uuidv4();
+      
+      // Save both JSON and original ALS file
+      const dataPath = path.join(dataDir, `${versionId}.json`);
+      const alsPath = path.join(dataDir, `${versionId}.als`);
+      
+      fs.writeFileSync(dataPath, ALSParser.toJSON(alsData));
+      fs.copyFileSync(tempFilePath, alsPath);
+
+      const now = Date.now();
+      await dbHelpers.insertVersion({
+        id: versionId,
+        project_id: projectId,
+        branch: branch || 'main',
+        parent_id: branchData.head_version_id,
+        message: message || 'Update from VST plugin',
+        author: author || 'VST Plugin',
+        timestamp: now,
+        data_path: dataPath,
+      });
+
+      await dbHelpers.updateBranch(branchData.id, { head_version_id: versionId });
+      await dbHelpers.updateProject(projectId, { updated_at: now });
+      
+      // Clean up temp file
+      fs.unlinkSync(tempFilePath);
+
+      return res.json({ versionId, message: 'Version committed successfully from VST', data: alsData });
+    }
+
+    // Normal file upload commit
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
     }

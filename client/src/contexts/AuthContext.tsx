@@ -1,17 +1,21 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { authApi } from '../api/api';
+import api from '../api/api';
 
 interface User {
   id: string;
-  username: string;
   email: string;
+  name: string;
+  username: string; // For display purposes, same as name
 }
 
 interface AuthContextType {
   user: User | null;
+  token: string | null;
   isAuthenticated: boolean;
-  login: (username: string, password: string) => Promise<void>;
-  register: (username: string, email: string, password: string) => Promise<void>;
-  logout: () => void;
+  login: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string, name: string) => Promise<void>;
+  logout: () => Promise<void>;
   isLoading: boolean;
 }
 
@@ -19,99 +23,102 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Initialize - verify token on mount
   useEffect(() => {
-    // 检查本地存储中的用户会话
-    const storedUser = localStorage.getItem('coldaw_user');
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (error) {
-        console.error('Failed to parse stored user:', error);
-        localStorage.removeItem('coldaw_user');
+    const initAuth = async () => {
+      const storedToken = localStorage.getItem('coldaw_token');
+      if (storedToken) {
+        try {
+          // Set token to axios header
+          api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+          
+          // Verify token and get user info
+          const userData = await authApi.verifyToken();
+          setUser({
+            id: userData.userId,
+            email: userData.email,
+            name: userData.name,
+            username: userData.name, // Use name as username
+          });
+          setToken(storedToken);
+        } catch (error) {
+          console.error('Token validation failed:', error);
+          localStorage.removeItem('coldaw_token');
+          delete api.defaults.headers.common['Authorization'];
+        }
       }
-    }
-    setIsLoading(false);
+      setIsLoading(false);
+    };
+
+    initAuth();
   }, []);
 
-  const login = async (username: string, password: string) => {
+  const login = async (email: string, password: string) => {
     try {
-      // 在实际应用中,这里应该调用后端API
-      // 目前使用简单的本地存储模拟
-      const storedUsers = localStorage.getItem('coldaw_users');
-      const users = storedUsers ? JSON.parse(storedUsers) : [];
+      const response = await authApi.login(email, password);
       
-      const foundUser = users.find(
-        (u: any) => u.username === username && u.password === password
-      );
-
-      if (!foundUser) {
-        throw new Error('用户名或密码错误');
-      }
-
-      const userData: User = {
-        id: foundUser.id,
-        username: foundUser.username,
-        email: foundUser.email,
-      };
-
-      setUser(userData);
-      localStorage.setItem('coldaw_user', JSON.stringify(userData));
-    } catch (error) {
-      throw error;
+      // Save token
+      localStorage.setItem('coldaw_token', response.token);
+      api.defaults.headers.common['Authorization'] = `Bearer ${response.token}`;
+      
+      // Set user info
+      setUser({
+        id: response.userId,
+        email: response.email,
+        name: response.name,
+        username: response.name, // Use name as username
+      });
+      setToken(response.token);
+    } catch (error: any) {
+      const message = error.response?.data?.error || '登录失败';
+      throw new Error(message);
     }
   };
 
-  const register = async (username: string, email: string, password: string) => {
+  const register = async (email: string, password: string, name: string) => {
     try {
-      // 检查用户名是否已存在
-      const storedUsers = localStorage.getItem('coldaw_users');
-      const users = storedUsers ? JSON.parse(storedUsers) : [];
+      const response = await authApi.register(email, password, name);
       
-      if (users.some((u: any) => u.username === username)) {
-        throw new Error('用户名已存在');
-      }
-
-      if (users.some((u: any) => u.email === email)) {
-        throw new Error('邮箱已被注册');
-      }
-
-      // 创建新用户
-      const newUser = {
-        id: Date.now().toString(),
-        username,
-        email,
-        password, // 在实际应用中应该加密
-      };
-
-      users.push(newUser);
-      localStorage.setItem('coldaw_users', JSON.stringify(users));
-
-      // 自动登录
-      const userData: User = {
-        id: newUser.id,
-        username: newUser.username,
-        email: newUser.email,
-      };
-
-      setUser(userData);
-      localStorage.setItem('coldaw_user', JSON.stringify(userData));
-    } catch (error) {
-      throw error;
+      // Auto login after registration
+      localStorage.setItem('coldaw_token', response.token);
+      api.defaults.headers.common['Authorization'] = `Bearer ${response.token}`;
+      
+      setUser({
+        id: response.userId,
+        email: response.email,
+        name: response.name,
+        username: response.name, // Use name as username
+      });
+      setToken(response.token);
+    } catch (error: any) {
+      const message = error.response?.data?.error || '注册失败';
+      throw new Error(message);
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('coldaw_user');
+  const logout = async () => {
+    try {
+      await authApi.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      // Clear local state anyway
+      localStorage.removeItem('coldaw_token');
+      delete api.defaults.headers.common['Authorization'];
+      setUser(null);
+      setToken(null);
+    }
   };
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        isAuthenticated: !!user,
+        token,
+        isAuthenticated: !!user && !!token,
         login,
         register,
         logout,

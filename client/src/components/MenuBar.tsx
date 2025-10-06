@@ -212,7 +212,7 @@ function MenuBar({ onToggleHistory, onVersionCommitted, currentVersionId }: Menu
   const { user, logout } = useAuth();
   const { showAlert, showConfirm, showPrompt } = useModal();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { currentProject, collaborators, setPendingData, clearPendingChanges } = useStore();
+  const { currentProject, collaborators, setPendingData, clearPendingChanges, vstTempFileName } = useStore();
   const [isPushing, setIsPushing] = useState(false);
   const [importedFile, setImportedFile] = useState<File | null>(null);
   const [isImporting, setIsImporting] = useState(false);
@@ -309,7 +309,7 @@ function MenuBar({ onToggleHistory, onVersionCommitted, currentVersionId }: Menu
 
   // Push: Commit imported changes to version system
   const handlePush = async () => {
-    if (!importedFile || !currentProject || !user) {
+    if ((!importedFile && !vstTempFileName) || !currentProject || !user) {
       await showAlert({ message: 'No changes to push. Please import a file first.', type: 'warning' });
       return;
     }
@@ -319,13 +319,40 @@ function MenuBar({ onToggleHistory, onVersionCommitted, currentVersionId }: Menu
     
     setIsPushing(true);
     try {
-      await versionApi.commitVersion(
-        currentProject.id,
-        importedFile,
-        currentProject.current_branch,
-        message,
-        user.username
-      );
+      if (vstTempFileName) {
+        // Push from VST import (temp file on server)
+        const formData = new FormData();
+        formData.append('branch', currentProject.current_branch);
+        formData.append('message', message);
+        formData.append('author', user.username);
+        formData.append('fromVST', 'true');
+        formData.append('tempFileName', vstTempFileName);
+        
+        const response = await fetch(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/versions/${currentProject.id}/commit`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('coldaw_token')}`,
+            },
+            body: formData,
+          }
+        );
+        
+        if (!response.ok) {
+          throw new Error('Failed to push VST import');
+        }
+      } else if (importedFile) {
+        // Normal file upload push
+        await versionApi.commitVersion(
+          currentProject.id,
+          importedFile,
+          currentProject.current_branch,
+          message,
+          user.username
+        );
+      }
+      
       await showAlert({ message: 'Changes pushed successfully!', type: 'success' });
       
       // Clear pending changes
@@ -457,8 +484,8 @@ function MenuBar({ onToggleHistory, onVersionCommitted, currentVersionId }: Menu
       {/* Push button - positioned with collaborators */}
       <PushButton 
         onClick={handlePush} 
-        disabled={isPushing || !importedFile}
-        $hasChanges={!!importedFile}
+        disabled={isPushing || (!importedFile && !vstTempFileName)}
+        $hasChanges={!!(importedFile || vstTempFileName)}
       >
         <GitCommit />
         {isPushing ? 'Pushing...' : 'Push'}

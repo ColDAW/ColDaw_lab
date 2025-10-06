@@ -403,29 +403,31 @@ function HomePage() {
 
   const handleDeleteProject = async (e: React.MouseEvent, projectId: string) => {
     e.stopPropagation();
-    if (!await showConfirm({ message: 'Are you sure you want to delete this project?', type: 'warning' })) return;
-    
     try {
-      const userId = user?.email || user?.username;
+      await showConfirm({ message: 'Are you sure you want to delete this project?' });
+      const userId = user?.id;
       await projectApi.deleteProject(projectId, userId);
       await loadProjects();
+      await showAlert({ message: 'Project deleted successfully', type: 'success' });
     } catch (error) {
-      console.error('Error deleting project:', error);
-      await showAlert({ message: 'Failed to delete project', type: 'error' });
+      // User cancelled or error occurred
+      if (error && typeof error === 'object' && 'message' in error) {
+        await showAlert({ message: 'Failed to delete project', type: 'error' });
+      }
     }
   };
 
   const handleDuplicateProject = async (e: React.MouseEvent, projectId: string) => {
     e.stopPropagation();
-    const name = await showPrompt({ message: 'Enter name for duplicated project:', placeholder: 'Project name' });
-    if (!name) return;
-    
     try {
-      const userId = user?.email || user?.username;
+      const name = await showPrompt({ message: 'Enter a name for the duplicated project:' });
+      if (!name) return;
+      
+      const userId = user?.id;
       await projectApi.duplicateProject(projectId, name, userId);
       await loadProjects();
+      await showAlert({ message: 'Project duplicated successfully', type: 'success' });
     } catch (error) {
-      console.error('Error duplicating project:', error);
       await showAlert({ message: 'Failed to duplicate project', type: 'error' });
     }
   };
@@ -456,8 +458,8 @@ function HomePage() {
 
   const loadProjects = async () => {
     try {
-      // Use email for collaboration matching, fallback to username for owned projects
-      const userId = user?.email || user?.username;
+      // Use user ID to fetch projects
+      const userId = user?.id;
       const data = await projectApi.getProjects(userId);
       setProjects(data);
     } catch (error) {
@@ -526,15 +528,15 @@ function HomePage() {
     
     setIsUploading(true);
     try {
-      // Use email as userId for consistency with collaboration system
-      const userId = user?.email || user?.username;
+      // Use user ID for authentication
+      const userId = user?.id;
       console.log('Initializing project with:', { projectName, author, fileName: selectedFile.name, userId });
       
       const result = await projectApi.initProject(
         selectedFile, 
         projectName, 
         author, 
-        userId // Pass email as userId
+        userId // Pass user ID
       );
       console.log('Project initialized successfully:', result);
       

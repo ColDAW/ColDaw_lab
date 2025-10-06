@@ -85,6 +85,7 @@ interface AppState {
   // Uncommitted changes
   pendingData: ProjectData | null; // Data from imported file but not pushed yet
   hasPendingChanges: boolean;
+  vstTempFileName: string | null; // Temp filename for VST imports
   
   // Collaboration
   socket: Socket | null;
@@ -105,6 +106,7 @@ interface AppState {
   setIsMenuOpen: (isOpen: boolean) => void;
   setCurrentUser: (userName: string) => void;
   setPendingData: (data: ProjectData | null) => void;
+  setVSTTempFileName: (fileName: string | null) => void;
   clearPendingChanges: () => void;
   
   // Socket actions
@@ -126,6 +128,7 @@ export const useStore = create<AppState>((set, get) => ({
   versions: [],
   pendingData: null,
   hasPendingChanges: false,
+  vstTempFileName: null,
   socket: null,
   collaborators: [],
   currentUser: 'Anonymous',
@@ -142,7 +145,8 @@ export const useStore = create<AppState>((set, get) => ({
   setIsMenuOpen: (isOpen) => set({ isMenuOpen: isOpen }),
   setCurrentUser: (userName) => set({ currentUser: userName }),
   setPendingData: (data) => set({ pendingData: data, hasPendingChanges: !!data }),
-  clearPendingChanges: () => set({ pendingData: null, hasPendingChanges: false }),
+  setVSTTempFileName: (fileName) => set({ vstTempFileName: fileName }),
+  clearPendingChanges: () => set({ pendingData: null, hasPendingChanges: false, vstTempFileName: null }),
   
   // Socket methods
   initSocket: (projectId: string, userName: string) => {

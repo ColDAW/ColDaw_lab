@@ -24,6 +24,7 @@ export interface ALSClip {
   loopEnd: number;
   isLooping: boolean;
   color: number;
+  clipType?: 'audio' | 'midi'; // Differentiate between audio and MIDI clips
   file?: string;
   samplePath?: string;
   pitchCoarse?: number;
@@ -161,27 +162,49 @@ export class ALSParser {
     const clips: ALSClip[] = [];
     
     try {
-      // 参考 als_bridge notebook: 从 DeviceChain -> MainSequencer -> Sample -> ArrangerAutomation -> Events -> AudioClip
+      // 参考 als_bridge notebook: 从 DeviceChain -> MainSequencer -> Sample -> ArrangerAutomation -> Events -> AudioClip/MidiClip
       const mainSequencer = trackData.DeviceChain?.[0]?.MainSequencer?.[0];
       const sample = mainSequencer?.Sample?.[0];
       const arrangerAutomation = sample?.ArrangerAutomation?.[0];
       const events = arrangerAutomation?.Events?.[0];
       
-      // Look for AudioClip in events
-      let audioClips = events?.AudioClip;
-      if (!audioClips) {
-        console.log('No AudioClip found in events');
+      if (!events) {
+        console.log('No Events found in track');
         return clips;
       }
       
-      if (!Array.isArray(audioClips)) {
-        audioClips = [audioClips];
+      // Look for both AudioClip and MidiClip in events
+      let audioClips = events?.AudioClip;
+      let midiClips = events?.MidiClip;
+      
+      // Collect all clips
+      const allClips: any[] = [];
+      
+      if (audioClips) {
+        if (!Array.isArray(audioClips)) {
+          audioClips = [audioClips];
+        }
+        allClips.push(...audioClips.map((clip: any) => ({ ...clip, type: 'audio' })));
+      }
+      
+      if (midiClips) {
+        if (!Array.isArray(midiClips)) {
+          midiClips = [midiClips];
+        }
+        allClips.push(...midiClips.map((clip: any) => ({ ...clip, type: 'midi' })));
+      }
+      
+      if (allClips.length === 0) {
+        console.log('No AudioClip or MidiClip found in events');
+        return clips;
       }
 
-      console.log(`Found ${audioClips.length} clips in track`);
+      console.log(`Found ${allClips.length} clips in track (Audio: ${audioClips?.length || 0}, MIDI: ${midiClips?.length || 0})`);
 
-      audioClips.forEach((clip: any, index: number) => {
+      allClips.forEach((clip: any, index: number) => {
         try {
+          const clipType = clip.type; // 'audio' or 'midi'
+          
           // 使用 $ 对象访问属性(xml2js 的标准方式)
           const startTime = parseFloat(clip.$?.Time || '0');
           
@@ -191,9 +214,9 @@ export class ALSParser {
           
           // 获取 clip 名称
           const nameData = clip.Name?.[0];
-          const name = nameData?.$?.Value || `Clip ${index + 1}`;
+          const name = nameData?.$?.Value || `${clipType === 'midi' ? 'MIDI' : 'Audio'} Clip ${index + 1}`;
           
-          console.log(`Parsing clip "${name}": Time=${startTime}, CurrentEnd=${endTime}`);
+          console.log(`Parsing ${clipType} clip "${name}": Time=${startTime}, CurrentEnd=${endTime}`);
           
           // Extract loop settings
           const loopData = clip.Loop?.[0] || {};
@@ -210,35 +233,38 @@ export class ALSParser {
           const colorData = clip.Color?.[0];
           const color = parseInt(colorData?.$?.Value || '0');
           
-          // Extract sample path
-          const sampleRef = clip.SampleRef?.[0];
-          const fileRef = sampleRef?.FileRef?.[0];
-          const pathData = fileRef?.Path?.[0];
-          let samplePath = pathData?.$?.Value || '';
-          
-          // Normalize sample path
-          if (samplePath) {
-            samplePath = samplePath.replace(/\\/g, '/');
-            const parts = samplePath.split('/');
-            const audioIndex = parts.findIndex((p: string) => p.toLowerCase() === 'audio');
-            if (audioIndex >= 0 && audioIndex < parts.length - 1) {
-              samplePath = parts.slice(audioIndex + 1).join('/');
+          // Extract sample path (only for audio clips)
+          let samplePath = '';
+          if (clipType === 'audio') {
+            const sampleRef = clip.SampleRef?.[0];
+            const fileRef = sampleRef?.FileRef?.[0];
+            const pathData = fileRef?.Path?.[0];
+            samplePath = pathData?.$?.Value || '';
+            
+            // Normalize sample path
+            if (samplePath) {
+              samplePath = samplePath.replace(/\\/g, '/');
+              const parts = samplePath.split('/');
+              const audioIndex = parts.findIndex((p: string) => p.toLowerCase() === 'audio');
+              if (audioIndex >= 0 && audioIndex < parts.length - 1) {
+                samplePath = parts.slice(audioIndex + 1).join('/');
+              }
             }
           }
           
-          // Extract pitch shift
+          // Extract pitch shift (audio clips) or transpose (MIDI clips)
           const pitchCoarseData = clip.PitchCoarse?.[0];
           const pitchCoarse = parseFloat(pitchCoarseData?.$?.Value || '0');
           
           const pitchFineData = clip.PitchFine?.[0];
           const pitchFine = parseFloat(pitchFineData?.$?.Value || '0');
           
-          // Extract gain
+          // Extract gain (audio clips only)
           const gainData = clip.Gain?.[0];
           const gain = parseFloat(gainData?.$?.Value || '1.0');
 
           clips.push({
-            id: `clip-${index}`,
+            id: `clip-${clipType}-${index}`,
             name,
             startTime,
             endTime,
@@ -246,6 +272,7 @@ export class ALSParser {
             loopEnd,
             isLooping,
             color,
+            clipType, // Add clip type to differentiate audio and MIDI
             samplePath,
             pitchCoarse,
             pitchFine,

@@ -9,6 +9,66 @@ const api = axios.create({
   },
 });
 
+// Request interceptor: automatically add token
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('coldaw_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor: handle errors uniformly
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Token invalid, clear local storage
+      localStorage.removeItem('coldaw_token');
+      // Redirect to home page if not already there
+      if (window.location.pathname !== '/') {
+        window.location.href = '/';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
+export const authApi = {
+  // Login
+  async login(email: string, password: string) {
+    const response = await api.post('/auth/login', { email, password });
+    return response.data;
+  },
+  
+  // Register
+  async register(email: string, password: string, name: string) {
+    const response = await api.post('/auth/register', { 
+      email, 
+      password, 
+      name 
+    });
+    return response.data;
+  },
+  
+  // Verify token
+  async verifyToken() {
+    const response = await api.get('/auth/verify');
+    return response.data;
+  },
+  
+  // Logout
+  async logout() {
+    const response = await api.post('/auth/logout');
+    return response.data;
+  }
+};
+
 export const projectApi = {
   // Parse ALS file without creating a version (for preview)
   async parseALSFile(file: File) {
@@ -87,6 +147,24 @@ export const projectApi = {
       email,
       invitedBy,
     });
+    return response.data;
+  },
+
+  // Get pending changes for a project
+  async getPendingChanges(projectId: string) {
+    const response = await api.get(`/projects/${projectId}/pending-changes`);
+    return response.data;
+  },
+
+  // Get VST import data
+  async getVSTImport(projectId: string) {
+    const response = await api.get(`/projects/${projectId}/vst-import`);
+    return response.data;
+  },
+
+  // Push (commit) a pending change
+  async pushPendingChange(projectId: string, pendingId: string) {
+    const response = await api.post(`/projects/${projectId}/push-pending/${pendingId}`);
     return response.data;
   },
 };

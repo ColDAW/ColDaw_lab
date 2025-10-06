@@ -125,7 +125,7 @@ interface AuthModalProps {
 
 function AuthModal({ onClose }: AuthModalProps) {
   const [isLogin, setIsLogin] = useState(true);
-  const [username, setUsername] = useState('');
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -139,12 +139,14 @@ function AuthModal({ onClose }: AuthModalProps) {
 
     try {
       if (isLogin) {
-        await login(username, password);
+        // 登录使用 email
+        await login(email, password);
       } else {
-        if (!email) {
-          throw new Error('Please enter email');
+        // 注册需要 email, password, name
+        if (!email || !name) {
+          throw new Error('Please enter all required fields');
         }
-        await register(username, email, password);
+        await register(email, password, name);
       }
       if (onClose) {
         onClose();
@@ -159,7 +161,7 @@ function AuthModal({ onClose }: AuthModalProps) {
   const toggleMode = () => {
     setIsLogin(!isLogin);
     setError('');
-    setEmail('');
+    setName('');
   };
 
   return (
@@ -168,22 +170,22 @@ function AuthModal({ onClose }: AuthModalProps) {
         <Title>{isLogin ? 'Login' : 'Sign Up'}</Title>
         <Form onSubmit={handleSubmit}>
           <Input
-            type="text"
-            placeholder="Username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             required
-            minLength={3}
-            maxLength={20}
             autoFocus
           />
           {!isLogin && (
             <Input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="text"
+              placeholder="Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               required
+              minLength={2}
+              maxLength={50}
             />
           )}
           <Input
