@@ -5,7 +5,8 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc",
+    "build": "tsc && npm run copy-sql",
+    "copy-sql": "mkdir -p dist/database && cp src/database/*.sql dist/database/",
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
     "railway:build": "npm install && npm run build",
