@@ -144,7 +144,7 @@ router.post('/smart-import', requireAuth, upload.single('alsFile'), async (req: 
         project_id: projectId,
         name: 'main',
         created_at: now,
-        created_by: userId || 'anonymous',
+        created_by: userId, // Must be a valid user ID
       });
 
       // Create initial version
@@ -392,7 +392,7 @@ router.post('/init', requireAuth, upload.single('alsFile'), async (req: any, res
       project_id: projectId,
       name: 'main',
       created_at: now,
-      created_by: userId || 'anonymous',
+      created_by: userId, // Must be a valid user ID
     });
 
     // Create initial version (commit)
@@ -616,7 +616,7 @@ router.post('/:projectId/duplicate', async (req: any, res: any) => {
         project_id: newProjectId,
         name: branch.name,
         created_at: now,
-        created_by: userId || 'anonymous',
+        created_by: userId, // Must be a valid user ID
       });
     }
 

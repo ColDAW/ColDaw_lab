@@ -165,7 +165,7 @@ router.post('/:projectId/branch', async (req: any, res: any) => {
       project_id: projectId,
       name,
       created_at: now,
-      created_by: req.user_id || 'anonymous',
+      created_by: req.user_id, // Must be a valid user ID from authenticated request
     });
 
     res.json({ branchId, message: `Branch '${name}' created successfully` });
