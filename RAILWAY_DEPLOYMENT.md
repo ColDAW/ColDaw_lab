@@ -1,94 +1,166 @@
-# Railway部署指南
+# Railway 部署指南
 
-## 问题修复
+本指南将帮助您将 ColDaw 项目部署到 Railway 平台。
 
-原来的部署错误已经修复：
+## 前置要求
 
-### 1. Shell兼容性问题
-- **问题**: `start.sh: 8: Bad substitution`
-- **原因**: `BASH_SOURCE[0]` 在某些shell环境中不支持
-- **修复**: 替换为更兼容的 `dirname "$0"`
-
-### 2. npm not found问题
-- **问题**: `start.sh: 37: npm: not found`
-- **原因**: Railway容器环境中没有正确配置Node.js
-- **修复**: 创建Dockerfile确保正确的Node.js环境
-
-### 3. TypeScript编译问题 (2024-10-06 更新)
-- **问题**: `npm error command sh -c npm run build` 和 TypeScript显示帮助信息
-- **原因**: Docker构建时postinstall脚本在源码复制前就尝试编译
-- **修复**: 重新设计Dockerfile构建流程，先复制源码再编译
+1. [Railway](https://railway.app) 账户
+2. Git 仓库（GitHub, GitLab 等）
+3. 项目推送到仓库
 
 ## 部署步骤
 
-### 1. 推送代码到仓库
-```bash
-git add .
-git commit -m "Fix Railway deployment configuration"
-git push origin main
+### 1. 准备代码
+
+确保您的项目包含以下文件：
+- `package.json` (根目录)
+- `Dockerfile`
+- `railway.json`
+- `.env.example`
+
+### 2. 连接 Railway
+
+1. 登录 [Railway Dashboard](https://railway.app/dashboard)
+2. 点击 "New Project"
+3. 选择 "Deploy from GitHub repo"
+4. 选择您的 ColDaw 仓库
+
+### 3. 配置环境变量
+
+在 Railway 项目设置中添加以下环境变量：
+
+#### 基础配置
 ```
-
-### 2. Railway配置
-
-在Railway项目中设置以下环境变量：
-
-```env
 NODE_ENV=production
-JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
-CLIENT_URL=https://your-frontend-url.railway.app
+PORT=${{RAILWAY_PORT}} # Railway 自动设置
+JWT_SECRET=your-secure-jwt-secret-key
 ```
 
-### 3. 构建配置
+#### 数据库配置
 
-Railway将自动：
-1. 检测到Dockerfile并使用它构建
-2. 安装Node.js 18 Alpine镜像
-3. 复制server目录到容器
-4. 安装依赖 (`npm ci`)
-5. 编译TypeScript (`npm run build`)
-6. 清理开发依赖
-7. 使用 `npm start` 启动应用
-
-## 文件说明
-
-### 新增文件：
-- `package.json` (根目录) - Railway主配置
-- `railway.json` - Railway部署配置
-- `Dockerfile` - 容器化配置
-- `.dockerignore` - Docker构建优化
-- `.env.example` - 环境变量示例
-
-### 修改文件：
-- `start.sh` - 修复shell兼容性
-- `server/package.json` - 添加postinstall脚本
-
-## 部署架构
-
+**选项 A: 使用 LowDB (文件数据库)**
 ```
-Railway部署 → Docker容器 → Node.js 18 → Express服务器 (端口由Railway自动分配)
+DATABASE_TYPE=lowdb
 ```
 
-## 重要注意事项
+**选项 B: 使用 MongoDB**
+```
+DATABASE_TYPE=mongodb
+MONGODB_URI=your-mongodb-connection-string
+```
 
-1. **端口配置**: 服务器已配置使用 `process.env.PORT`，Railway会自动分配端口
-2. **环境变量**: 必须在Railway控制台设置JWT_SECRET
-3. **CORS配置**: 如果有前端，需要设置CLIENT_URL环境变量
-4. **文件存储**: 项目文件会存储在容器的`/app/server/projects`目录
-5. **数据持久性**: 当前使用LowDB文件存储，重启后数据可能丢失，建议后续迁移到数据库
+**选项 C: 使用 PostgreSQL**
+```
+DATABASE_TYPE=postgresql
+DATABASE_URL=${{POSTGRES.DATABASE_URL}} # 如果使用 Railway PostgreSQL
+```
+
+### 4. 添加数据库服务 (可选)
+
+如果选择使用外部数据库：
+
+#### PostgreSQL
+1. 在 Railway 项目中点击 "Add Service"
+2. 选择 "PostgreSQL"
+3. Railway 会自动设置 `DATABASE_URL` 环境变量
+
+#### MongoDB
+1. 使用 MongoDB Atlas 或其他 MongoDB 提供商
+2. 将连接字符串设置为 `MONGODB_URI`
+
+### 5. 部署配置
+
+Railway 将自动：
+1. 检测 `Dockerfile` 并构建容器
+2. 运行构建脚本
+3. 启动应用程序
+
+### 6. 域名配置
+
+1. 在 Railway 项目设置中
+2. 点击 "Settings" → "Domains"
+3. 生成域名或连接自定义域名
+
+## 环境变量详细说明
+
+### 必需变量
+- `NODE_ENV`: 设置为 `production`
+- `JWT_SECRET`: JWT 令牌加密密钥
+- `DATABASE_TYPE`: 数据库类型 (`lowdb`, `mongodb`, `postgresql`)
+
+### 数据库变量
+- `MONGODB_URI`: MongoDB 连接字符串
+- `DATABASE_URL`: PostgreSQL 连接字符串
+- `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, `PGPASSWORD`: PostgreSQL 详细配置
+
+### 可选变量
+- `CLIENT_URL`: 前端 URL (CORS 配置)
+- `MAX_FILE_SIZE`: 文件上传大小限制
+- `UPLOAD_DIR`: 上传目录
+- `PROJECTS_DIR`: 项目存储目录
+
+## 构建过程
+
+项目使用多阶段 Docker 构建：
+
+1. **Client Build**: 构建 React 前端
+2. **Server Build**: 编译 TypeScript 后端
+3. **Production**: 组合前后端到单个容器
 
 ## 故障排除
 
-如果部署仍有问题：
+### 构建失败
+1. 检查 `package.json` 依赖
+2. 确认 Node.js 版本兼容 (>=18.0.0)
+3. 查看 Railway 构建日志
 
-1. 检查Railway日志
-2. 确认环境变量设置正确
-3. 验证所有依赖都在package.json中
-4. 检查TypeScript编译是否成功
+### 数据库连接问题
+1. 验证环境变量设置
+2. 检查数据库服务状态
+3. 确认连接字符串格式
 
-## 下一步优化建议
+### 文件权限问题
+```bash
+# 如果遇到权限问题，确保 Dockerfile 中有：
+RUN mkdir -p projects uploads
+```
 
-1. 添加数据库支持（PostgreSQL/MongoDB）
-2. 添加静态文件服务
-3. 配置CDN for文件上传
-4. 添加健康检查端点
-5. 配置日志管理
+### CORS 问题
+确保设置正确的 `CLIENT_URL` 环境变量
+
+## 监控和日志
+
+1. Railway Dashboard → 项目 → "Deployments"
+2. 点击部署查看日志
+3. 使用 "Metrics" 标签监控性能
+
+## 扩展和优化
+
+### 水平扩展
+- Railway 支持自动扩展
+- 在项目设置中配置扩展规则
+
+### 性能优化
+- 启用 Railway 的 CDN
+- 优化 Docker 镜像大小
+- 使用生产数据库服务
+
+## 备份和恢复
+
+### 文件备份 (LowDB)
+- Railway 提供卷快照功能
+- 定期下载 `projects/db.json`
+
+### 数据库备份
+- PostgreSQL: 使用 Railway 的自动备份
+- MongoDB: 配置 MongoDB Atlas 备份
+
+## 成本考虑
+
+- Railway 提供免费额度
+- 数据库服务可能产生额外费用
+- 监控使用量和账单
+
+---
+
+需要帮助？查看 [Railway 文档](https://docs.railway.app) 或联系支持团队。

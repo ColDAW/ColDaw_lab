@@ -1,25 +1,39 @@
-# Use Node.js 18 LTS as base image
-FROM node:18-alpine
+# Multi-stage build for Railway deployment
+FROM node:18-alpine AS base
 
-# Set working directory
-WORKDIR /app
-
-# Copy server directory with all files
-COPY server ./server
-
-# Install dependencies and build
-WORKDIR /app/server
-RUN npm ci
+# Build stage for client
+FROM base AS client-builder
+WORKDIR /app/client
+COPY client/package*.json ./
+RUN npm install
+COPY client/ ./
 RUN npm run build
 
-# Clean up dev dependencies to reduce image size
-RUN npm ci --only=production && npm cache clean --force
+# Build stage for server
+FROM base AS server-builder
+WORKDIR /app/server
+COPY server/package*.json ./
+RUN npm install
+COPY server/ ./
+RUN npm run build
 
-# Set environment to production
-ENV NODE_ENV=production
+# Production stage
+FROM node:18-alpine AS production
+WORKDIR /app
 
-# Expose port (Railway will automatically set PORT)
-EXPOSE 3001
+# Copy server build and dependencies
+COPY --from=server-builder /app/server/dist ./dist
+COPY --from=server-builder /app/server/node_modules ./node_modules
+COPY --from=server-builder /app/server/package*.json ./
+
+# Copy client build to serve static files
+COPY --from=client-builder /app/client/dist ./public
+
+# Create necessary directories
+RUN mkdir -p projects uploads
+
+# Expose port
+EXPOSE $PORT
 
 # Start the application
 CMD ["npm", "start"]

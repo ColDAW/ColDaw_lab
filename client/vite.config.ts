@@ -3,14 +3,33 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
+  base: '/',
+  build: {
+    outDir: 'dist',
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          ui: ['styled-components', 'lucide-react'],
+          utils: ['axios', 'zustand', 'socket.io-client']
+        }
+      }
+    }
+  },
   server: {
-    host: '0.0.0.0', // Listen on all interfaces (IPv4 and IPv6)
+    host: '0.0.0.0',
     port: 5173,
     proxy: {
       '/api': {
         target: 'http://localhost:3001',
         changeOrigin: true,
       },
+      '/socket.io': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+        ws: true,
+      },
     },
-  },
+  }
 });

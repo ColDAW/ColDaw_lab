@@ -2,6 +2,7 @@ import { join } from 'path';
 import { LowSync } from 'lowdb';
 import { JSONFileSync } from 'lowdb/node';
 import * as fs from 'fs';
+import { connectToDatabase, getDatabaseConfig, getPgPool } from './config';
 
 const dbDir = join(__dirname, '..', '..', 'projects');
 const dbPath = join(dbDir, 'db.json');
@@ -50,12 +51,35 @@ export const db = new LowSync<DatabaseSchema>(adapter, {
   pendingChanges: [],
 });
 
-export function initDatabase() {
-  if (!fs.existsSync(dbDir)) {
-    fs.mkdirSync(dbDir, { recursive: true });
+export async function initDatabase() {
+  const config = getDatabaseConfig();
+  
+  try {
+    await connectToDatabase();
+    
+    if (config.type === 'postgresql') {
+      // Initialize PostgreSQL schema
+      const pool = getPgPool();
+      if (pool) {
+        const schemaSQL = fs.readFileSync(join(__dirname, 'schema.sql'), 'utf-8');
+        await pool.query(schemaSQL);
+        console.log('📋 PostgreSQL schema initialized');
+      }
+    }
+    
+    if (config.type === 'lowdb') {
+      db.read();
+      console.log('📁 LowDB initialized');
+    }
+    
+    console.log('💾 Database initialized');
+  } catch (error) {
+    console.error('❌ Database initialization failed:', error);
+    throw error;
   }
-  db.read();
 }
+
+// Database instance is already exported above
 
 export const dbHelpers = {
   // Project methods

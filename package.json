@@ -1,32 +1,28 @@
 {
-  "name": "coldaw-app",
+  "name": "coldaw-fullstack",
   "version": "1.0.0",
-  "description": "ColDaw - Collaborative DAW Application",
+  "description": "ColDaw - Collaborative DAW (Full Stack Application)",
   "main": "server/dist/index.js",
   "scripts": {
-    "build": "echo 'Build handled in Dockerfile'",
-    "start": "node server/dist/index.js",
-    "dev": "bash start.sh",
-    "install:server": "cd server && npm install",
+    "build": "cd client && npm install && npm run build && cd ../server && npm install && npm run build",
+    "start": "cd server && npm start",
+    "dev:client": "cd client && npm run dev",
+    "dev:server": "cd server && npm run dev",
     "install:client": "cd client && npm install",
-    "build:client": "cd client && npm install && npm run build",
-    "build:server": "cd server && npm install && npm run build"
-  },
-  "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=8.0.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/yifandeng2002/ColDaw_lab"
+    "install:server": "cd server && npm install",
+    "install:all": "npm run install:client && npm run install:server"
   },
   "keywords": [
     "daw",
     "collaboration",
     "music",
     "audio",
-    "web-app"
+    "version-control"
   ],
-  "author": "Yifan Deng",
-  "license": "MIT"
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  }
 }

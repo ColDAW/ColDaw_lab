@@ -18,17 +18,35 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: process.env.CLIENT_URL || process.env.RAILWAY_STATIC_URL || 'http://localhost:5173',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true,
   },
 });
 
 const PORT = process.env.PORT || 3001;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: process.env.CLIENT_URL || process.env.RAILWAY_STATIC_URL || 'http://localhost:5173',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true,
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Serve static files in production
+if (process.env.NODE_ENV === 'production') {
+  const publicPath = path.join(__dirname, '..', 'public');
+  app.use(express.static(publicPath));
+  
+  // Serve React app for any non-API routes
+  app.get('*', (req, res) => {
+    if (!req.path.startsWith('/api')) {
+      res.sendFile(path.join(publicPath, 'index.html'));
+    }
+  });
+}
 
 // Ensure directories exist
 const uploadDir = path.join(__dirname, '..', 'uploads');
@@ -37,14 +55,16 @@ if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 if (!fs.existsSync(projectsDir)) fs.mkdirSync(projectsDir, { recursive: true });
 
 // Initialize database
-initDatabase();
+initDatabase().catch(console.error);
 
 // Clean up all collaborators on server start (all connections are stale)
 import { db } from './database/init';
-db.read();
-db.data.collaborators = [];
-db.write();
-console.log('🧹 Cleared all stale collaborators');
+(async () => {
+  await db.read();
+  db.data.collaborators = [];
+  await db.write();
+  console.log('🧹 Cleared all stale collaborators');
+})();
 
 // Routes
 app.use('/api/auth', authRoutes);
