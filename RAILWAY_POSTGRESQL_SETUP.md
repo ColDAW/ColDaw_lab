@@ -178,6 +178,34 @@ curl https://your-app.railway.app/api/health
 
 ## 🐛 常见问题
 
+### Q0: SSL 连接错误
+
+**症状:**
+```
+❌ Error: There was an error establishing an SSL connection
+```
+
+**解决方案:**
+1. 确保设置 `NODE_ENV=production`
+2. 检查代码中的 SSL 配置
+
+详细信息: 参考 `RAILWAY_SSL_FIX.md`
+
+### Q0.5: 数据库主机无法找到
+
+**症状:**
+```
+❌ Error: getaddrinfo ENOTFOUND postgres.railway.internal
+```
+
+**解决方案:**
+1. 验证 `DATABASE_URL=${{Postgres.DATABASE_URL}}` 中的服务名称正确
+2. 确保应用和数据库在同一个项目中
+3. 确认 Private Networking 已启用
+4. 如果不行,尝试启用数据库的 Public Networking
+
+详细信息: 参考 `RAILWAY_DATABASE_CONNECTION_FIX.md`
+
 ### Q1: 如何找到数据库服务名称？
 
 **A:** 在 Railway 项目中，数据库服务的名称显示在卡片顶部。默认是 `Postgres`，但可能是 `postgres-123` 之类的。

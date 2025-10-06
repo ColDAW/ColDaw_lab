@@ -50,9 +50,10 @@ function ProjectThumbnail({ projectId, projectName }: ProjectThumbnailProps) {
   ) => {
     try {
       console.log('Fetching project data for:', id);
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
       
       // Fetch the version history of the project
-      const response = await fetch(`http://localhost:3001/api/versions/${id}/history`);
+      const response = await fetch(`${API_BASE_URL}/api/versions/${id}/history`);
       if (!response.ok) {
         console.warn('Failed to fetch versions for project:', id, response.status);
         renderPlaceholder(ctx, width, height);
@@ -71,7 +72,7 @@ function ProjectThumbnail({ projectId, projectName }: ProjectThumbnailProps) {
       // Get the latest version data
       const latestVersion = versions[0];
       const versionResponse = await fetch(
-        `http://localhost:3001/api/projects/${id}/version/${latestVersion.id}`
+        `${API_BASE_URL}/api/projects/${id}/version/${latestVersion.id}`
       );
       if (!versionResponse.ok) {
         console.warn('Failed to fetch version data for version:', latestVersion.id, versionResponse.status);
