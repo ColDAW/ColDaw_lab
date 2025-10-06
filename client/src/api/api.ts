@@ -1,6 +1,10 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+// In production (Railway), frontend and backend are served from the same domain
+// So we can use an empty string to use relative paths
+// In development, use localhost:3001
+const API_BASE_URL = import.meta.env.VITE_API_URL || 
+  (import.meta.env.DEV ? 'http://localhost:3001' : '');
 
 const api = axios.create({
   baseURL: `${API_BASE_URL}/api`,

@@ -117,7 +117,8 @@ interface AppState {
   updateCollaboratorCursor: (socketId: string, x: number, y: number) => void;
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 
+  (import.meta.env.DEV ? 'http://localhost:3001' : '');
 
 export const useStore = create<AppState>((set, get) => ({
   // Initial state
