@@ -16,13 +16,26 @@ export const connectToDatabase = async (): Promise<Pool> => {
   try {
     console.log('🔌 Connecting to PostgreSQL...');
     
+    const databaseUrl = getDatabaseUrl();
+    
+    // Railway PostgreSQL SSL configuration
+    // Railway requires SSL but with rejectUnauthorized: false
+    const sslConfig = process.env.NODE_ENV === 'production' 
+      ? { rejectUnauthorized: false }
+      : false;
+    
     pgPool = new Pool({
-      connectionString: getDatabaseUrl(),
-      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+      connectionString: databaseUrl,
+      ssl: sslConfig,
+      // Connection pool settings
+      max: 20,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 10000,
     });
 
     // Test connection
     const client = await pgPool.connect();
+    await client.query('SELECT NOW()');
     console.log('✅ Connected to PostgreSQL');
     client.release();
 
