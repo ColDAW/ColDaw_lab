@@ -47,8 +47,9 @@ router.post('/register', async (req, res) => {
 
     // Create new user
     const newUser: User = {
-      id: uuidv4(),
-      email: email.toLowerCase(),
+      id: require('uuid').v4(),
+      email,
+      username: name || email.split('@')[0],
       password: hashedPassword,
       name: name || email.split('@')[0],
       created_at: Date.now(),

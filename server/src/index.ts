@@ -41,12 +41,10 @@ initDatabase();
 
 // Clean up all collaborators on server start (all connections are stale)
 import { db } from './database/init';
-(async () => {
-  await db.read();
-  db.data.collaborators = [];
-  await db.write();
-  console.log('🧹 Cleared all stale collaborators');
-})();
+db.read();
+db.data.collaborators = [];
+db.write();
+console.log('🧹 Cleared all stale collaborators');
 
 // Routes
 app.use('/api/auth', authRoutes);
