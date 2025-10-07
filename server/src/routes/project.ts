@@ -154,7 +154,7 @@ router.post('/smart-import', requireAuth, upload.single('alsFile'), async (req: 
         branch: 'main',
         parent_id: undefined,
         message: message || 'Initial commit from VST plugin',
-        user_id: author || 'VST Plugin',
+        user_id: author || 'vst-plugin-system',
         timestamp: now,
         files: dataPath,
       });
@@ -402,7 +402,7 @@ router.post('/init', requireAuth, upload.single('alsFile'), async (req: any, res
       branch: 'main',
       parent_id: undefined,
       message: 'Initial commit',
-      user_id: author || 'Anonymous',
+      user_id: author || 'anonymous-system',
       timestamp: now,
       files: dataPath,
     });

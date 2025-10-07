@@ -62,7 +62,7 @@ router.post('/:projectId/commit', upload.single('alsFile'), async (req: any, res
         project_id: projectId,
         branch: branch || 'main',
         message: message || 'Update from VST plugin',
-        user_id: author || 'VST Plugin',
+        user_id: author || 'vst-plugin-system',
         timestamp: now,
         files: dataPath,
       });
@@ -107,7 +107,7 @@ router.post('/:projectId/commit', upload.single('alsFile'), async (req: any, res
       project_id: projectId,
       branch: branch || 'main',
       message: message || 'Update project',
-      user_id: author || 'Anonymous',
+      user_id: author || 'anonymous-system',
       timestamp: now,
       files: dataPath,
     });
@@ -206,7 +206,7 @@ router.post('/:projectId/merge', async (req: any, res: any) => {
       project_id: projectId,
       branch: targetBranch,
       message: `Merge '${sourceBranch}' into '${targetBranch}'`,
-      user_id: author || 'Anonymous',
+      user_id: author || 'anonymous-system',
       timestamp: now,
       files: sourceData,
     });
@@ -313,7 +313,7 @@ router.post('/:projectId/revert/:versionId', async (req: any, res: any) => {
       project_id: projectId,
       branch: branch || 'main',
       message: revertMessage,
-      user_id: author || 'Anonymous',
+      user_id: author || 'anonymous-system',
       timestamp: now,
       files: dataPath,
     });
