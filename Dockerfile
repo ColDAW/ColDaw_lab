@@ -7,6 +7,9 @@ WORKDIR /app/client
 COPY client/package*.json ./
 RUN npm install
 COPY client/ ./
+# Set API URL for production build
+ARG VITE_API_URL=https://www.coldaw.app
+ENV VITE_API_URL=$VITE_API_URL
 RUN npm run build
 
 # Build stage for server

@@ -125,7 +125,7 @@ cd vst-plugin
 
 ### 3. 登录和使用
 
-插件已预配置连接到 **https://coldawlab-production.up.railway.app**（生产环境）。
+插件已预配置连接到 **https://www.coldaw.app**（生产环境）。
 
 #### 使用步骤：
 
