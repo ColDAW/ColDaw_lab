@@ -47,6 +47,13 @@ export function setupSocketHandlers(io: Server) {
       const now = Date.now();
       
       try {
+        // Double-check userId before inserting
+        if (!userId || userId === 'undefined' || userId === 'null') {
+          console.error('Invalid userId before insert:', userId);
+          socket.emit('error', { message: 'Invalid user ID' });
+          return;
+        }
+
         await db.insertCollaborator({
           id: collaboratorId,
           project_id: projectId,
