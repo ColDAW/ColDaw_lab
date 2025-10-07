@@ -57,7 +57,11 @@ function ProjectThumbnail({ projectId, projectName }: ProjectThumbnailProps) {
   ) => {
     try {
       console.log('[ProjectThumbnail] Fetching project data for:', id);
-      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      // Use the same API base URL logic as api.ts
+      // In production (Railway), use relative paths (empty string)
+      // In development, use localhost:3001
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 
+        (import.meta.env.DEV ? 'http://localhost:3001' : '');
       
       // Fetch the version history of the project
       const response = await fetch(`${API_BASE_URL}/api/versions/${id}/history`);

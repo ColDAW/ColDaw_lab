@@ -7,9 +7,8 @@ WORKDIR /app/client
 COPY client/package*.json ./
 RUN npm install
 COPY client/ ./
-# Set API URL for production build
-ARG VITE_API_URL=https://www.coldaw.app
-ENV VITE_API_URL=$VITE_API_URL
+# Don't set VITE_API_URL - let it use empty string (relative paths) in production
+# This way frontend and backend on the same domain will work correctly
 RUN npm run build
 
 # Build stage for server
