@@ -40,17 +40,17 @@ const SidebarFooter = styled.div`
 `;
 
 const Logo = styled.h1`
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 900;
   letter-spacing: -1px;
   color: ${({ theme }) => theme.colors.accentOrange};
-  font-family: ${({ theme }) => theme.fonts.mono};
+  font-family: 'Poppins', ${({ theme }) => theme.fonts.sans};
   text-align: center;
 `;
 
 const UserSection = styled.div`
   background: ${({ theme }) => theme.colors.bgTertiary};
-  border-radius: 16px;
+  border-radius: 12px;
   padding: ${({ theme }) => theme.spacing.md};
   margin-bottom: ${({ theme }) => theme.spacing.xl};
 `;
@@ -65,6 +65,8 @@ const UserProfile = styled.div`
 const UserAvatar = styled.div`
   width: 48px;
   height: 48px;
+  min-width: 48px;
+  min-height: 48px;
   border-radius: 50%;
   background: linear-gradient(135deg, ${({ theme }) => theme.colors.accentOrange}, ${({ theme }) => theme.colors.accentBlue});
   display: flex;
@@ -80,14 +82,14 @@ const UserDetails = styled.div`
 `;
 
 const UserName = styled.div`
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   color: ${({ theme }) => theme.colors.textPrimary};
   margin-bottom: 4px;
 `;
 
 const UserEmail = styled.div`
-  font-size: 12px;
+  font-size: 11px;
   color: ${({ theme }) => theme.colors.textTertiary};
 `;
 
@@ -97,8 +99,8 @@ const AccountButton = styled.button`
   background: transparent;
   color: ${({ theme }) => theme.colors.textSecondary};
   border: 1px solid ${({ theme }) => theme.colors.borderColor};
-  border-radius: 10px;
-  font-size: 13px;
+  border-radius: 8px;
+  font-size: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -124,14 +126,14 @@ const SidebarNav = styled.div`
 const NavItem = styled.div<{ $active?: boolean }>`
   padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md};
   margin-bottom: ${({ theme }) => theme.spacing.xs};
-  border-radius: 12px;
+  border-radius: 8px;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: ${({ theme }) => theme.spacing.sm};
   color: ${({ theme, $active }) => $active ? theme.colors.textPrimary : theme.colors.textSecondary};
   background: ${({ theme, $active }) => $active ? theme.colors.bgTertiary : 'transparent'};
-  font-size: 14px;
+  font-size: 13px;
   
   &:hover {
     background: ${({ theme }) => theme.colors.bgTertiary};
@@ -139,8 +141,8 @@ const NavItem = styled.div<{ $active?: boolean }>`
   }
   
   svg {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
   }
 `;
 
@@ -162,7 +164,7 @@ const UploadArea = styled.div<{ $isDragging: boolean }>`
   height: 200px;
   border: 2px solid ${({ theme, $isDragging }) => 
     $isDragging ? theme.colors.accentOrange : theme.colors.borderColor};
-  border-radius: 20px;
+  border-radius: 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -189,14 +191,14 @@ const UploadIcon = styled(Upload)`
 `;
 
 const UploadText = styled.p`
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
   color: ${({ theme }) => theme.colors.textPrimary};
   margin-bottom: ${({ theme }) => theme.spacing.xs};
 `;
 
 const UploadHint = styled.p`
-  font-size: 13px;
+  font-size: 12px;
   color: ${({ theme }) => theme.colors.textTertiary};
 `;
 
@@ -210,7 +212,7 @@ const ProjectsGrid = styled.div`
 const ProjectCard = styled.div`
   background: ${({ theme }) => theme.colors.bgSecondary};
   border: 1px solid ${({ theme }) => theme.colors.borderColor};
-  border-radius: 18px;
+  border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -235,7 +237,7 @@ const ProjectInfo = styled.div`
 `;
 
 const ProjectTitle = styled.div`
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: ${({ theme }) => theme.colors.textPrimary};
   margin-bottom: ${({ theme }) => theme.spacing.xs};
@@ -264,7 +266,7 @@ const IconButton = styled.button`
   background: transparent;
   color: ${({ theme }) => theme.colors.textSecondary};
   border: 1px solid ${({ theme }) => theme.colors.borderColor};
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -310,21 +312,22 @@ const Modal = styled.div`
 const ModalContent = styled.div`
   background: ${({ theme }) => theme.colors.bgSecondary};
   border: 1px solid ${({ theme }) => theme.colors.borderColor};
-  border-radius: 16px;
+  border-radius: 12px;
   padding: ${({ theme }) => theme.spacing.xl};
   width: 400px;
 `;
 
 const ModalTitle = styled.h2`
-  font-size: 20px;
-  font-family: ${({ theme }) => theme.fonts.mono};
+  font-size: 18px;
+  font-family: 'Poppins', ${({ theme }) => theme.fonts.sans};
+  font-weight: 600;
   margin-bottom: ${({ theme }) => theme.spacing.lg};
   color: ${({ theme }) => theme.colors.textPrimary};
 `;
 
 const Label = styled.label`
   display: block;
-  font-size: 14px;
+  font-size: 13px;
   color: ${({ theme }) => theme.colors.textSecondary};
   margin-bottom: ${({ theme }) => theme.spacing.sm};
 `;
@@ -334,9 +337,9 @@ const TextInput = styled.input`
   padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md};
   background: ${({ theme }) => theme.colors.bgTertiary};
   border: 1px solid ${({ theme }) => theme.colors.borderColor};
-  border-radius: 10px;
+  border-radius: 8px;
   color: ${({ theme }) => theme.colors.textPrimary};
-  font-size: 14px;
+  font-size: 13px;
   margin-bottom: ${({ theme }) => theme.spacing.md};
   
   &:focus {
@@ -358,8 +361,8 @@ const Button = styled.button<{ $variant?: 'primary' | 'secondary' }>`
   color: ${({ theme }) => theme.colors.textPrimary};
   border: 1px solid ${({ theme, $variant }) => 
     $variant === 'primary' ? theme.colors.accentOrange : theme.colors.borderColor};
-  border-radius: 10px;
-  font-size: 14px;
+  border-radius: 8px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   

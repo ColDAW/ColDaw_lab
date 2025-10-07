@@ -48,7 +48,6 @@ const VersionInfo = styled.div`
   display: flex;
   align-items: center;
   gap: ${({ theme }) => theme.spacing.md};
-  flex: 1;
 `;
 
 const VersionMessage = styled.div<{ $isPending?: boolean }>`
@@ -77,7 +76,7 @@ const PushButton = styled.button<{ $hasChanges?: boolean }>`
   background: ${({ theme, $hasChanges }) => $hasChanges ? theme.colors.accentOrange : 'transparent'};
   color: ${({ theme, $hasChanges }) => $hasChanges ? 'white' : theme.colors.textSecondary};
   border: 1px solid ${({ theme, $hasChanges }) => $hasChanges ? theme.colors.accentOrange : theme.colors.borderColor};
-  border-radius: 10px;
+  border-radius: 8px;
   font-size: 13px;
   font-weight: ${({ $hasChanges }) => $hasChanges ? '600' : '400'};
   display: flex;
@@ -85,7 +84,7 @@ const PushButton = styled.button<{ $hasChanges?: boolean }>`
   gap: ${({ theme }) => theme.spacing.sm};
   cursor: pointer;
   transition: all 0.2s ease;
-  margin-left: auto;
+  margin-left: ${({ theme }) => theme.spacing.md};
   
   &:hover {
     background: ${({ theme, $hasChanges }) => $hasChanges ? theme.colors.accentBlue : theme.colors.bgTertiary};

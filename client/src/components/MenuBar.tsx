@@ -36,18 +36,19 @@ const Container = styled.div`
 `;
 
 const Logo = styled.div`
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 900;
   color: ${({ theme }) => theme.colors.accentOrange};
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: ${({ theme }) => theme.spacing.sm};
-  font-family: ${({ theme }) => theme.fonts.mono};
+  font-family: 'Poppins', ${({ theme }) => theme.fonts.sans};
 `;
 
 const ProjectName = styled.div`
-  font-size: 16px;
+  font-size: 15px;
+  font-weight: 600;
   color: ${({ theme }) => theme.colors.textPrimary};
   margin-left: ${({ theme }) => theme.spacing.md};
 `;
@@ -69,7 +70,7 @@ const Button = styled.button`
   background: transparent;
   color: ${({ theme }) => theme.colors.textSecondary};
   border: 1px solid ${({ theme }) => theme.colors.borderColor};
-  border-radius: 10px;
+  border-radius: 8px;
   font-size: 13px;
   display: flex;
   align-items: center;
@@ -114,7 +115,7 @@ const UserInfo = styled.div`
   gap: ${({ theme }) => theme.spacing.sm};
   padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md};
   background: ${({ theme }) => theme.colors.bgTertiary};
-  border-radius: 10px;
+  border-radius: 8px;
   margin-left: ${({ theme }) => theme.spacing.md};
 `;
 
@@ -128,7 +129,7 @@ const LogoutButton = styled.button`
   background: transparent;
   color: ${({ theme }) => theme.colors.textSecondary};
   border: 1px solid ${({ theme }) => theme.colors.borderColor};
-  border-radius: 8px;
+  border-radius: 6px;
   font-size: 12px;
   display: flex;
   align-items: center;

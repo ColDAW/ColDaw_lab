@@ -27,6 +27,13 @@ function ProjectThumbnail({ projectId, projectName }: ProjectThumbnailProps) {
     // Set canvas resolution
     const dpr = window.devicePixelRatio || 1;
     const rect = canvas.getBoundingClientRect();
+    
+    // Ensure canvas has valid dimensions
+    if (rect.width === 0 || rect.height === 0) {
+      console.warn('Canvas has zero dimensions, skipping render');
+      return;
+    }
+    
     canvas.width = rect.width * dpr;
     canvas.height = rect.height * dpr;
     ctx.scale(dpr, dpr);
