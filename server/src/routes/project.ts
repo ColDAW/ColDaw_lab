@@ -429,33 +429,42 @@ router.post('/init', requireAuth, upload.single('alsFile'), async (req: any, res
  * Get project details
  */
 router.get('/:projectId', async (req: any, res: any) => {
+  const startTime = Date.now();
   try {
     const { projectId } = req.params;
-    console.log('GET /api/projects/:projectId - Fetching project:', projectId);
+    console.log(`[${new Date().toISOString()}] GET /api/projects/:projectId - Start fetching project:`, projectId);
 
+    console.log('Step 1: Fetching project...');
+    const projectStart = Date.now();
     const project = await db.getProject(projectId);
-    console.log('Project fetched:', project ? 'found' : 'not found');
+    console.log(`Step 1: Project fetched in ${Date.now() - projectStart}ms:`, project ? 'found' : 'not found');
     
     if (!project) {
+      console.log('Project not found, returning 404');
       return res.status(404).json({ error: 'Project not found' });
     }
 
-    console.log('Fetching branches for project:', projectId);
+    console.log('Step 2: Fetching branches...');
+    const branchStart = Date.now();
     const branches = await db.getBranchesByProject(projectId);
-    console.log('Branches fetched:', branches.length);
+    console.log(`Step 2: Branches fetched in ${Date.now() - branchStart}ms:`, branches.length);
     
-    console.log('Fetching versions for project:', projectId);
+    console.log('Step 3: Fetching versions...');
+    const versionStart = Date.now();
     const versions = await db.getVersionsByProject(projectId);
-    console.log('Versions fetched:', versions.length);
+    console.log(`Step 3: Versions fetched in ${Date.now() - versionStart}ms:`, versions.length);
 
-    console.log('Sending response for project:', projectId);
+    const totalTime = Date.now() - startTime;
+    console.log(`[${new Date().toISOString()}] GET /api/projects/:projectId - Completed in ${totalTime}ms, sending response`);
+    
     res.json({
       project,
       branches,
       versions,
     });
   } catch (error: any) {
-    console.error('Error fetching project:', error);
+    const totalTime = Date.now() - startTime;
+    console.error(`[${new Date().toISOString()}] Error fetching project (after ${totalTime}ms):`, error);
     res.status(500).json({ error: error.message });
   }
 });

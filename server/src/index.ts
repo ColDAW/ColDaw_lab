@@ -63,8 +63,28 @@ app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/versions', versionRoutes);
 
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+app.get('/api/health', async (req, res) => {
+  try {
+    // Test database connection
+    const { db } = await import('./database/init');
+    const start = Date.now();
+    await db.getProjects(); // Simple query to test DB
+    const dbTime = Date.now() - start;
+    
+    res.json({ 
+      status: 'ok', 
+      timestamp: new Date().toISOString(),
+      database: 'connected',
+      dbQueryTime: `${dbTime}ms`
+    });
+  } catch (error: any) {
+    res.status(500).json({ 
+      status: 'error', 
+      timestamp: new Date().toISOString(),
+      database: 'error',
+      error: error.message
+    });
+  }
 });
 
 // Setup Socket.io for real-time collaboration
