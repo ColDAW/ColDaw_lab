@@ -686,53 +686,30 @@ router.delete('/:projectId', async (req: any, res: any) => {
     const { projectId } = req.params;
     const { userId } = req.query;
 
-    console.log('Delete project request:', { projectId, userId });
-
     const project = await db.getProject(projectId);
     
     if (!project) {
-      console.log('Project not found:', projectId);
       return res.status(404).json({ error: 'Project not found' });
     }
 
-    console.log('Project found:', { 
-      projectId: project.id, 
-      projectUserId: project.user_id,
-      requestUserId: userId,
-      userIdType: typeof project.user_id,
-      requestUserIdType: typeof userId
-    });
-
     // Check if user owns the project
-    // Convert both to strings for comparison to avoid type mismatch
-    if (userId && project.user_id) {
-      const projectUserId = String(project.user_id);
-      const requestUserId = String(userId);
-      
-      if (projectUserId !== requestUserId) {
-        console.log('Unauthorized delete attempt:', { projectUserId, requestUserId });
-        return res.status(403).json({ error: 'Unauthorized: You do not own this project' });
-      }
+    if (userId && project.user_id && project.user_id !== userId) {
+      return res.status(403).json({ error: 'Unauthorized' });
     }
 
     // Delete project directory
     const projectDir = path.join(__dirname, '..', '..', 'projects', projectId);
     if (fs.existsSync(projectDir)) {
-      console.log('Deleting project directory:', projectDir);
       fs.rmSync(projectDir, { recursive: true, force: true });
-    } else {
-      console.log('Project directory not found:', projectDir);
     }
 
     // Delete from database
-    console.log('Deleting project from database:', projectId);
     await db.deleteProject(projectId);
 
-    console.log('Project deleted successfully:', projectId);
     res.json({ message: 'Project deleted successfully' });
   } catch (error: any) {
     console.error('Error deleting project:', error);
-    res.status(500).json({ error: error.message || 'Failed to delete project' });
+    res.status(500).json({ error: error.message });
   }
 });
 

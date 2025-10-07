@@ -35,12 +35,12 @@ export const theme = {
   sizes: {
     headerHeight: '48px',
     sidebarWidth: '240px',
-    trackHeight: '64px',
+    trackHeight: '48px',
   },
   
   fonts: {
     mono: "'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace",
-    sans: "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', sans-serif",
+    sans: "'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', sans-serif",
     logo: '"Righteous", "Impact", "Haettenschweiler", "Arial Black", sans-serif',
   },
 };

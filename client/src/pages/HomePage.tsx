@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { Upload, Folder, Edit2, Trash2, Copy, User } from 'lucide-react';
+import { Upload, Folder, Edit2, Trash2, Copy, User, Settings } from 'lucide-react';
 import { projectApi } from '../api/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useModal } from '../contexts/ModalContext';
@@ -25,24 +25,41 @@ const Sidebar = styled.div`
   padding: ${({ theme }) => theme.spacing.xl};
 `;
 
-const SidebarHeader = styled.div`
-  margin-bottom: ${({ theme }) => theme.spacing.xl};
+const SidebarContent = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+`;
+
+const SidebarFooter = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: ${({ theme }) => theme.spacing.lg};
+  border-top: 1px solid ${({ theme }) => theme.colors.borderColor};
 `;
 
 const Logo = styled.h1`
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 900;
   letter-spacing: -1px;
   color: ${({ theme }) => theme.colors.accentOrange};
   font-family: ${({ theme }) => theme.fonts.mono};
-  margin-bottom: ${({ theme }) => theme.spacing.lg};
+  text-align: center;
 `;
 
 const UserSection = styled.div`
   background: ${({ theme }) => theme.colors.bgTertiary};
-  border-radius: 8px;
+  border-radius: 16px;
   padding: ${({ theme }) => theme.spacing.md};
   margin-bottom: ${({ theme }) => theme.spacing.xl};
+`;
+
+const UserProfile = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing.md};
+  margin-bottom: ${({ theme }) => theme.spacing.md};
 `;
 
 const UserAvatar = styled.div`
@@ -80,17 +97,16 @@ const AccountButton = styled.button`
   background: transparent;
   color: ${({ theme }) => theme.colors.textSecondary};
   border: 1px solid ${({ theme }) => theme.colors.borderColor};
-  border-radius: 4px;
+  border-radius: 10px;
   font-size: 13px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: ${({ theme }) => theme.spacing.xs};
   cursor: pointer;
-  margin-bottom: ${({ theme }) => theme.spacing.md};
   
   &:hover {
-    background: ${({ theme }) => theme.colors.bgTertiary};
+    background: ${({ theme }) => theme.colors.bgHover};
     color: ${({ theme }) => theme.colors.textPrimary};
     border-color: ${({ theme }) => theme.colors.borderActive};
   }
@@ -108,7 +124,7 @@ const SidebarNav = styled.div`
 const NavItem = styled.div<{ $active?: boolean }>`
   padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md};
   margin-bottom: ${({ theme }) => theme.spacing.xs};
-  border-radius: 6px;
+  border-radius: 12px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -135,24 +151,6 @@ const MainContent = styled.div`
   overflow: hidden;
 `;
 
-const ContentHeader = styled.div`
-  padding: ${({ theme }) => theme.spacing.xl};
-  border-bottom: 1px solid ${({ theme }) => theme.colors.borderColor};
-`;
-
-const HeaderTitle = styled.h2`
-  font-size: 24px;
-  font-weight: 600;
-  font-family: ${({ theme }) => theme.fonts.mono};
-  color: ${({ theme }) => theme.colors.textPrimary};
-  margin-bottom: ${({ theme }) => theme.spacing.sm};
-`;
-
-const HeaderSubtitle = styled.p`
-  font-size: 14px;
-  color: ${({ theme }) => theme.colors.textSecondary};
-`;
-
 const Content = styled.div`
   flex: 1;
   overflow-y: auto;
@@ -162,22 +160,24 @@ const Content = styled.div`
 const UploadArea = styled.div<{ $isDragging: boolean }>`
   width: 100%;
   height: 200px;
-  border: 2px dashed ${({ theme, $isDragging }) => 
+  border: 2px solid ${({ theme, $isDragging }) => 
     $isDragging ? theme.colors.accentOrange : theme.colors.borderColor};
-  border-radius: 12px;
+  border-radius: 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   background: ${({ theme, $isDragging }) => 
-    $isDragging ? theme.colors.bgTertiary : theme.colors.bgSecondary};
+    $isDragging 
+      ? theme.colors.bgTertiary 
+      : `linear-gradient(135deg, ${theme.colors.bgSecondary} 0%, rgba(30, 30, 30, 0.5) 100%)`};
   cursor: pointer;
   transition: all 0.2s ease;
   margin-bottom: ${({ theme }) => theme.spacing.xl};
   
   &:hover {
     border-color: ${({ theme }) => theme.colors.borderActive};
-    background: ${({ theme }) => theme.colors.bgTertiary};
+    background: ${({ theme }) => `linear-gradient(135deg, ${theme.colors.bgTertiary} 0%, rgba(30, 30, 30, 0.7) 100%)`};
   }
 `;
 
@@ -210,7 +210,7 @@ const ProjectsGrid = styled.div`
 const ProjectCard = styled.div`
   background: ${({ theme }) => theme.colors.bgSecondary};
   border: 1px solid ${({ theme }) => theme.colors.borderColor};
-  border-radius: 12px;
+  border-radius: 18px;
   overflow: hidden;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -264,7 +264,7 @@ const IconButton = styled.button`
   background: transparent;
   color: ${({ theme }) => theme.colors.textSecondary};
   border: 1px solid ${({ theme }) => theme.colors.borderColor};
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -310,7 +310,7 @@ const Modal = styled.div`
 const ModalContent = styled.div`
   background: ${({ theme }) => theme.colors.bgSecondary};
   border: 1px solid ${({ theme }) => theme.colors.borderColor};
-  border-radius: 8px;
+  border-radius: 16px;
   padding: ${({ theme }) => theme.spacing.xl};
   width: 400px;
 `;
@@ -334,7 +334,7 @@ const TextInput = styled.input`
   padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md};
   background: ${({ theme }) => theme.colors.bgTertiary};
   border: 1px solid ${({ theme }) => theme.colors.borderColor};
-  border-radius: 4px;
+  border-radius: 10px;
   color: ${({ theme }) => theme.colors.textPrimary};
   font-size: 14px;
   margin-bottom: ${({ theme }) => theme.spacing.md};
@@ -358,7 +358,7 @@ const Button = styled.button<{ $variant?: 'primary' | 'secondary' }>`
   color: ${({ theme }) => theme.colors.textPrimary};
   border: 1px solid ${({ theme, $variant }) => 
     $variant === 'primary' ? theme.colors.accentOrange : theme.colors.borderColor};
-  border-radius: 4px;
+  border-radius: 10px;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -594,44 +594,47 @@ function HomePage() {
       
       {/* Left Sidebar */}
       <Sidebar>
-        <SidebarHeader>
-          <Logo>ColDAW</Logo>
-        </SidebarHeader>
+        <SidebarContent>
+          {user && (
+            <>
+              <UserSection>
+                <UserProfile>
+                  <UserAvatar>
+                    {user.username.charAt(0).toUpperCase()}
+                  </UserAvatar>
+                  <UserDetails>
+                    <UserName>{user.username}</UserName>
+                    <UserEmail>{user.email || 'user@coldaw.com'}</UserEmail>
+                  </UserDetails>
+                </UserProfile>
+                
+                <AccountButton onClick={() => navigate('/account')}>
+                  <User size={16} />
+                  Account
+                </AccountButton>
+              </UserSection>
+              
+              <SidebarNav>
+                <NavItem $active>
+                  <Folder size={16} />
+                  Projects
+                </NavItem>
+                <NavItem>
+                  <Settings size={16} />
+                  Settings
+                </NavItem>
+              </SidebarNav>
+            </>
+          )}
+        </SidebarContent>
         
-        {user && (
-          <>
-            <UserSection>
-              <UserAvatar>
-                {user.username.charAt(0).toUpperCase()}
-              </UserAvatar>
-              <UserDetails>
-                <UserName>{user.username}</UserName>
-                <UserEmail>{user.email || 'user@coldaw.com'}</UserEmail>
-              </UserDetails>
-            </UserSection>
-            
-            <AccountButton onClick={() => navigate('/account')}>
-              <User size={16} />
-              Account
-            </AccountButton>
-            
-            <SidebarNav>
-              <NavItem $active>
-                <Folder size={16} />
-                Projects
-              </NavItem>
-            </SidebarNav>
-          </>
-        )}
+        <SidebarFooter>
+          <Logo>ColDAW</Logo>
+        </SidebarFooter>
       </Sidebar>
       
       {/* Main Content */}
       <MainContent>
-        <ContentHeader>
-          <HeaderTitle>Projects</HeaderTitle>
-          <HeaderSubtitle>Manage and collaborate on your DAW projects</HeaderSubtitle>
-        </ContentHeader>
-        
         <Content>
           {/* Upload Area */}
           <UploadArea

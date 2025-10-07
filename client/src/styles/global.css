@@ -30,7 +30,7 @@
   
   /* Typography */
   --font-mono: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
-  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', sans-serif;
+  --font-sans: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', sans-serif;
   
   /* Spacing */
   --space-xs: 4px;
@@ -42,7 +42,7 @@
   /* Sizing */
   --header-height: 48px;
   --sidebar-width: 240px;
-  --track-height: 64px;
+  --track-height: 48px;
 }
 
 body {

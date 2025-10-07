@@ -10,7 +10,6 @@ import {
   ArrowLeft,
   LogOut,
   User,
-  GitCommit,
   UserPlus,
 } from 'lucide-react';
 import { useStore } from '../store/useStore';
@@ -23,6 +22,7 @@ interface MenuBarProps {
   showingHistory?: boolean;
   onVersionCommitted?: () => void;
   currentVersionId?: string;
+  onFileImported?: (file: File) => void;
 }
 
 const Container = styled.div`
@@ -69,7 +69,7 @@ const Button = styled.button`
   background: transparent;
   color: ${({ theme }) => theme.colors.textSecondary};
   border: 1px solid ${({ theme }) => theme.colors.borderColor};
-  border-radius: 4px;
+  border-radius: 10px;
   font-size: 13px;
   display: flex;
   align-items: center;
@@ -114,7 +114,7 @@ const UserInfo = styled.div`
   gap: ${({ theme }) => theme.spacing.sm};
   padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md};
   background: ${({ theme }) => theme.colors.bgTertiary};
-  border-radius: 4px;
+  border-radius: 10px;
   margin-left: ${({ theme }) => theme.spacing.md};
 `;
 
@@ -128,7 +128,7 @@ const LogoutButton = styled.button`
   background: transparent;
   color: ${({ theme }) => theme.colors.textSecondary};
   border: 1px solid ${({ theme }) => theme.colors.borderColor};
-  border-radius: 4px;
+  border-radius: 8px;
   font-size: 12px;
   display: flex;
   align-items: center;
@@ -149,37 +149,6 @@ const LogoutButton = styled.button`
 
 const HiddenInput = styled.input`
   display: none;
-`;
-
-const PushButton = styled.button<{ $hasChanges?: boolean }>`
-  padding: ${({ theme }) => theme.spacing.xs} ${({ theme }) => theme.spacing.md};
-  background: ${({ theme, $hasChanges }) => $hasChanges ? theme.colors.accentOrange : 'transparent'};
-  color: ${({ theme, $hasChanges }) => $hasChanges ? 'white' : theme.colors.textSecondary};
-  border: 1px solid ${({ theme, $hasChanges }) => $hasChanges ? theme.colors.accentOrange : theme.colors.borderColor};
-  border-radius: 4px;
-  font-size: 13px;
-  font-weight: ${({ $hasChanges }) => $hasChanges ? '600' : '400'};
-  display: flex;
-  align-items: center;
-  gap: ${({ theme }) => theme.spacing.sm};
-  cursor: pointer;
-  transition: all 0.2s ease;
-  
-  &:hover {
-    background: ${({ theme, $hasChanges }) => $hasChanges ? theme.colors.accentBlue : theme.colors.bgTertiary};
-    color: white;
-    border-color: ${({ theme, $hasChanges }) => $hasChanges ? theme.colors.accentBlue : theme.colors.borderActive};
-  }
-  
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-  
-  svg {
-    width: 16px;
-    height: 16px;
-  }
 `;
 
 const InviteButton = styled.button`
@@ -207,14 +176,12 @@ const InviteButton = styled.button`
   }
 `;
 
-function MenuBar({ onToggleHistory, onVersionCommitted, currentVersionId }: MenuBarProps = {}) {
+function MenuBar({ onToggleHistory, onVersionCommitted, currentVersionId, onFileImported }: MenuBarProps = {}) {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { showAlert, showConfirm, showPrompt } = useModal();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { currentProject, collaborators, setPendingData, clearPendingChanges, vstTempFileName } = useStore();
-  const [isPushing, setIsPushing] = useState(false);
-  const [importedFile, setImportedFile] = useState<File | null>(null);
+  const { currentProject, collaborators, setPendingData } = useStore();
   const [isImporting, setIsImporting] = useState(false);
 
   const handleBack = () => {
@@ -291,8 +258,10 @@ function MenuBar({ onToggleHistory, onVersionCommitted, currentVersionId }: Menu
       // Store the parsed data as pending changes
       setPendingData(result.data);
       
-      // Store the file for later push
-      setImportedFile(file);
+      // Store the file for later push - call parent callback
+      if (onFileImported) {
+        onFileImported(file);
+      }
       
       await showAlert({ message: `File "${file.name}" imported successfully! Click Push to commit to version system.`, type: 'success' });
     } catch (error) {
@@ -304,56 +273,6 @@ function MenuBar({ onToggleHistory, onVersionCommitted, currentVersionId }: Menu
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
-    }
-  };
-
-  // Push: Commit imported changes to version system
-  const handlePush = async () => {
-    if ((!importedFile && !vstTempFileName) || !currentProject || !user) {
-      await showAlert({ message: 'No changes to push. Please import a file first.', type: 'warning' });
-      return;
-    }
-    
-    const message = await showPrompt({ message: 'Commit message:', placeholder: 'Enter commit message' });
-    if (!message) return;
-    
-    setIsPushing(true);
-    try {
-      if (vstTempFileName) {
-        // Push from VST import (temp file on server)
-        await versionApi.commitVSTImport(
-          currentProject.id,
-          vstTempFileName,
-          currentProject.current_branch,
-          message,
-          user.id
-        );
-      } else if (importedFile) {
-        // Normal file upload push
-        await versionApi.commitVersion(
-          currentProject.id,
-          importedFile,
-          currentProject.current_branch,
-          message,
-          user.id  // Use user.id instead of username
-        );
-      }
-      
-      await showAlert({ message: 'Changes pushed successfully!', type: 'success' });
-      
-      // Clear pending changes
-      clearPendingChanges();
-      setImportedFile(null);
-      
-      // Call the callback to reload project data without full page reload
-      if (onVersionCommitted) {
-        onVersionCommitted();
-      }
-    } catch (error) {
-      console.error('Error pushing version:', error);
-      await showAlert({ message: 'Failed to push changes', type: 'error' });
-    } finally {
-      setIsPushing(false);
     }
   };
 
@@ -466,16 +385,6 @@ function MenuBar({ onToggleHistory, onVersionCommitted, currentVersionId }: Menu
       </ButtonGroup>
       
       <Separator />
-      
-      {/* Push button - positioned with collaborators */}
-      <PushButton 
-        onClick={handlePush} 
-        disabled={isPushing || (!importedFile && !vstTempFileName)}
-        $hasChanges={!!(importedFile || vstTempFileName)}
-      >
-        <GitCommit />
-        {isPushing ? 'Pushing...' : 'Push'}
-      </PushButton>
       
       {collaborators.length > 0 && (
         <CollaboratorsList>

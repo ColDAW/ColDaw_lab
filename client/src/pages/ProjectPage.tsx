@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import styled from 'styled-components';
 import { useStore } from '../store/useStore';
@@ -68,11 +68,15 @@ function ProjectPage() {
     disconnectSocket,
     setPendingData,
     setVSTTempFileName,
+    vstTempFileName,
+    clearPendingChanges,
   } = useStore();
   
   const [isLoading, setIsLoading] = useState(true);
   const [showVersionHistory, setShowVersionHistory] = useState(false);
   const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null);
+  const [isPushing, setIsPushing] = useState(false);
+  const [importedFile, setImportedFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (!projectId) return;
@@ -268,6 +272,54 @@ function ProjectPage() {
     await loadProject();
   };
 
+  // Push: Commit imported changes to version system
+  const handlePush = async () => {
+    if ((!importedFile && !vstTempFileName) || !currentProject || !user) {
+      await showAlert({ message: 'No changes to push. Please import a file first.', type: 'warning' });
+      return;
+    }
+    
+    const message = await showPrompt({ message: 'Commit message:', placeholder: 'Enter commit message' });
+    if (!message) return;
+    
+    setIsPushing(true);
+    try {
+      if (vstTempFileName) {
+        // Push from VST import (temp file on server)
+        await versionApi.commitVSTImport(
+          currentProject.id,
+          vstTempFileName,
+          currentProject.current_branch,
+          message,
+          user.id
+        );
+      } else if (importedFile) {
+        // Normal file upload push
+        await versionApi.commitVersion(
+          currentProject.id,
+          importedFile,
+          currentProject.current_branch,
+          message,
+          user.id
+        );
+      }
+      
+      await showAlert({ message: 'Changes pushed successfully!', type: 'success' });
+      
+      // Clear pending changes
+      clearPendingChanges();
+      setImportedFile(null);
+      
+      // Reload project data
+      await handleVersionCommitted();
+    } catch (error) {
+      console.error('Error pushing version:', error);
+      await showAlert({ message: 'Failed to push changes', type: 'error' });
+    } finally {
+      setIsPushing(false);
+    }
+  };
+
   if (authLoading || isLoading) {
     return (
       <Container>
@@ -291,6 +343,7 @@ function ProjectPage() {
         showingHistory={showVersionHistory}
         onVersionCommitted={handleVersionCommitted}
         currentVersionId={selectedVersionId || undefined}
+        onFileImported={(file) => setImportedFile(file)}
       />
       {hasPendingChanges && (
         <PendingChangesBar>
@@ -311,7 +364,11 @@ function ProjectPage() {
           />
         ) : (
           <>
-            <Timeline />
+            <Timeline 
+              onPush={handlePush}
+              isPushing={isPushing}
+              hasChanges={!!(importedFile || vstTempFileName)}
+            />
             <ArrangementView tracks={projectData.tracks} tempo={projectData.tempo} />
             <CollaboratorCursors />
           </>
