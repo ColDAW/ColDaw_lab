@@ -24,8 +24,11 @@ interface Version {
   branch: string;
   parent_id: string | null;
   message: string;
-  author: string;
-  timestamp: number;
+  author?: string;
+  user_id?: string;
+  user_name?: string;
+  timestamp?: number;
+  created_at?: string;
   data_path: string;
 }
 

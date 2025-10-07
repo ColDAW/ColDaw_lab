@@ -148,13 +148,15 @@ function ProjectPage() {
       
       // Load project details
       const projectDetails = await projectApi.getProject(projectId);
-      console.log('Project details loaded:', projectDetails);
+      console.log('[ProjectPage] Project details loaded:', projectDetails);
+      console.log('[ProjectPage] Versions:', projectDetails.versions);
       
       clearTimeout(timeoutId); // Cancel timeout if successful
       
       setCurrentProject(projectDetails.project);
       setBranches(projectDetails.branches);
       setVersions(projectDetails.versions);
+      console.log('[ProjectPage] Set versions to store:', projectDetails.versions);
       
       // Load latest version data
       if (projectDetails.versions.length > 0) {

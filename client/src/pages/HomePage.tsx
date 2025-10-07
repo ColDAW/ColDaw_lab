@@ -192,22 +192,20 @@ const UploadArea = styled.div<{ $isDragging: boolean }>`
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 140%;
-    height: 140%;
-    transform: translate(-50%, -50%) rotate(-45deg);
+    width: 100%;
+    height: 350px;
+    transform: translate(-50%, 50px) rotate(-10deg);
     background-image: linear-gradient(
       90deg,
-      transparent 0%,
       #89aaf8 20%,
       #b770fc 40%,
       #d24dc3 60%,
       #e85560 80%,
-      #ee7b6b 90%,
-      transparent 100%
+      #ee7b6b 100%
     );
-    background-size: 0% 100%;
+    background-size: 0% 0%;
     background-repeat: no-repeat;
-    background-position: left center;
+    background-position: top center;
     filter: blur(35px);
     opacity: 0;
     transition: all 0.6s ease-out;
@@ -216,7 +214,7 @@ const UploadArea = styled.div<{ $isDragging: boolean }>`
   }
   
   &:hover::before {
-    background-size: 200% 100%;
+    background-size: 100% 20%;
     opacity: 1;
   }
   

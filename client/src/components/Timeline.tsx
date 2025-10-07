@@ -228,10 +228,10 @@ function Timeline({ onPush, isPushing, hasChanges, zoom = 1, onZoomChange }: Tim
               <>
                 <VersionMeta>
                   <Clock size={12} />
-                  {formatDate(currentVersion.timestamp)}
+                  {formatDate(currentVersion.timestamp || currentVersion.created_at)}
                 </VersionMeta>
                 <VersionMeta>
-                  by {currentVersion.author || 'Unknown'}
+                  by {currentVersion.author || currentVersion.user_name || currentVersion.user_id || 'Unknown'}
                 </VersionMeta>
               </>
             )}
