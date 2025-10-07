@@ -566,7 +566,7 @@ router.patch('/:projectId', async (req: any, res: any) => {
  * POST /api/projects/:projectId/duplicate
  * Duplicate a project
  */
-router.post('/:projectId/duplicate', async (req: any, res: any) => {
+router.post('/:projectId/duplicate', requireAuth, async (req: any, res: any) => {
   try {
     const { projectId } = req.params;
     const { name, userId } = req.body;
@@ -689,7 +689,7 @@ router.delete('/:projectId', async (req: any, res: any) => {
  * POST /api/projects/:projectId/invite
  * Invite a collaborator to the project
  */
-router.post('/:projectId/invite', async (req: any, res: any) => {
+router.post('/:projectId/invite', requireAuth, async (req: any, res: any) => {
   try {
     const { projectId } = req.params;
     const { email, invitedBy } = req.body;

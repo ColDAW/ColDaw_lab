@@ -5,6 +5,7 @@ import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import { ALSParser } from '../utils/alsParser';
 import { db } from '../database/init';
+import { requireAuth } from './auth';
 
 const router = Router();
 
@@ -122,7 +123,7 @@ router.post('/:projectId/commit', upload.single('alsFile'), async (req: any, res
   }
 });
 
-router.post('/:projectId/branch', async (req: any, res: any) => {
+router.post('/:projectId/branch', requireAuth, async (req: any, res: any) => {
   try {
     const { projectId } = req.params;
     const { name, fromBranch, fromVersionId } = req.body;
@@ -175,7 +176,7 @@ router.post('/:projectId/branch', async (req: any, res: any) => {
   }
 });
 
-router.post('/:projectId/merge', async (req: any, res: any) => {
+router.post('/:projectId/merge', requireAuth, async (req: any, res: any) => {
   try {
     const { projectId } = req.params;
     const { sourceBranch, targetBranch, author } = req.body;
@@ -276,7 +277,7 @@ router.get('/:projectId/download/:versionId', async (req: any, res: any) => {
 });
 
 // Revert to a specific version (creates a new commit with the old version's data)
-router.post('/:projectId/revert/:versionId', async (req: any, res: any) => {
+router.post('/:projectId/revert/:versionId', requireAuth, async (req: any, res: any) => {
   try {
     const { projectId, versionId } = req.params;
     const { branch, message, author } = req.body;
