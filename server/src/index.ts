@@ -79,9 +79,11 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 });
 
 httpServer.listen(PORT, () => {
+  const deployTime = new Date().toISOString();
   console.log(`🚀 ColDaw server running on port ${PORT}`);
   console.log(`📁 Upload directory: ${uploadDir}`);
   console.log(`💾 Projects directory: ${projectsDir}`);
+  console.log(`🔄 Server version: ${deployTime} (log optimization applied)`);
 });
 
 export { io };
