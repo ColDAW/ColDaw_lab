@@ -56,7 +56,13 @@ if (!fs.existsSync(projectsDir)) fs.mkdirSync(projectsDir, { recursive: true });
 
 // Initialize database
 // Initialize database (includes clearing stale collaborators)
-initDatabase().catch(console.error);
+initDatabase()
+  .then(() => {
+    console.log('✅ Database initialization completed');
+  })
+  .catch((error) => {
+    console.error('❌ Database initialization failed, but server will continue:', error);
+  });
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -64,6 +70,22 @@ app.use('/api/projects', projectRoutes);
 app.use('/api/versions', versionRoutes);
 
 app.get('/api/health', async (req, res) => {
+  try {
+    res.json({ 
+      status: 'ok', 
+      timestamp: new Date().toISOString(),
+      message: 'Server is running'
+    });
+  } catch (error: any) {
+    res.status(500).json({ 
+      status: 'error', 
+      timestamp: new Date().toISOString(),
+      error: error.message
+    });
+  }
+});
+
+app.get('/api/health/db', async (req, res) => {
   try {
     // Test database connection
     const { db } = await import('./database/init');
