@@ -123,12 +123,25 @@ function ProjectPage() {
     if (!projectId) return;
     
     setIsLoading(true);
+    
+    // Set a manual timeout as a failsafe
+    const timeoutId = setTimeout(() => {
+      console.error('Load project timeout after 15 seconds');
+      setIsLoading(false);
+      showAlert({ 
+        message: 'Loading project timed out. Please refresh the page and try again.', 
+        type: 'error' 
+      });
+    }, 15000);
+    
     try {
       console.log('Loading project:', projectId);
       
       // Load project details
       const projectDetails = await projectApi.getProject(projectId);
       console.log('Project details loaded:', projectDetails);
+      
+      clearTimeout(timeoutId); // Cancel timeout if successful
       
       setCurrentProject(projectDetails.project);
       setBranches(projectDetails.branches);
@@ -149,6 +162,7 @@ function ProjectPage() {
         setProjectData(null);
       }
     } catch (error: any) {
+      clearTimeout(timeoutId); // Cancel timeout on error
       console.error('Error loading project:', error);
       console.error('Error details:', {
         message: error.message,
