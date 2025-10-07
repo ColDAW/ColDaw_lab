@@ -168,6 +168,23 @@ cd vst-plugin
 
 See [vst-plugin/QUICKSTART.md](vst-plugin/QUICKSTART.md) for detailed instructions.
 
+## 🚀 Deployment
+
+### Railway Deployment
+
+ColDaw can be easily deployed to [Railway](https://railway.app) with PostgreSQL database support.
+
+See [RAILWAY_DEPLOYMENT.md](RAILWAY_DEPLOYMENT.md) for detailed deployment instructions.
+
+Quick steps:
+1. Push your code to GitHub
+2. Connect your repo to Railway
+3. Add PostgreSQL service
+4. Configure environment variables
+5. Deploy!
+
+### Development
+
 3. Open http://localhost:5173 in your browser
 
 ### Quick Start
