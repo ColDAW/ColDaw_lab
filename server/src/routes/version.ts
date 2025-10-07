@@ -207,7 +207,7 @@ router.post('/:projectId/merge', requireAuth, async (req: any, res: any) => {
       project_id: projectId,
       branch: targetBranch,
       message: `Merge '${sourceBranch}' into '${targetBranch}'`,
-      user_id: author || 'anonymous-system',
+      user_id: req.user_id, // Use authenticated user ID
       timestamp: now,
       files: sourceData,
     });
@@ -314,7 +314,7 @@ router.post('/:projectId/revert/:versionId', requireAuth, async (req: any, res: 
       project_id: projectId,
       branch: branch || 'main',
       message: revertMessage,
-      user_id: author || 'anonymous-system',
+      user_id: req.user_id, // Use authenticated user ID
       timestamp: now,
       files: dataPath,
     });
