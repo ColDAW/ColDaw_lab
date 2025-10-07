@@ -227,14 +227,15 @@ interface Track {
 
 interface ArrangementViewProps {
   tracks: Track[];
-  tempo: number;
+  tempo?: number;
+  zoom?: number;
 }
 
-function ArrangementView({ tracks }: ArrangementViewProps) {
+function ArrangementView({ tracks, zoom = 1 }: ArrangementViewProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const timeRulerRef = useRef<HTMLDivElement>(null);
   const { pendingData, hasPendingChanges } = useStore();
-  const [pixelsPerBeat] = useState(20); // 增加缩放级别
+  const pixelsPerBeat = 20 * zoom; // Apply zoom to base pixels per beat
   const [maxBeat, setMaxBeat] = useState(128);
   
   // 计算clip的diff类型
@@ -353,7 +354,7 @@ function ArrangementView({ tracks }: ArrangementViewProps) {
     });
     console.log(`Max beat calculated: ${max}`);
     setMaxBeat(max);
-  }, [displayTracksWithDiff]);
+  }, [displayTracksWithDiff, zoom]);
 
   const totalWidth = maxBeat * pixelsPerBeat;
   

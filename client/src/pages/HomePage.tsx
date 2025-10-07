@@ -39,13 +39,13 @@ const SidebarFooter = styled.div`
   border-top: 1px solid ${({ theme }) => theme.colors.borderColor};
 `;
 
-const Logo = styled.h1`
-  font-size: 18px;
-  font-weight: 900;
-  letter-spacing: -1px;
-  color: ${({ theme }) => theme.colors.accentOrange};
+const Logo = styled.div`
+  font-size: 16px;
+  font-weight: 400;
   font-family: 'Poppins', ${({ theme }) => theme.fonts.sans};
+  color: ${({ theme }) => theme.colors.textSecondary};
   text-align: center;
+  padding: ${({ theme }) => theme.spacing.md};
 `;
 
 const UserSection = styled.div`
@@ -79,6 +79,7 @@ const UserAvatar = styled.div`
 
 const UserDetails = styled.div`
   flex: 1;
+  min-width: 0;
 `;
 
 const UserName = styled.div`
@@ -86,11 +87,17 @@ const UserName = styled.div`
   font-weight: 600;
   color: ${({ theme }) => theme.colors.textPrimary};
   margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
 const UserEmail = styled.div`
   font-size: 11px;
   color: ${({ theme }) => theme.colors.textTertiary};
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
 const AccountButton = styled.button`

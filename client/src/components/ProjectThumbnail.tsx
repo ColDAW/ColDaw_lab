@@ -56,48 +56,53 @@ function ProjectThumbnail({ projectId, projectName }: ProjectThumbnailProps) {
     height: number
   ) => {
     try {
-      console.log('Fetching project data for:', id);
+      console.log('[ProjectThumbnail] Fetching project data for:', id);
       const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
       
       // Fetch the version history of the project
       const response = await fetch(`${API_BASE_URL}/api/versions/${id}/history`);
       if (!response.ok) {
-        console.warn('Failed to fetch versions for project:', id, response.status);
+        console.warn('[ProjectThumbnail] Failed to fetch versions for project:', id, 'status:', response.status);
         renderPlaceholder(ctx, width, height);
         return;
       }
 
       const versions = await response.json();
+      console.log('[ProjectThumbnail] Received versions:', versions);
+      
       if (!versions || versions.length === 0) {
-        console.warn('No versions found for project:', id);
+        console.warn('[ProjectThumbnail] No versions found for project:', id);
         renderPlaceholder(ctx, width, height);
         return;
       }
 
-      console.log('Found', versions.length, 'versions for project:', id);
+      console.log('[ProjectThumbnail] Found', versions.length, 'versions for project:', id);
 
       // Get the latest version data
       const latestVersion = versions[0];
+      console.log('[ProjectThumbnail] Latest version:', latestVersion);
+      
       const versionResponse = await fetch(
         `${API_BASE_URL}/api/projects/${id}/version/${latestVersion.id}`
       );
       if (!versionResponse.ok) {
-        console.warn('Failed to fetch version data for version:', latestVersion.id, versionResponse.status);
+        console.warn('[ProjectThumbnail] Failed to fetch version data for version:', latestVersion.id, 'status:', versionResponse.status);
         renderPlaceholder(ctx, width, height);
         return;
       }
 
       const versionResult = await versionResponse.json();
-      console.log('Got version data, tracks:', versionResult.data?.tracks?.length || 0);
+      console.log('[ProjectThumbnail] Got version result:', versionResult);
+      console.log('[ProjectThumbnail] Version data tracks:', versionResult.data?.tracks);
       
       if (versionResult.data && versionResult.data.tracks) {
         renderProjectData(versionResult.data, ctx, width, height);
       } else {
-        console.warn('No track data in version');
+        console.warn('[ProjectThumbnail] No track data in version, full result:', JSON.stringify(versionResult, null, 2));
         renderPlaceholder(ctx, width, height);
       }
     } catch (error) {
-      console.error('Error rendering project thumbnail:', error);
+      console.error('[ProjectThumbnail] Error rendering project thumbnail:', error);
       renderPlaceholder(ctx, width, height);
     }
   };

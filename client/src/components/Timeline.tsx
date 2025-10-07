@@ -1,11 +1,13 @@
 import styled from 'styled-components';
 import { useStore } from '../store/useStore';
-import { Clock, GitCommit } from 'lucide-react';
+import { Clock, GitCommit, ZoomIn } from 'lucide-react';
 
 interface TimelineProps {
   onPush?: () => void;
   isPushing?: boolean;
   hasChanges?: boolean;
+  zoom?: number;
+  onZoomChange?: (zoom: number) => void;
 }
 
 const Container = styled.div`
@@ -103,7 +105,72 @@ const PushButton = styled.button<{ $hasChanges?: boolean }>`
   }
 `;
 
-function Timeline({ onPush, isPushing, hasChanges }: TimelineProps) {
+const ZoomControl = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing.md};
+  margin-left: auto;
+  padding-right: ${({ theme }) => theme.spacing.lg};
+`;
+
+const ZoomLabel = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing.xs};
+  color: ${({ theme }) => theme.colors.textSecondary};
+  font-size: 13px;
+  
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+`;
+
+const ZoomSlider = styled.input`
+  width: 120px;
+  height: 4px;
+  background: ${({ theme }) => theme.colors.bgTertiary};
+  border-radius: 2px;
+  outline: none;
+  -webkit-appearance: none;
+  
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: ${({ theme }) => theme.colors.accentBlue};
+    cursor: pointer;
+    
+    &:hover {
+      background: ${({ theme }) => theme.colors.accentOrange};
+    }
+  }
+  
+  &::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: ${({ theme }) => theme.colors.accentBlue};
+    cursor: pointer;
+    border: none;
+    
+    &:hover {
+      background: ${({ theme }) => theme.colors.accentOrange};
+    }
+  }
+`;
+
+const ZoomValue = styled.div`
+  font-size: 12px;
+  color: ${({ theme }) => theme.colors.textTertiary};
+  font-family: ${({ theme }) => theme.fonts.mono};
+  min-width: 40px;
+  text-align: right;
+`;
+
+function Timeline({ onPush, isPushing, hasChanges, zoom = 1, onZoomChange }: TimelineProps) {
   const { projectData, versions, hasPendingChanges, pendingData } = useStore();
 
   if (!projectData && !pendingData) return null;
@@ -165,6 +232,24 @@ function Timeline({ onPush, isPushing, hasChanges }: TimelineProps) {
           <GitCommit />
           {isPushing ? 'Pushing...' : 'Push'}
         </PushButton>
+      )}
+      
+      {onZoomChange && (
+        <ZoomControl>
+          <ZoomLabel>
+            <ZoomIn size={14} />
+            Zoom
+          </ZoomLabel>
+          <ZoomSlider
+            type="range"
+            min="0.5"
+            max="2"
+            step="0.1"
+            value={zoom}
+            onChange={(e) => onZoomChange(parseFloat(e.target.value))}
+          />
+          <ZoomValue>{(zoom * 100).toFixed(0)}%</ZoomValue>
+        </ZoomControl>
       )}
     </Container>
   );

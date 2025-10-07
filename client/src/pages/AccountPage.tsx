@@ -27,7 +27,7 @@ const Logo = styled.h1`
   font-weight: 900;
   letter-spacing: -1px;
   color: ${({ theme }) => theme.colors.accentOrange};
-  font-family: ${({ theme }) => theme.fonts.mono};
+  font-family: 'Poppins', ${({ theme }) => theme.fonts.sans};
   margin-bottom: ${({ theme }) => theme.spacing.xl};
   cursor: pointer;
   
@@ -79,7 +79,7 @@ const PageHeader = styled.div`
 const PageTitle = styled.h2`
   font-size: 32px;
   font-weight: 700;
-  font-family: ${({ theme }) => theme.fonts.mono};
+  font-family: 'Poppins', ${({ theme }) => theme.fonts.sans};
   color: ${({ theme }) => theme.colors.textPrimary};
   margin-bottom: ${({ theme }) => theme.spacing.sm};
 `;
@@ -100,7 +100,7 @@ const Section = styled.div`
 const SectionTitle = styled.h3`
   font-size: 18px;
   font-weight: 600;
-  font-family: ${({ theme }) => theme.fonts.mono};
+  font-family: 'Poppins', ${({ theme }) => theme.fonts.sans};
   color: ${({ theme }) => theme.colors.textPrimary};
   margin-bottom: ${({ theme }) => theme.spacing.lg};
 `;

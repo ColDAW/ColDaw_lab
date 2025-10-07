@@ -77,6 +77,7 @@ function ProjectPage() {
   const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null);
   const [isPushing, setIsPushing] = useState(false);
   const [importedFile, setImportedFile] = useState<File | null>(null);
+  const [zoom, setZoom] = useState(1); // Zoom level: 0.5 to 2
 
   useEffect(() => {
     if (!projectId) return;
@@ -368,8 +369,10 @@ function ProjectPage() {
               onPush={handlePush}
               isPushing={isPushing}
               hasChanges={!!(importedFile || vstTempFileName)}
+              zoom={zoom}
+              onZoomChange={setZoom}
             />
-            <ArrangementView tracks={projectData.tracks} tempo={projectData.tempo} />
+            <ArrangementView tracks={projectData.tracks} tempo={projectData.tempo} zoom={zoom} />
             <CollaboratorCursors />
           </>
         )}
