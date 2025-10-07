@@ -195,7 +195,8 @@ export async function requireAuth(req: any, res: any, next: any) {
     }
 
     // Attach user info to request
-    req.userId = decoded.userId;
+    req.user_id = decoded.userId;  // Use underscore for consistency
+    req.userId = decoded.userId;   // Keep camelCase for backward compatibility
     req.user = user;
     
     next();
