@@ -21,6 +21,9 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    // Log the full URL for debugging
+    const fullUrl = `${config.baseURL}${config.url}`;
+    console.log(`[API Request] ${config.method?.toUpperCase()} ${fullUrl}`);
     return config;
   },
   (error) => {
