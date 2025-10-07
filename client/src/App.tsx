@@ -2,7 +2,6 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import ProjectPage from './pages/ProjectPage';
 import AccountPage from './pages/AccountPage';
-import GradientDemoPage from './pages/GradientDemoPage';
 import { ThemeProvider } from 'styled-components';
 import { theme } from './styles/theme';
 import { AuthProvider } from './contexts/AuthContext';
@@ -17,7 +16,6 @@ function App() {
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<HomePage />} />
-              <Route path="/gradient-demo" element={<GradientDemoPage />} />
               <Route 
                 path="/project/:projectId" 
                 element={
