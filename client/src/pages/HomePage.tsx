@@ -186,35 +186,65 @@ const UploadArea = styled.div<{ $isDragging: boolean }>`
   position: relative;
   overflow: hidden;
   
-  /* Apple Intelligence style gradient fill effect */
+  /* Apple Intelligence style gradient - Layer 1 (leftmost, widest wave) */
   &::before {
     content: '';
     position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 180%;
-    height: 630px;
-    transform: translate(-50%, 50px) rotate(20deg);
+    bottom: 0;
+    left: 5%;
+    width: 28%;
+    height: 0%;
     background-image: linear-gradient(
-      90deg,
-      #89aaf8 20%,
-      #b770fc 40%,
-      #d24dc3 60%,
-      #e85560 80%,
-      #ee7b6b 100%
+      0deg,
+      rgba(137, 170, 248, 1) 0%,
+      rgba(163, 141, 250, 0.95) 25%,
+      rgba(183, 112, 252, 0.9) 50%,
+      rgba(197, 94, 223, 0.7) 75%,
+      rgba(210, 77, 195, 0.3) 90%,
+      rgba(210, 77, 195, 0) 100%
     );
-    background-size: 0% 0%;
-    background-repeat: no-repeat;
-    background-position: top center;
-    filter: blur(35px);
+    filter: blur(45px);
     opacity: 0;
-    transition: all 0.6s ease-out;
+    transition: height 1.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+                opacity 0.8s ease-out;
+    transition-delay: 0s;
+    pointer-events: none;
+    z-index: 0;
+  }
+  
+  /* Layer 2 (center-left, tall wave) */
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 25%;
+    width: 32%;
+    height: 0%;
+    background-image: linear-gradient(
+      0deg,
+      rgba(183, 112, 252, 1) 0%,
+      rgba(197, 94, 223, 0.95) 30%,
+      rgba(210, 77, 195, 0.9) 55%,
+      rgba(221, 81, 145, 0.75) 75%,
+      rgba(232, 85, 96, 0.4) 90%,
+      rgba(232, 85, 96, 0) 100%
+    );
+    filter: blur(42px);
+    opacity: 0;
+    transition: height 1.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+                opacity 0.85s ease-out;
+    transition-delay: 0.12s;
     pointer-events: none;
     z-index: 0;
   }
   
   &:hover::before {
-    background-size: 180% 36%;
+    height: 180%;
+    opacity: 1;
+  }
+  
+  &:hover::after {
+    height: 195%;
     opacity: 1;
   }
   
@@ -226,6 +256,65 @@ const UploadArea = styled.div<{ $isDragging: boolean }>`
   
   &:hover {
     border-color: ${({ theme }) => theme.colors.borderActive};
+  }
+`;
+
+/* Additional gradient layers for dynamic wave effect */
+const GradientLayer3 = styled.div`
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 26%;
+  height: 0%;
+  background-image: linear-gradient(
+    0deg,
+    rgba(210, 77, 195, 1) 0%,
+    rgba(221, 81, 145, 0.95) 28%,
+    rgba(232, 85, 96, 0.9) 52%,
+    rgba(235, 104, 81, 0.7) 72%,
+    rgba(238, 123, 107, 0.35) 88%,
+    rgba(238, 123, 107, 0) 100%
+  );
+  filter: blur(48px);
+  opacity: 0;
+  transition: height 1.15s cubic-bezier(0.34, 1.56, 0.64, 1),
+              opacity 0.75s ease-out;
+  transition-delay: 0.08s;
+  pointer-events: none;
+  z-index: 0;
+  
+  ${UploadArea}:hover & {
+    height: 170%;
+    opacity: 1;
+  }
+`;
+
+const GradientLayer4 = styled.div`
+  position: absolute;
+  bottom: 0;
+  right: 8%;
+  width: 30%;
+  height: 0%;
+  background-image: linear-gradient(
+    0deg,
+    rgba(232, 85, 96, 1) 0%,
+    rgba(235, 104, 81, 0.95) 32%,
+    rgba(238, 123, 107, 0.88) 58%,
+    rgba(241, 142, 127, 0.68) 78%,
+    rgba(245, 161, 147, 0.3) 92%,
+    rgba(245, 161, 147, 0) 100%
+  );
+  filter: blur(40px);
+  opacity: 0;
+  transition: height 1.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+              opacity 0.82s ease-out;
+  transition-delay: 0.18s;
+  pointer-events: none;
+  z-index: 0;
+  
+  ${UploadArea}:hover & {
+    height: 185%;
+    opacity: 1;
   }
 `;
 
@@ -693,6 +782,8 @@ function HomePage() {
             onDrop={handleDrop}
             onClick={handleClick}
           >
+            <GradientLayer3 />
+            <GradientLayer4 />
             <UploadIcon />
             <UploadText>Create New Project</UploadText>
             <UploadHint>Drop your .als file here or click to browse</UploadHint>
