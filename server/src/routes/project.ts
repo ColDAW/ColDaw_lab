@@ -431,16 +431,24 @@ router.post('/init', requireAuth, upload.single('alsFile'), async (req: any, res
 router.get('/:projectId', async (req: any, res: any) => {
   try {
     const { projectId } = req.params;
+    console.log('GET /api/projects/:projectId - Fetching project:', projectId);
 
     const project = await db.getProject(projectId);
+    console.log('Project fetched:', project ? 'found' : 'not found');
     
     if (!project) {
       return res.status(404).json({ error: 'Project not found' });
     }
 
+    console.log('Fetching branches for project:', projectId);
     const branches = await db.getBranchesByProject(projectId);
+    console.log('Branches fetched:', branches.length);
+    
+    console.log('Fetching versions for project:', projectId);
     const versions = await db.getVersionsByProject(projectId);
+    console.log('Versions fetched:', versions.length);
 
+    console.log('Sending response for project:', projectId);
     res.json({
       project,
       branches,

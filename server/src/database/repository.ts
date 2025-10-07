@@ -130,11 +130,16 @@ class PostgresDatabase {
   }
 
   async getProjectById(id: string): Promise<Project | null> {
-    const result = await this.getPool().query<Project>(
-      'SELECT * FROM projects WHERE id = $1',
-      [id]
-    );
-    return result.rows[0] || null;
+    try {
+      const result = await this.getPool().query<Project>(
+        'SELECT * FROM projects WHERE id = $1',
+        [id]
+      );
+      return result.rows[0] || null;
+    } catch (error) {
+      console.error('Error fetching project by id:', id, error);
+      throw error;
+    }
   }
 
   async getProjectsByUserId(userId: string): Promise<Project[]> {

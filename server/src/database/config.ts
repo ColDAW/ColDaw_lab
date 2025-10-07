@@ -43,10 +43,26 @@ export const connectToDatabase = async (): Promise<Pool> => {
     pgPool = new Pool({
       connectionString: databaseUrl,
       ssl: sslConfig,
-      // Connection pool settings
-      max: 20,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 10000,
+      // Connection pool settings optimized for Railway
+      max: 10, // Reduced from 20 to avoid too many connections
+      min: 2, // Keep minimum connections alive
+      idleTimeoutMillis: 60000, // Increased to 60 seconds
+      connectionTimeoutMillis: 20000, // Increased to 20 seconds
+      statement_timeout: 30000, // 30 second query timeout
+      query_timeout: 30000, // 30 second query timeout
+    });
+
+    // Handle pool errors
+    pgPool.on('error', (err) => {
+      console.error('❌ Unexpected database pool error:', err);
+    });
+
+    pgPool.on('connect', () => {
+      console.log('🔗 New database connection established');
+    });
+
+    pgPool.on('remove', () => {
+      console.log('🔌 Database connection removed from pool');
     });
 
     // Test connection
