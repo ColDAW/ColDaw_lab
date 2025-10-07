@@ -146,11 +146,21 @@ function ProjectPage() {
         setProjectData(versionData.data);
       } else {
         console.warn('No versions found for project');
+        setProjectData(null);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading project:', error);
-      await showAlert({ message: 'Failed to load project: ' + (error as Error).message, type: 'error' });
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      await showAlert({ 
+        message: 'Failed to load project: ' + (error.response?.data?.error || error.message || 'Unknown error'), 
+        type: 'error' 
+      });
     } finally {
+      console.log('Setting isLoading to false');
       setIsLoading(false);
     }
   };
