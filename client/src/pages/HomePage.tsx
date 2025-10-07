@@ -234,6 +234,16 @@ const ProjectInfo = styled.div`
   padding: ${({ theme }) => theme.spacing.md};
 `;
 
+const ProjectTitle = styled.div`
+  font-size: 14px;
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.textPrimary};
+  margin-bottom: ${({ theme }) => theme.spacing.xs};
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
 const ProjectMeta = styled.div`
   display: flex;
   justify-content: space-between;
@@ -665,9 +675,12 @@ function HomePage() {
                         autoFocus
                       />
                     ) : (
-                      <ProjectMeta>
-                        <span>{new Date(project.updated_at).toLocaleDateString()}</span>
-                      </ProjectMeta>
+                      <>
+                        <ProjectTitle>{project.name}</ProjectTitle>
+                        <ProjectMeta>
+                          <span>{new Date(project.updated_at).toLocaleDateString()}</span>
+                        </ProjectMeta>
+                      </>
                     )}
                   </ProjectInfo>
                   
