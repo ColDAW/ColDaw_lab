@@ -97,12 +97,13 @@ function ProjectPage() {
       loadVSTImport(projectId);
     }
     
-    // Use logged-in username
+    // Use logged-in username and user ID
     const userName = user.username;
+    const userId = user.id;
     useStore.getState().setCurrentUser(userName);
     
     // Initialize WebSocket connection
-    initSocket(projectId, userName);
+    initSocket(projectId, userName, userId);
 
     return () => {
       disconnectSocket();

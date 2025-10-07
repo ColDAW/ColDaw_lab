@@ -110,7 +110,7 @@ interface AppState {
   clearPendingChanges: () => void;
   
   // Socket actions
-  initSocket: (projectId: string, userName: string) => void;
+  initSocket: (projectId: string, userName: string, userId: string) => void;
   disconnectSocket: () => void;
   addCollaborator: (collaborator: Collaborator) => void;
   removeCollaborator: (socketId: string) => void;
@@ -150,12 +150,12 @@ export const useStore = create<AppState>((set, get) => ({
   clearPendingChanges: () => set({ pendingData: null, hasPendingChanges: false, vstTempFileName: null }),
   
   // Socket methods
-  initSocket: (projectId: string, userName: string) => {
+  initSocket: (projectId: string, userName: string, userId: string) => {
     const socket = io(API_BASE_URL);
     
     socket.on('connect', () => {
       console.log('Socket connected');
-      socket.emit('join-project', { projectId, userName });
+      socket.emit('join-project', { projectId, userName, userId });
     });
     
     socket.on('collaborators-list', (collaborators: Collaborator[]) => {

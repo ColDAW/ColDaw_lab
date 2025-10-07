@@ -22,14 +22,14 @@ export function setupSocketHandlers(io: Server) {
     console.log(`Client connected: ${socket.id}`);
 
     // Join a project room
-    socket.on('join-project', async (data: { projectId: string; userName: string }) => {
-      const { projectId, userName } = data;
+    socket.on('join-project', async (data: { projectId: string; userName: string; userId: string }) => {
+      const { projectId, userName, userId } = data;
       
       socket.join(projectId);
       
       // Clean up any existing connections for this user in this project
       // This prevents duplicate avatars when the user refreshes the page
-      await db.deleteCollaboratorsByUserAndProject(userName, projectId);
+      await db.deleteCollaboratorsByUserAndProject(userId, projectId);
       
       // Assign random color
       const color = COLORS[Math.floor(Math.random() * COLORS.length)];
@@ -42,7 +42,7 @@ export function setupSocketHandlers(io: Server) {
         await db.insertCollaborator({
           id: collaboratorId,
           project_id: projectId,
-          user_id: userName,
+          user_id: userId, // Use actual user ID
           socket_id: socket.id,
           joined_at: now,
           last_activity: now,
