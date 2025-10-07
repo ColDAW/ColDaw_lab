@@ -126,16 +126,20 @@ function ProjectPage() {
     
     // Set a manual timeout as a failsafe
     const timeoutId = setTimeout(() => {
-      console.error('Load project timeout after 15 seconds');
+      console.error('Load project timeout after 20 seconds');
       setIsLoading(false);
       showAlert({ 
-        message: 'Loading project timed out. Please refresh the page and try again.', 
-        type: 'error' 
+        message: 'Loading project timed out. The server might be processing a large file. Please wait a moment and refresh the page.', 
+        type: 'warning' 
       });
-    }, 15000);
+    }, 20000); // Increased to 20 seconds
     
     try {
       console.log('Loading project:', projectId);
+      
+      // Add a small delay to allow database writes to complete
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds
+      console.log('Starting to fetch project details...');
       
       // Load project details
       const projectDetails = await projectApi.getProject(projectId);
@@ -170,7 +174,7 @@ function ProjectPage() {
         status: error.response?.status
       });
       await showAlert({ 
-        message: 'Failed to load project: ' + (error.response?.data?.error || error.message || 'Unknown error'), 
+        message: 'Failed to load project: ' + (error.response?.data?.error || error.message || 'Unknown error') + '. Please try refreshing the page.', 
         type: 'error' 
       });
     } finally {
