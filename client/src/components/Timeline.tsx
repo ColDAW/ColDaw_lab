@@ -185,8 +185,10 @@ function Timeline({ onPush, isPushing, hasChanges, zoom = 1, onZoomChange }: Tim
   // Use pending data if available for display
   const displayData = hasPendingChanges && pendingData ? pendingData : projectData;
 
-  const formatDate = (timestamp: number) => {
+  const formatDate = (timestamp: number | string) => {
+    if (!timestamp) return 'Unknown date';
     const date = new Date(timestamp);
+    if (isNaN(date.getTime())) return 'Invalid date';
     return date.toLocaleString('en-US', {
       month: 'short',
       day: 'numeric',
@@ -210,7 +212,7 @@ function Timeline({ onPush, isPushing, hasChanges, zoom = 1, onZoomChange }: Tim
           <VersionInfo>
             <VersionMessage $isPending={hasPendingChanges}>
               <GitCommit size={14} />
-              {hasPendingChanges ? 'Imported changes (not pushed)' : currentVersion?.message}
+              {hasPendingChanges ? 'Imported changes (not pushed)' : (currentVersion?.message || 'No message')}
             </VersionMessage>
             {currentVersion && !hasPendingChanges && (
               <>
@@ -219,7 +221,7 @@ function Timeline({ onPush, isPushing, hasChanges, zoom = 1, onZoomChange }: Tim
                   {formatDate(currentVersion.timestamp)}
                 </VersionMeta>
                 <VersionMeta>
-                  by {currentVersion.author}
+                  by {currentVersion.author || 'Unknown'}
                 </VersionMeta>
               </>
             )}

@@ -181,55 +181,73 @@ const UploadArea = styled.div<{ $isDragging: boolean }>`
       ? theme.colors.bgTertiary 
       : `linear-gradient(135deg, ${theme.colors.bgSecondary} 0%, rgba(30, 30, 30, 0.5) 100%)`};
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: border-color 0.3s ease;
   margin-bottom: ${({ theme }) => theme.spacing.xl};
   position: relative;
   overflow: hidden;
+  isolation: isolate;
   
-  /* Apple Intelligence style gradient border animation */
+  /* Apple Intelligence style animated gradient overlay */
   &::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    border-radius: 16px;
-    padding: 1px;
-    background: linear-gradient(
-      135deg,
-      transparent 0%,
-      transparent 40%,
-      rgba(59, 130, 246, 0.4) 50%,
-      rgba(139, 92, 246, 0.4) 60%,
-      transparent 70%,
-      transparent 100%
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(
+      from 0deg at 50% 50%,
+      transparent 0deg,
+      rgba(59, 130, 246, 0.15) 60deg,
+      rgba(99, 102, 241, 0.2) 120deg,
+      rgba(139, 92, 246, 0.15) 180deg,
+      transparent 240deg,
+      transparent 360deg
     );
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
     opacity: 0;
     transition: opacity 0.3s ease;
-    pointer-events: none;
+    animation: none;
+    z-index: -1;
   }
   
   &:hover::before {
     opacity: 1;
-    animation: shimmer 2s linear infinite;
+    animation: rotate-gradient 4s linear infinite;
   }
   
-  @keyframes shimmer {
+  /* Inner glow effect */
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 16px;
+    background: radial-gradient(
+      circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+      rgba(59, 130, 246, 0.08) 0%,
+      rgba(139, 92, 246, 0.05) 30%,
+      transparent 60%
+    );
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    z-index: -1;
+  }
+  
+  &:hover::after {
+    opacity: 1;
+  }
+  
+  @keyframes rotate-gradient {
     0% {
-      background-position: -200% 0;
+      transform: rotate(0deg);
     }
     100% {
-      background-position: 200% 0;
+      transform: rotate(360deg);
     }
   }
   
   &:hover {
     border-color: ${({ theme }) => theme.colors.borderActive};
-    background: ${({ theme }) => `linear-gradient(135deg, ${theme.colors.bgTertiary} 0%, rgba(30, 30, 30, 0.7) 100%)`};
   }
 `;
 
