@@ -137,27 +137,31 @@ const ZoomSlider = styled.input`
   &::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
+    width: 10px;
+    height: 16px;
+    border-radius: 3px;
     background: ${({ theme }) => theme.colors.accentBlue};
     cursor: pointer;
+    transition: all 0.2s ease;
     
     &:hover {
       background: ${({ theme }) => theme.colors.accentOrange};
+      transform: scaleY(1.1);
     }
   }
   
   &::-moz-range-thumb {
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
+    width: 10px;
+    height: 16px;
+    border-radius: 3px;
     background: ${({ theme }) => theme.colors.accentBlue};
     cursor: pointer;
     border: none;
+    transition: all 0.2s ease;
     
     &:hover {
       background: ${({ theme }) => theme.colors.accentOrange};
+      transform: scaleY(1.1);
     }
   }
 `;

@@ -169,7 +169,7 @@ const Content = styled.div`
 const UploadArea = styled.div<{ $isDragging: boolean }>`
   width: 100%;
   height: 200px;
-  border: 2px solid ${({ theme, $isDragging }) => 
+  border: 1px solid ${({ theme, $isDragging }) => 
     $isDragging ? theme.colors.accentOrange : theme.colors.borderColor};
   border-radius: 16px;
   display: flex;
@@ -181,8 +181,51 @@ const UploadArea = styled.div<{ $isDragging: boolean }>`
       ? theme.colors.bgTertiary 
       : `linear-gradient(135deg, ${theme.colors.bgSecondary} 0%, rgba(30, 30, 30, 0.5) 100%)`};
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   margin-bottom: ${({ theme }) => theme.spacing.xl};
+  position: relative;
+  overflow: hidden;
+  
+  /* Apple Intelligence style gradient border animation */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 16px;
+    padding: 1px;
+    background: linear-gradient(
+      135deg,
+      transparent 0%,
+      transparent 40%,
+      rgba(59, 130, 246, 0.4) 50%,
+      rgba(139, 92, 246, 0.4) 60%,
+      transparent 70%,
+      transparent 100%
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+  
+  &:hover::before {
+    opacity: 1;
+    animation: shimmer 2s linear infinite;
+  }
+  
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
   
   &:hover {
     border-color: ${({ theme }) => theme.colors.borderActive};
