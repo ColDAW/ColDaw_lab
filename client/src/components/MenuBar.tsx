@@ -321,27 +321,13 @@ function MenuBar({ onToggleHistory, onVersionCommitted, currentVersionId }: Menu
     try {
       if (vstTempFileName) {
         // Push from VST import (temp file on server)
-        const formData = new FormData();
-        formData.append('branch', currentProject.current_branch);
-        formData.append('message', message);
-        formData.append('author', user.id);  // Use user.id instead of username
-        formData.append('fromVST', 'true');
-        formData.append('tempFileName', vstTempFileName);
-        
-        const response = await fetch(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/versions/${currentProject.id}/commit`,
-          {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('coldaw_token')}`,
-            },
-            body: formData,
-          }
+        await versionApi.commitVSTImport(
+          currentProject.id,
+          vstTempFileName,
+          currentProject.current_branch,
+          message,
+          user.id
         );
-        
-        if (!response.ok) {
-          throw new Error('Failed to push VST import');
-        }
       } else if (importedFile) {
         // Normal file upload push
         await versionApi.commitVersion(

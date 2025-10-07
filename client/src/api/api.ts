@@ -192,6 +192,21 @@ export const versionApi = {
     return response.data;
   },
   
+  // Commit from VST import (temp file already on server)
+  async commitVSTImport(projectId: string, tempFileName: string, branch: string, message: string, author: string) {
+    const formData = new FormData();
+    formData.append('branch', branch);
+    formData.append('message', message);
+    formData.append('author', author);
+    formData.append('fromVST', 'true');
+    formData.append('tempFileName', tempFileName);
+    
+    const response = await api.post(`/versions/${projectId}/commit`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+  
   // Create a new branch
   async createBranch(projectId: string, name: string, fromBranch?: string, fromVersionId?: string) {
     const response = await api.post(`/versions/${projectId}/branch`, {
