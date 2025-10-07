@@ -526,10 +526,21 @@ function HomePage() {
   const handleSubmit = async () => {
     if (!selectedFile || !projectName || !author) return;
     
+    // Check authentication first
+    if (!isAuthenticated || !user) {
+      await showAlert({ 
+        message: 'Please log in to create a project.', 
+        type: 'error' 
+      });
+      setShowModal(false);
+      setShowAuthModal(true);
+      return;
+    }
+    
     setIsUploading(true);
     try {
       // Use user ID for authentication
-      const userId = user?.id;
+      const userId = user.id;
       console.log('Initializing project with:', { projectName, author, fileName: selectedFile.name, userId });
       
       const result = await projectApi.initProject(
