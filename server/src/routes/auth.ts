@@ -195,7 +195,8 @@ export async function requireAuth(req: any, res: any, next: any) {
     }
 
     // Attach user info to request
-    req.userId = decoded.userId;
+    req.user_id = decoded.userId; // Use user_id to match other routes
+    req.userId = decoded.userId; // Keep both for compatibility
     req.user = user;
     
     next();
