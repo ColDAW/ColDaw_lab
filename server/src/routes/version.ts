@@ -27,6 +27,12 @@ router.post('/:projectId/commit', upload.single('alsFile'), async (req: any, res
     const { projectId } = req.params;
     const { branch, message, author, fromVST, tempFileName } = req.body;
 
+    // Get user ID from author or token
+    let userId = author || 'anonymous';
+    if (req.user && req.user.id) {
+      userId = req.user.id;
+    }
+
     // Check if this is a VST import commit
     if (fromVST === 'true' && tempFileName) {
       // Use temp file from VST import
@@ -63,7 +69,7 @@ router.post('/:projectId/commit', upload.single('alsFile'), async (req: any, res
         project_id: projectId,
         branch: branch || 'main',
         message: message || 'Update from VST plugin',
-        user_id: 'vst-plugin-system', // Always use system user for VST plugin
+        user_id: userId,
         timestamp: now,
         files: dataPath,
       });
@@ -108,7 +114,7 @@ router.post('/:projectId/commit', upload.single('alsFile'), async (req: any, res
       project_id: projectId,
       branch: branch || 'main',
       message: message || 'Update project',
-      user_id: 'anonymous-system', // Always use system user for anonymous uploads
+      user_id: userId,
       timestamp: now,
       files: dataPath,
     });

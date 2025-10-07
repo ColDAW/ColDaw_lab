@@ -8,7 +8,7 @@
 
 **ColDaw** 是一个基于 Web 的协作数字音频工作站（DAW），专为 Ableton Live 项目设计，提供 Git 风格的版本控制和实时协作功能。
 
-**生产环境**: https://codaw.app
+**生产环境**: https://coldawlab-production.up.railway.app
 
 ---
 
@@ -68,7 +68,7 @@ ColDaw_lab/
 
 ### ✅ 最终配置
 
-**服务器 URL**: `https://codaw.app` （固定，不可修改）
+**服务器 URL**: `https://coldawlab-production.up.railway.app` （固定，不可修改）
 
 - ✅ 硬编码在源代码中
 - ✅ 不暴露给用户
@@ -310,7 +310,7 @@ cd vst-plugin
    ↓
 5. 点击 "EXPORT TO ColDAW"
    ↓
-6. 浏览器自动打开 https://codaw.app/project/xxx
+6. 浏览器自动打开 https://coldawlab-production.up.railway.app/project/xxx
    ↓
 7. 在 Web 应用中查看和协作
    ↓
@@ -369,7 +369,7 @@ cd vst-plugin
 
 ### 立即可做
 1. ✅ 使用 VST 插件
-2. ✅ 上传项目到 https://codaw.app
+2. ✅ 上传项目到 https://coldawlab-production.up.railway.app
 3. ✅ 开始协作
 4. ✅ 管理版本
 
@@ -394,12 +394,12 @@ ColDaw 是一个**完整的、生产就绪的**协作 DAW 平台：
 
 ✅ **前端**: React + TypeScript，部署在 Railway  
 ✅ **后端**: Node.js + PostgreSQL，部署在 Railway  
-✅ **VST 插件**: C++ + JUCE，连接到 https://codaw.app  
+✅ **VST 插件**: C++ + JUCE，连接到 https://coldawlab-production.up.railway.app  
 ✅ **文档**: 完整、清晰、易于维护  
 ✅ **代码库**: 整洁、专业、优化完成  
 
 **状态**: ✅ 生产就绪  
-**URL**: https://codaw.app  
+**URL**: https://coldawlab-production.up.railway.app  
 **VST**: 固定连接到生产环境  
 
 ---

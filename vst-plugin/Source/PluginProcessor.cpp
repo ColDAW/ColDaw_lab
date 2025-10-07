@@ -14,8 +14,8 @@ ColDawExportProcessor::ColDawExportProcessor()
                        )
 #endif
 {
-    // Initialize defaults - production URL only
-    serverUrl = "https://codaw.app";
+    // Initialize defaults - production URL
+    serverUrl = "https://coldawlab-production.up.railway.app";
     userId = "default_user";
     author = "Ableton User";
     autoExport = false;

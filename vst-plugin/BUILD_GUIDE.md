@@ -4,7 +4,7 @@
 
 **VST 插件必须重新编译才能使更改生效！**
 
-插件已预配置连接到 **https://codaw.app** 生产环境。
+插件已预配置连接到 **https://coldawlab-production.up.railway.app** 生产环境。
 
 ---
 
@@ -118,7 +118,7 @@ cmake --build . --config Release
 
 ```cpp
 // 改回生产 URL
-serverUrl = "https://codaw.app";
+serverUrl = "https://coldawlab-production.up.railway.app";
 ```
 
 然后重新编译和重启。
@@ -201,7 +201,7 @@ cd ColDaw_lab
 
 1. **确认生产 URL**:
    ```cpp
-   serverUrl = "https://codaw.app";
+   serverUrl = "https://coldawlab-production.up.railway.app";
    ```
 
 2. **Release 模式构建**:
@@ -238,7 +238,7 @@ cd ColDaw_lab
 ## ✅ 完成！
 
 构建成功后，您的 VST 插件已经可以：
-- ✅ 连接到 https://codaw.app
+- ✅ 连接到 https://coldawlab-production.up.railway.app
 - ✅ 在 Ableton Live 中使用
 - ✅ 一键导出项目
 - ✅ 自动打开浏览器

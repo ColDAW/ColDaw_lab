@@ -324,7 +324,7 @@ function MenuBar({ onToggleHistory, onVersionCommitted, currentVersionId }: Menu
         const formData = new FormData();
         formData.append('branch', currentProject.current_branch);
         formData.append('message', message);
-        formData.append('author', user.username);
+        formData.append('author', user.id);  // Use user.id instead of username
         formData.append('fromVST', 'true');
         formData.append('tempFileName', vstTempFileName);
         
@@ -349,7 +349,7 @@ function MenuBar({ onToggleHistory, onVersionCommitted, currentVersionId }: Menu
           importedFile,
           currentProject.current_branch,
           message,
-          user.username
+          user.id  // Use user.id instead of username
         );
       }
       
