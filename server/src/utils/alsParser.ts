@@ -169,7 +169,7 @@ export class ALSParser {
       const events = arrangerAutomation?.Events?.[0];
       
       if (!events) {
-        console.log('No Events found in track');
+        // No events in track
         return clips;
       }
       
@@ -195,11 +195,14 @@ export class ALSParser {
       }
       
       if (allClips.length === 0) {
-        console.log('No AudioClip or MidiClip found in events');
+        // No clips found
         return clips;
       }
 
-      console.log(`Found ${allClips.length} clips in track (Audio: ${audioClips?.length || 0}, MIDI: ${midiClips?.length || 0})`);
+      // Only log summary if there are many clips to avoid Railway log rate limits
+      if (allClips.length > 50) {
+        console.log(`Processing track with ${allClips.length} clips (Audio: ${audioClips?.length || 0}, MIDI: ${midiClips?.length || 0})`);
+      }
 
       allClips.forEach((clip: any, index: number) => {
         try {
@@ -216,7 +219,7 @@ export class ALSParser {
           const nameData = clip.Name?.[0];
           const name = nameData?.$?.Value || `${clipType === 'midi' ? 'MIDI' : 'Audio'} Clip ${index + 1}`;
           
-          console.log(`Parsing ${clipType} clip "${name}": Time=${startTime}, CurrentEnd=${endTime}`);
+          // Removed excessive logging to improve performance
           
           // Extract loop settings
           const loopData = clip.Loop?.[0] || {};
@@ -279,7 +282,7 @@ export class ALSParser {
             gain,
           });
           
-          console.log(`Successfully parsed clip: ${name} (${startTime} -> ${endTime})`);
+          // Removed excessive logging to improve performance
         } catch (err) {
           console.error(`Error parsing clip ${index}:`, err);
         }
