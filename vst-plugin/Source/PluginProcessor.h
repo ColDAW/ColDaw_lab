@@ -77,12 +77,10 @@ public:
     juce::String getAuthToken() const { return authToken; }
     
     // Settings
-    void setServerUrl(const juce::String& url) { serverUrl = url; }
     void setUserId(const juce::String& id) { userId = id; }
     void setAuthor(const juce::String& name) { author = name; }
     void setAutoExport(bool enable) { autoExport = enable; }
     
-    juce::String getServerUrl() const { return serverUrl; }
     juce::String getUserId() const { return userId; }
     juce::String getAuthor() const { return author; }
     bool getAutoExport() const { return autoExport; }

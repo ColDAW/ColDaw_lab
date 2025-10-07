@@ -20,8 +20,11 @@ ColDaw includes a VST3 plugin for Ableton Live that enables one-click project ex
 - **User Authentication**: Login directly from the plugin
 - **Instant Upload**: Export and open projects in browser with one click
 - **Auto-Export Mode**: Automatically upload on every save
+- **Pre-configured**: Connects to https://codaw.app production environment
 
-See [vst-plugin/README.md](vst-plugin/README.md) for installation and usage.
+**Documentation**:
+- [Installation & Usage](vst-plugin/README.md) - Complete plugin guide
+- **Important**: Plugin must be rebuilt after code changes
 
 ## 🔐 Authentication System
 

@@ -14,8 +14,8 @@ ColDawExportProcessor::ColDawExportProcessor()
                        )
 #endif
 {
-    // Initialize defaults
-    serverUrl = "http://localhost:3001";
+    // Initialize defaults - production URL only
+    serverUrl = "https://codaw.app";
     userId = "default_user";
     author = "Ableton User";
     autoExport = false;
@@ -533,12 +533,24 @@ void ColDawExportProcessor::uploadProjectFile(const juce::File& alsFile)
 
 void ColDawExportProcessor::openProjectInBrowser(const juce::String& projectId, bool fromVST)
 {
-    // Construct URL (adjust based on your frontend port)
-    juce::String webUrl = "http://localhost:5174/project/" + projectId;
+    // Use the same base URL as server (frontend is served from same domain in production)
+    juce::String webUrl = serverUrl;
+    
+    // Remove /api suffix if present and construct project URL
+    if (webUrl.contains("/api"))
+    {
+        webUrl = webUrl.upToFirstOccurrenceOf("/api", false, true);
+    }
+    
+    // In production, frontend and backend share the same domain
+    // In development with separate ports, this should be configured
+    webUrl += "/project/" + projectId;
+    
     if (fromVST)
     {
         webUrl += "?from=vst";
     }
+    
     juce::URL url(webUrl);
     url.launchInDefaultBrowser();
 }

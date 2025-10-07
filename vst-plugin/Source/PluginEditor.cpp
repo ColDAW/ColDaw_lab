@@ -5,7 +5,7 @@
 ColDawExportEditor::ColDawExportEditor (ColDawExportProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
-    // Set size - minimal and compact
+    // Set size - compact interface
     setSize (400, 550);
     
     // Title - uppercase, minimal

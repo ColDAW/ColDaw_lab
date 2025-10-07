@@ -102,17 +102,20 @@ cmake --build . --config Release
 
 ## 使用方法
 
-### 1. 启动 ColDaw 服务器
+### 1. 构建和安装插件
+
+**⚠️ 重要**: 修改代码后必须重新编译插件才能生效！
 
 ```bash
-# 启动后端
-cd /Users/yifan/Documents/WebD/ColDaw/server
-npm run dev
-
-# 启动前端
-cd /Users/yifan/Documents/WebD/ColDaw/client
-npm run dev
+cd vst-plugin
+./build.sh  # 或参考下方的构建步骤
 ```
+
+插件会自动安装到：
+- **macOS VST3**: `~/Library/Audio/Plug-Ins/VST3/ColDaw Export.vst3`
+- **macOS AU**: `~/Library/Audio/Plug-Ins/Components/ColDaw Export.component`
+
+安装后需要**重启 DAW** 或重新扫描插件。
 
 ### 2. 在 Ableton Live 中加载插件
 
@@ -120,12 +123,41 @@ npm run dev
 2. 在任意音轨上添加 "ColDaw Export" 插件
 3. 双击打开插件界面
 
-### 3. 配置插件
+### 3. 登录和使用
 
-在插件界面中设置:
-- **Server URL**: `http://localhost:3000` (ColDaw 后端地址)
-- **User ID**: 您的用户名或邮箱
-- **Author**: 作者名称
+插件已预配置连接到 **https://codaw.app**（生产环境）。
+
+#### 使用步骤：
+
+1. **登录账户**：
+   - 输入邮箱和密码
+   - 点击 "LOGIN" 按钮
+   
+2. **配置项目路径**（可选）：
+   - 默认路径: `~/Music/Ableton`
+   - 可以自定义 Ableton 项目的默认路径
+
+3. **开始导出**：
+   - 插件会自动检测最近保存的项目
+   - 或手动选择 .als 文件
+   - 点击 "EXPORT TO ColDAW"
+
+#### 开发环境配置（仅供开发者）：
+
+如果你是开发者，需要连接到本地服务器：
+
+1. 在 `PluginProcessor.cpp` 中修改服务器 URL：
+   ```cpp
+   serverUrl = "http://localhost:3001";  // 开发环境
+   ```
+
+2. 重新编译插件：
+   ```bash
+   cd vst-plugin
+   ./build.sh
+   ```
+
+3. 重启 DAW
 
 ### 4. 导出项目
 
