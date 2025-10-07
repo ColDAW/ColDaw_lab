@@ -35,40 +35,12 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static files in production
-if (process.env.NODE_ENV === 'production') {
-  const publicPath = path.join(__dirname, '..', 'public');
-  app.use(express.static(publicPath));
-  
-  // Serve React app for any non-API routes
-  app.get('*', (req, res) => {
-    if (!req.path.startsWith('/api')) {
-      res.sendFile(path.join(publicPath, 'index.html'));
-    }
-  });
-}
-
-// Ensure directories exist
-const uploadDir = path.join(__dirname, '..', 'uploads');
-const projectsDir = path.join(__dirname, '..', 'projects');
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-if (!fs.existsSync(projectsDir)) fs.mkdirSync(projectsDir, { recursive: true });
-
-// Initialize database
-// Initialize database (includes clearing stale collaborators)
-initDatabase()
-  .then(() => {
-    console.log('✅ Database initialization completed');
-  })
-  .catch((error) => {
-    console.error('❌ Database initialization failed, but server will continue:', error);
-  });
-
-// Routes
+// Routes - MUST be before the catch-all route
 app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/versions', versionRoutes);
 
+// Health check endpoints
 app.get('/api/health', async (req, res) => {
   try {
     res.json({ 
@@ -108,6 +80,33 @@ app.get('/api/health/db', async (req, res) => {
     });
   }
 });
+
+// Serve static files in production - MUST be AFTER API routes
+if (process.env.NODE_ENV === 'production') {
+  const publicPath = path.join(__dirname, '..', 'public');
+  app.use(express.static(publicPath));
+  
+  // Serve React app for any non-API routes - This is the catch-all route
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(publicPath, 'index.html'));
+  });
+}
+
+// Ensure directories exist
+const uploadDir = path.join(__dirname, '..', 'uploads');
+const projectsDir = path.join(__dirname, '..', 'projects');
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+if (!fs.existsSync(projectsDir)) fs.mkdirSync(projectsDir, { recursive: true });
+
+// Initialize database
+// Initialize database (includes clearing stale collaborators)
+initDatabase()
+  .then(() => {
+    console.log('✅ Database initialization completed');
+  })
+  .catch((error) => {
+    console.error('❌ Database initialization failed, but server will continue:', error);
+  });
 
 // Setup Socket.io for real-time collaboration
 setupSocketHandlers(io);

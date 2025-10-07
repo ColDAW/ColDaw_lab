@@ -433,10 +433,21 @@ router.get('/:projectId', async (req: any, res: any) => {
   try {
     const { projectId } = req.params;
     console.log(`[${new Date().toISOString()}] GET /api/projects/:projectId - Start fetching project:`, projectId);
+    
+    // Log pool status
+    const pool = (db as any).getPool();
+    console.log('Pool status:', {
+      total: pool.totalCount,
+      idle: pool.idleCount,
+      waiting: pool.waitingCount
+    });
 
     console.log('Step 1: Fetching project...');
     const projectStart = Date.now();
-    const project = await db.getProject(projectId);
+    const project = await Promise.race([
+      db.getProject(projectId),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Query timeout after 10s')), 10000))
+    ]) as any;
     console.log(`Step 1: Project fetched in ${Date.now() - projectStart}ms:`, project ? 'found' : 'not found');
     
     if (!project) {
