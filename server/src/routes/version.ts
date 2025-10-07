@@ -63,7 +63,7 @@ router.post('/:projectId/commit', upload.single('alsFile'), async (req: any, res
         project_id: projectId,
         branch: branch || 'main',
         message: message || 'Update from VST plugin',
-        user_id: author || 'vst-plugin-system',
+        user_id: 'vst-plugin-system', // Always use system user for VST plugin
         timestamp: now,
         files: dataPath,
       });
@@ -108,7 +108,7 @@ router.post('/:projectId/commit', upload.single('alsFile'), async (req: any, res
       project_id: projectId,
       branch: branch || 'main',
       message: message || 'Update project',
-      user_id: author || 'anonymous-system',
+      user_id: 'anonymous-system', // Always use system user for anonymous uploads
       timestamp: now,
       files: dataPath,
     });
