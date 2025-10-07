@@ -87,6 +87,14 @@ function ProjectPage() {
       return;
     }
 
+    // Ensure user has valid id before proceeding
+    if (!user.id) {
+      console.error('User object missing id:', user);
+      showAlert({ message: 'Authentication error: User ID missing', type: 'error' });
+      navigate('/');
+      return;
+    }
+
     loadProject();
     
     // Check if this is a VST import
@@ -100,6 +108,7 @@ function ProjectPage() {
     // Use logged-in username and user ID
     const userName = user.username;
     const userId = user.id;
+    console.log('Initializing socket with user:', { userName, userId });
     useStore.getState().setCurrentUser(userName);
     
     // Initialize WebSocket connection

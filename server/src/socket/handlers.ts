@@ -25,6 +25,14 @@ export function setupSocketHandlers(io: Server) {
     socket.on('join-project', async (data: { projectId: string; userName: string; userId: string }) => {
       const { projectId, userName, userId } = data;
       
+      console.log('Join project request:', { projectId, userName, userId });
+      
+      if (!userId) {
+        console.error('userId is missing in join-project event');
+        socket.emit('error', { message: 'User ID is required' });
+        return;
+      }
+      
       socket.join(projectId);
       
       // Clean up any existing connections for this user in this project

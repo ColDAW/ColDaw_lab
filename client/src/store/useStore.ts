@@ -151,10 +151,11 @@ export const useStore = create<AppState>((set, get) => ({
   
   // Socket methods
   initSocket: (projectId: string, userName: string, userId: string) => {
+    console.log('initSocket called with:', { projectId, userName, userId });
     const socket = io(API_BASE_URL);
     
     socket.on('connect', () => {
-      console.log('Socket connected');
+      console.log('Socket connected, emitting join-project with:', { projectId, userName, userId });
       socket.emit('join-project', { projectId, userName, userId });
     });
     
