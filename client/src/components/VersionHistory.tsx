@@ -2,6 +2,7 @@ import { useState } from 'react';
 import styled from 'styled-components';
 import { Clock, GitBranch, GitCommit, User, RotateCcw } from 'lucide-react';
 import { useModal } from '../contexts/ModalContext';
+import { useStore } from '../store/useStore';
 
 const Container = styled.div`
   width: 100%;
@@ -209,6 +210,22 @@ function VersionHistory({
 }: VersionHistoryProps) {
   const [selectedBranch, setSelectedBranch] = useState('main');
   const { showConfirm, showPrompt } = useModal();
+  const collaborators = useStore(state => state.collaborators);
+
+  // 根据 user_id 获取用户名
+  const getUserName = (version: Version): string => {
+    // 优先使用 user_name
+    if (version.user_name) return version.user_name;
+    // 如果有 author 就用 author
+    if (version.author) return version.author;
+    // 否则尝试从 collaborators 中查找
+    if (version.user_id) {
+      const collaborator = collaborators.find(c => c.id === version.user_id);
+      if (collaborator) return collaborator.userName;
+    }
+    // 最后返回默认值
+    return 'Unknown';
+  };
 
   // 按分支过滤版本
   const filteredVersions = versions
@@ -311,7 +328,7 @@ function VersionHistory({
             <VersionMeta>
               <MetaItem>
                 <User size={12} />
-                {version.author}
+                {getUserName(version)}
               </MetaItem>
               <MetaItem>
                 <Clock size={12} />

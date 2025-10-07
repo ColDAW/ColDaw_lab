@@ -192,9 +192,9 @@ const UploadArea = styled.div<{ $isDragging: boolean }>`
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 100%;
-    height: 350px;
-    transform: translate(-50%, 50px) rotate(-10deg);
+    width: 180%;
+    height: 630px;
+    transform: translate(-50%, 50px) rotate(20deg);
     background-image: linear-gradient(
       90deg,
       #89aaf8 20%,
@@ -214,7 +214,7 @@ const UploadArea = styled.div<{ $isDragging: boolean }>`
   }
   
   &:hover::before {
-    background-size: 100% 20%;
+    background-size: 180% 36%;
     opacity: 1;
   }
   
