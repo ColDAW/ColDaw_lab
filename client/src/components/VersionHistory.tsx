@@ -174,8 +174,11 @@ interface Version {
   branch: string;
   parent_id: string | null;
   message: string;
-  author: string;
-  timestamp: number;
+  author?: string;
+  user_id?: string;
+  user_name?: string;
+  timestamp?: number;
+  created_at?: string;
   data_path: string;
 }
 
@@ -210,15 +213,24 @@ function VersionHistory({
   // 按分支过滤版本
   const filteredVersions = versions
     .filter(v => v.branch === selectedBranch)
-    .sort((a, b) => b.timestamp - a.timestamp);
+    .sort((a, b) => {
+      const aTime = a.timestamp || (a.created_at ? new Date(a.created_at).getTime() : 0);
+      const bTime = b.timestamp || (b.created_at ? new Date(b.created_at).getTime() : 0);
+      return bTime - aTime;
+    });
 
-  const formatDate = (timestamp: number) => {
-    const date = new Date(timestamp);
+  const formatDate = (timestamp?: number | string) => {
+    if (!timestamp) return 'Unknown date';
+    const date = typeof timestamp === 'string' ? new Date(timestamp) : new Date(timestamp);
+    if (isNaN(date.getTime())) return 'Invalid date';
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
   };
 
-  const formatTimeAgo = (timestamp: number) => {
-    const seconds = Math.floor((Date.now() - timestamp) / 1000);
+  const formatTimeAgo = (timestamp?: number | string) => {
+    if (!timestamp) return 'Unknown time';
+    const time = typeof timestamp === 'string' ? new Date(timestamp).getTime() : timestamp;
+    if (isNaN(time)) return 'Invalid time';
+    const seconds = Math.floor((Date.now() - time) / 1000);
     if (seconds < 60) return `${seconds}s ago`;
     const minutes = Math.floor(seconds / 60);
     if (minutes < 60) return `${minutes}m ago`;
@@ -303,10 +315,15 @@ function VersionHistory({
               </MetaItem>
               <MetaItem>
                 <Clock size={12} />
-                {formatTimeAgo(version.timestamp)}
+                {formatTimeAgo(version.timestamp || version.created_at)}
               </MetaItem>
-              <MetaItem title={formatDate(version.timestamp)}>
-                {new Date(version.timestamp).toLocaleDateString()}
+              <MetaItem title={formatDate(version.timestamp || version.created_at)}>
+                {(() => {
+                  const ts = version.timestamp || version.created_at;
+                  if (!ts) return 'Unknown date';
+                  const date = typeof ts === 'string' ? new Date(ts) : new Date(ts);
+                  return isNaN(date.getTime()) ? 'Invalid date' : date.toLocaleDateString();
+                })()}
               </MetaItem>
             </VersionMeta>
           </VersionItem>
