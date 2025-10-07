@@ -551,13 +551,17 @@ function HomePage() {
       );
       console.log('Project initialized successfully:', result);
       
+      // Close modal and clear state first
       setShowModal(false);
       setSelectedFile(null);
       setProjectName('');
-      await loadProjects(); // Reload projects list
       
-      await showAlert({ message: `Project created successfully! Navigating to project ${result.projectId}`, type: 'success' });
+      // Reload projects in background
+      loadProjects().catch(console.error);
+      
+      // Navigate immediately without waiting for alert
       navigate(`/project/${result.projectId}`);
+      
     } catch (error: any) {
       console.error('Error initializing project:', error);
       const errorMsg = error?.response?.data?.error || error?.message || 'Unknown error occurred';
