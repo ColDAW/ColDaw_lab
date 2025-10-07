@@ -106,7 +106,7 @@ const AccountButton = styled.button`
   background: transparent;
   color: ${({ theme }) => theme.colors.textSecondary};
   border: 1px solid ${({ theme }) => theme.colors.borderColor};
-  border-radius: 8px;
+  border-radius: 6px;
   font-size: 12px;
   display: flex;
   align-items: center;
@@ -133,7 +133,7 @@ const SidebarNav = styled.div`
 const NavItem = styled.div<{ $active?: boolean }>`
   padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md};
   margin-bottom: ${({ theme }) => theme.spacing.xs};
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -192,29 +192,31 @@ const UploadArea = styled.div<{ $isDragging: boolean }>`
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 100%;
-    height: 350px;
-    transform: translate(-50%, -150px);
+    width: 140%;
+    height: 140%;
+    transform: translate(-50%, -50%) rotate(-45deg);
     background-image: linear-gradient(
       90deg,
+      transparent 0%,
       #89aaf8 20%,
       #b770fc 40%,
       #d24dc3 60%,
       #e85560 80%,
-      #ee7b6b 100%
+      #ee7b6b 90%,
+      transparent 100%
     );
-    background-size: 0% 0%;
+    background-size: 0% 100%;
     background-repeat: no-repeat;
-    background-position: top center;
+    background-position: left center;
     filter: blur(35px);
     opacity: 0;
-    transition: all 1.2s ease-in-out;
+    transition: all 0.6s ease-out;
     pointer-events: none;
     z-index: 0;
   }
   
   &:hover::before {
-    background-size: 100% 20%;
+    background-size: 200% 100%;
     opacity: 1;
   }
   
@@ -383,7 +385,7 @@ const TextInput = styled.input`
   padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md};
   background: ${({ theme }) => theme.colors.bgTertiary};
   border: 1px solid ${({ theme }) => theme.colors.borderColor};
-  border-radius: 8px;
+  border-radius: 6px;
   color: ${({ theme }) => theme.colors.textPrimary};
   font-size: 13px;
   margin-bottom: ${({ theme }) => theme.spacing.md};
@@ -407,7 +409,7 @@ const Button = styled.button<{ $variant?: 'primary' | 'secondary' }>`
   color: ${({ theme }) => theme.colors.textPrimary};
   border: 1px solid ${({ theme, $variant }) => 
     $variant === 'primary' ? theme.colors.accentOrange : theme.colors.borderColor};
-  border-radius: 8px;
+  border-radius: 6px;
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;

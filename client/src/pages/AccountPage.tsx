@@ -43,7 +43,7 @@ const BackButton = styled.button`
   padding: ${({ theme }) => theme.spacing.md};
   background: transparent;
   border: 1px solid ${({ theme }) => theme.colors.borderColor};
-  border-radius: 8px;
+  border-radius: 6px;
   color: ${({ theme }) => theme.colors.textSecondary};
   font-size: 14px;
   cursor: pointer;
@@ -126,7 +126,7 @@ const Input = styled.input`
   padding: ${({ theme }) => theme.spacing.md};
   background: ${({ theme }) => theme.colors.bgPrimary};
   border: 1px solid ${({ theme }) => theme.colors.borderColor};
-  border-radius: 8px;
+  border-radius: 6px;
   color: ${({ theme }) => theme.colors.textPrimary};
   font-size: 14px;
   font-family: inherit;
@@ -164,7 +164,7 @@ const Button = styled.button<{ $variant?: 'primary' | 'danger' }>`
   align-items: center;
   gap: ${({ theme }) => theme.spacing.sm};
   padding: ${({ theme }) => theme.spacing.md} ${({ theme }) => theme.spacing.lg};
-  border-radius: 8px;
+  border-radius: 6px;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;

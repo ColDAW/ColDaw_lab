@@ -70,7 +70,7 @@ const Button = styled.button`
   background: transparent;
   color: ${({ theme }) => theme.colors.textSecondary};
   border: 1px solid ${({ theme }) => theme.colors.borderColor};
-  border-radius: 8px;
+  border-radius: 6px;
   font-size: 13px;
   display: flex;
   align-items: center;
@@ -115,7 +115,7 @@ const UserInfo = styled.div`
   gap: ${({ theme }) => theme.spacing.sm};
   padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md};
   background: ${({ theme }) => theme.colors.bgTertiary};
-  border-radius: 8px;
+  border-radius: 6px;
   margin-left: ${({ theme }) => theme.spacing.md};
 `;
 

@@ -78,7 +78,7 @@ const PushButton = styled.button<{ $hasChanges?: boolean }>`
   background: ${({ theme, $hasChanges }) => $hasChanges ? theme.colors.accentOrange : 'transparent'};
   color: ${({ theme, $hasChanges }) => $hasChanges ? 'white' : theme.colors.textSecondary};
   border: 1px solid ${({ theme, $hasChanges }) => $hasChanges ? theme.colors.accentOrange : theme.colors.borderColor};
-  border-radius: 8px;
+  border-radius: 6px;
   font-size: 13px;
   font-weight: ${({ $hasChanges }) => $hasChanges ? '600' : '400'};
   display: flex;
@@ -182,13 +182,23 @@ function Timeline({ onPush, isPushing, hasChanges, zoom = 1, onZoomChange }: Tim
   // Get the latest version (first in the array)
   const currentVersion = versions[0];
   
+  // Debug logging
+  console.log('[Timeline] Current version:', currentVersion);
+  console.log('[Timeline] All versions:', versions);
+  
   // Use pending data if available for display
   const displayData = hasPendingChanges && pendingData ? pendingData : projectData;
 
   const formatDate = (timestamp: number | string) => {
-    if (!timestamp) return 'Unknown date';
+    if (!timestamp) {
+      console.warn('[Timeline] No timestamp provided');
+      return 'Unknown date';
+    }
     const date = new Date(timestamp);
-    if (isNaN(date.getTime())) return 'Invalid date';
+    if (isNaN(date.getTime())) {
+      console.warn('[Timeline] Invalid timestamp:', timestamp);
+      return 'Invalid date';
+    }
     return date.toLocaleString('en-US', {
       month: 'short',
       day: 'numeric',
