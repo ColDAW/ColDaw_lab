@@ -171,7 +171,7 @@ const UploadArea = styled.div<{ $isDragging: boolean }>`
   height: 200px;
   border: 1px solid ${({ theme, $isDragging }) => 
     $isDragging ? theme.colors.accentOrange : theme.colors.borderColor};
-  border-radius: 16px;
+  border-radius: 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -179,71 +179,49 @@ const UploadArea = styled.div<{ $isDragging: boolean }>`
   background: ${({ theme, $isDragging }) => 
     $isDragging 
       ? theme.colors.bgTertiary 
-      : `linear-gradient(135deg, ${theme.colors.bgSecondary} 0%, rgba(30, 30, 30, 0.5) 100%)`};
+      : theme.colors.bgSecondary};
   cursor: pointer;
   transition: border-color 0.3s ease;
   margin-bottom: ${({ theme }) => theme.spacing.xl};
   position: relative;
   overflow: hidden;
-  isolation: isolate;
   
-  /* Apple Intelligence style animated gradient overlay */
+  /* Apple Intelligence style gradient fill effect */
   &::before {
     content: '';
     position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: conic-gradient(
-      from 0deg at 50% 50%,
-      transparent 0deg,
-      rgba(59, 130, 246, 0.15) 60deg,
-      rgba(99, 102, 241, 0.2) 120deg,
-      rgba(139, 92, 246, 0.15) 180deg,
-      transparent 240deg,
-      transparent 360deg
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 350px;
+    transform: translate(-50%, -150px);
+    background-image: linear-gradient(
+      90deg,
+      #89aaf8 20%,
+      #b770fc 40%,
+      #d24dc3 60%,
+      #e85560 80%,
+      #ee7b6b 100%
     );
+    background-size: 0% 0%;
+    background-repeat: no-repeat;
+    background-position: top center;
+    filter: blur(35px);
     opacity: 0;
-    transition: opacity 0.3s ease;
-    animation: none;
-    z-index: -1;
+    transition: all 1.2s ease-in-out;
+    pointer-events: none;
+    z-index: 0;
   }
   
   &:hover::before {
-    opacity: 1;
-    animation: rotate-gradient 4s linear infinite;
-  }
-  
-  /* Inner glow effect */
-  &::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: 16px;
-    background: radial-gradient(
-      circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-      rgba(59, 130, 246, 0.08) 0%,
-      rgba(139, 92, 246, 0.05) 30%,
-      transparent 60%
-    );
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    pointer-events: none;
-    z-index: -1;
-  }
-  
-  &:hover::after {
+    background-size: 100% 20%;
     opacity: 1;
   }
   
-  @keyframes rotate-gradient {
-    0% {
-      transform: rotate(0deg);
-    }
-    100% {
-      transform: rotate(360deg);
-    }
+  /* Ensure content is above the gradient */
+  > * {
+    position: relative;
+    z-index: 1;
   }
   
   &:hover {
@@ -280,7 +258,7 @@ const ProjectsGrid = styled.div`
 const ProjectCard = styled.div`
   background: ${({ theme }) => theme.colors.bgSecondary};
   border: 1px solid ${({ theme }) => theme.colors.borderColor};
-  border-radius: 12px;
+  border-radius: 10px;
   overflow: hidden;
   cursor: pointer;
   transition: all 0.2s ease;

@@ -11,10 +11,10 @@ const TRACK_COLORS = [
 
 interface ProjectThumbnailProps {
   projectId: string;
-  projectName: string;
+  projectName?: string; // Optional, not used in rendering anymore
 }
 
-function ProjectThumbnail({ projectId, projectName }: ProjectThumbnailProps) {
+function ProjectThumbnail({ projectId }: ProjectThumbnailProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -168,14 +168,7 @@ function ProjectThumbnail({ projectId, projectName }: ProjectThumbnailProps) {
       ctx.stroke();
     }
     
-    // Draw project name overlay
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    ctx.fillRect(0, height - 30, width, 30);
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 14px "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", "Courier New", monospace';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(projectName, width / 2, height - 15);
+    // Removed project name overlay - it's already shown in the card
   };
 
   const renderProjectData = (
@@ -256,14 +249,7 @@ function ProjectThumbnail({ projectId, projectName }: ProjectThumbnailProps) {
       });
     });
 
-    // Draw project name overlay
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-    ctx.fillRect(0, height - 30, width, 30);
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 14px "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", "Courier New", monospace';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(projectName, width / 2, height - 15);
+    // Removed project name overlay - it's already shown in the card
   };
 
   return (

@@ -140,12 +140,12 @@ const ZoomSlider = styled.input`
     width: 10px;
     height: 16px;
     border-radius: 3px;
-    background: ${({ theme }) => theme.colors.accentBlue};
+    background: ${({ theme }) => theme.colors.textTertiary};
     cursor: pointer;
     transition: all 0.2s ease;
     
     &:hover {
-      background: ${({ theme }) => theme.colors.accentOrange};
+      background: ${({ theme }) => theme.colors.accentBlue};
       transform: scaleY(1.1);
     }
   }
@@ -154,13 +154,13 @@ const ZoomSlider = styled.input`
     width: 10px;
     height: 16px;
     border-radius: 3px;
-    background: ${({ theme }) => theme.colors.accentBlue};
+    background: ${({ theme }) => theme.colors.textTertiary};
     cursor: pointer;
     border: none;
     transition: all 0.2s ease;
     
     &:hover {
-      background: ${({ theme }) => theme.colors.accentOrange};
+      background: ${({ theme }) => theme.colors.accentBlue};
       transform: scaleY(1.1);
     }
   }
