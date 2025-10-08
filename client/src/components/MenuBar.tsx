@@ -16,6 +16,7 @@ import { useStore } from '../store/useStore';
 import { projectApi, versionApi } from '../api/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useModal } from '../contexts/ModalContext';
+import GradientLoadingEffect from './GradientLoadingEffect';
 
 interface MenuBarProps {
   onToggleHistory?: () => void;
@@ -76,6 +77,8 @@ const Button = styled.button`
   align-items: center;
   gap: ${({ theme }) => theme.spacing.sm};
   cursor: pointer;
+  position: relative;
+  overflow: hidden;
   
   &:hover {
     background: ${({ theme }) => theme.colors.bgTertiary};
@@ -86,6 +89,14 @@ const Button = styled.button`
   svg {
     width: 16px;
     height: 16px;
+    position: relative;
+    z-index: 2;
+  }
+  
+  /* Text needs to be above gradient */
+  & > * {
+    position: relative;
+    z-index: 2;
   }
 `;
 
@@ -368,6 +379,7 @@ function MenuBar({ onToggleHistory, onVersionCommitted, currentVersionId, onFile
       
       <ButtonGroup>
         <Button onClick={handleImport} disabled={isImporting}>
+          <GradientLoadingEffect isActive={isImporting} fullscreen={false} />
           <Upload />
           {isImporting ? 'Importing...' : 'Import'}
         </Button>
