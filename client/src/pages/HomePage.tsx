@@ -190,17 +190,18 @@ const UploadArea = styled.div<{ $isDragging: boolean }>`
   &::before {
     content: '';
     position: absolute;
-    bottom: 0;
+    bottom: -10px;
     left: 5%;
     width: 28%;
     height: 0%;
     background-image: linear-gradient(
       0deg,
-      rgba(137, 170, 248, 1) 0%,
-      rgba(163, 141, 250, 0.95) 25%,
-      rgba(183, 112, 252, 0.9) 50%,
-      rgba(197, 94, 223, 0.7) 75%,
-      rgba(210, 77, 195, 0.3) 90%,
+      rgba(137, 170, 248, 0.85) 0%,
+      rgba(163, 141, 250, 0.75) 20%,
+      rgba(183, 112, 252, 0.65) 40%,
+      rgba(197, 94, 223, 0.5) 60%,
+      rgba(210, 77, 195, 0.3) 80%,
+      rgba(210, 77, 195, 0.1) 95%,
       rgba(210, 77, 195, 0) 100%
     );
     filter: blur(45px);
@@ -216,17 +217,18 @@ const UploadArea = styled.div<{ $isDragging: boolean }>`
   &::after {
     content: '';
     position: absolute;
-    bottom: 0;
+    bottom: -10px;
     left: 25%;
     width: 32%;
     height: 0%;
     background-image: linear-gradient(
       0deg,
-      rgba(183, 112, 252, 1) 0%,
-      rgba(197, 94, 223, 0.95) 30%,
-      rgba(210, 77, 195, 0.9) 55%,
-      rgba(221, 81, 145, 0.75) 75%,
-      rgba(232, 85, 96, 0.4) 90%,
+      rgba(183, 112, 252, 0.9) 0%,
+      rgba(197, 94, 223, 0.8) 25%,
+      rgba(210, 77, 195, 0.7) 45%,
+      rgba(221, 81, 145, 0.55) 65%,
+      rgba(232, 85, 96, 0.35) 82%,
+      rgba(232, 85, 96, 0.15) 95%,
       rgba(232, 85, 96, 0) 100%
     );
     filter: blur(42px);
@@ -240,12 +242,12 @@ const UploadArea = styled.div<{ $isDragging: boolean }>`
   
   &:hover::before {
     height: 180%;
-    opacity: 1;
+    opacity: 0.95;
   }
   
   &:hover::after {
     height: 195%;
-    opacity: 1;
+    opacity: 0.95;
   }
   
   /* Ensure content is above the gradient */
@@ -262,17 +264,18 @@ const UploadArea = styled.div<{ $isDragging: boolean }>`
 /* Additional gradient layers for dynamic wave effect */
 const GradientLayer3 = styled.div`
   position: absolute;
-  bottom: 0;
+  bottom: -10px;
   left: 50%;
   width: 26%;
   height: 0%;
   background-image: linear-gradient(
     0deg,
-    rgba(210, 77, 195, 1) 0%,
-    rgba(221, 81, 145, 0.95) 28%,
-    rgba(232, 85, 96, 0.9) 52%,
-    rgba(235, 104, 81, 0.7) 72%,
-    rgba(238, 123, 107, 0.35) 88%,
+    rgba(210, 77, 195, 0.88) 0%,
+    rgba(221, 81, 145, 0.78) 22%,
+    rgba(232, 85, 96, 0.68) 42%,
+    rgba(235, 104, 81, 0.52) 62%,
+    rgba(238, 123, 107, 0.32) 80%,
+    rgba(238, 123, 107, 0.12) 95%,
     rgba(238, 123, 107, 0) 100%
   );
   filter: blur(48px);
@@ -285,23 +288,24 @@ const GradientLayer3 = styled.div`
   
   ${UploadArea}:hover & {
     height: 170%;
-    opacity: 1;
+    opacity: 0.92;
   }
 `;
 
 const GradientLayer4 = styled.div`
   position: absolute;
-  bottom: 0;
+  bottom: -10px;
   right: 8%;
   width: 30%;
   height: 0%;
   background-image: linear-gradient(
     0deg,
-    rgba(232, 85, 96, 1) 0%,
-    rgba(235, 104, 81, 0.95) 32%,
-    rgba(238, 123, 107, 0.88) 58%,
-    rgba(241, 142, 127, 0.68) 78%,
-    rgba(245, 161, 147, 0.3) 92%,
+    rgba(232, 85, 96, 0.92) 0%,
+    rgba(235, 104, 81, 0.82) 26%,
+    rgba(238, 123, 107, 0.7) 48%,
+    rgba(241, 142, 127, 0.54) 68%,
+    rgba(245, 161, 147, 0.28) 86%,
+    rgba(245, 161, 147, 0.1) 96%,
     rgba(245, 161, 147, 0) 100%
   );
   filter: blur(40px);
@@ -314,7 +318,7 @@ const GradientLayer4 = styled.div`
   
   ${UploadArea}:hover & {
     height: 185%;
-    opacity: 1;
+    opacity: 0.9;
   }
 `;
 
@@ -323,6 +327,13 @@ const UploadIcon = styled(Upload)`
   height: 48px;
   color: ${({ theme }) => theme.colors.textSecondary};
   margin-bottom: ${({ theme }) => theme.spacing.md};
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  
+  ${UploadArea}:hover & {
+    transform: translateY(-8px) scale(1.08);
+    color: ${({ theme }) => theme.colors.textPrimary};
+    filter: drop-shadow(0 4px 12px rgba(137, 170, 248, 0.4));
+  }
 `;
 
 const UploadText = styled.p`
@@ -330,11 +341,25 @@ const UploadText = styled.p`
   font-weight: 500;
   color: ${({ theme }) => theme.colors.textPrimary};
   margin-bottom: ${({ theme }) => theme.spacing.xs};
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  
+  ${UploadArea}:hover & {
+    transform: translateY(-4px);
+    color: ${({ theme }) => theme.colors.textPrimary};
+    font-weight: 600;
+    text-shadow: 0 2px 8px rgba(183, 112, 252, 0.3);
+  }
 `;
 
 const UploadHint = styled.p`
   font-size: 12px;
   color: ${({ theme }) => theme.colors.textTertiary};
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  
+  ${UploadArea}:hover & {
+    transform: translateY(-2px);
+    color: ${({ theme }) => theme.colors.textSecondary};
+  }
 `;
 
 const ProjectsGrid = styled.div`
