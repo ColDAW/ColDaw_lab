@@ -105,8 +105,8 @@ const GradientContainer = styled.div<GradientContainerProps>`
   right: 0;
   bottom: 0;
   overflow: hidden;
-  pointer-events: ${({ $isActive }) => ($isActive ? 'all' : 'none')};
-  z-index: ${({ $fullscreen }) => ($fullscreen ? '9999' : '10')};
+  pointer-events: none;
+  z-index: ${({ $fullscreen }) => ($fullscreen ? '9999' : '1')};
   transition: opacity 0.6s ease-out;
   opacity: ${({ $isActive }) => ($isActive ? '1' : '0')};
   

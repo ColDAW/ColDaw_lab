@@ -80,8 +80,25 @@ const Button = styled.button`
   position: relative;
   overflow: hidden;
   
-  &:hover {
+  /* Gradient background container - behind text */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     background: ${({ theme }) => theme.colors.bgTertiary};
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    z-index: 0;
+  }
+  
+  &:hover::before {
+    opacity: 1;
+  }
+  
+  &:hover {
     color: ${({ theme }) => theme.colors.textPrimary};
     border-color: ${({ theme }) => theme.colors.borderActive};
   }
@@ -90,13 +107,13 @@ const Button = styled.button`
     width: 16px;
     height: 16px;
     position: relative;
-    z-index: 2;
+    z-index: 3;
   }
   
   /* Text needs to be above gradient */
-  & > * {
+  & > *:not(div) {
     position: relative;
-    z-index: 2;
+    z-index: 3;
   }
 `;
 
