@@ -196,15 +196,16 @@ const UploadArea = styled.div<{ $isDragging: boolean }>`
     height: 0%;
     background-image: linear-gradient(
       0deg,
-      rgba(137, 170, 248, 0.85) 0%,
-      rgba(163, 141, 250, 0.75) 20%,
-      rgba(183, 112, 252, 0.65) 40%,
-      rgba(197, 94, 223, 0.5) 60%,
-      rgba(210, 77, 195, 0.3) 80%,
-      rgba(210, 77, 195, 0.1) 95%,
+      rgba(137, 170, 248, 0.88) 0%,
+      rgba(163, 141, 250, 0.72) 18%,
+      rgba(183, 112, 252, 0.58) 35%,
+      rgba(197, 94, 223, 0.42) 52%,
+      rgba(210, 77, 195, 0.26) 68%,
+      rgba(210, 77, 195, 0.12) 82%,
+      rgba(210, 77, 195, 0.04) 94%,
       rgba(210, 77, 195, 0) 100%
     );
-    filter: blur(45px);
+    filter: blur(60px);
     opacity: 0;
     transition: height 1.2s cubic-bezier(0.34, 1.56, 0.64, 1),
                 opacity 0.8s ease-out;
@@ -223,15 +224,16 @@ const UploadArea = styled.div<{ $isDragging: boolean }>`
     height: 0%;
     background-image: linear-gradient(
       0deg,
-      rgba(183, 112, 252, 0.9) 0%,
-      rgba(197, 94, 223, 0.8) 25%,
-      rgba(210, 77, 195, 0.7) 45%,
-      rgba(221, 81, 145, 0.55) 65%,
-      rgba(232, 85, 96, 0.35) 82%,
-      rgba(232, 85, 96, 0.15) 95%,
+      rgba(183, 112, 252, 0.92) 0%,
+      rgba(197, 94, 223, 0.78) 22%,
+      rgba(210, 77, 195, 0.64) 40%,
+      rgba(221, 81, 145, 0.48) 56%,
+      rgba(232, 85, 96, 0.32) 70%,
+      rgba(232, 85, 96, 0.18) 82%,
+      rgba(232, 85, 96, 0.06) 92%,
       rgba(232, 85, 96, 0) 100%
     );
-    filter: blur(42px);
+    filter: blur(58px);
     opacity: 0;
     transition: height 1.35s cubic-bezier(0.34, 1.56, 0.64, 1),
                 opacity 0.85s ease-out;
@@ -241,12 +243,12 @@ const UploadArea = styled.div<{ $isDragging: boolean }>`
   }
   
   &:hover::before {
-    height: 180%;
+    height: 130%;
     opacity: 0.95;
   }
   
   &:hover::after {
-    height: 195%;
+    height: 140%;
     opacity: 0.95;
   }
   
@@ -270,15 +272,16 @@ const GradientLayer3 = styled.div`
   height: 0%;
   background-image: linear-gradient(
     0deg,
-    rgba(210, 77, 195, 0.88) 0%,
-    rgba(221, 81, 145, 0.78) 22%,
-    rgba(232, 85, 96, 0.68) 42%,
-    rgba(235, 104, 81, 0.52) 62%,
-    rgba(238, 123, 107, 0.32) 80%,
-    rgba(238, 123, 107, 0.12) 95%,
+    rgba(210, 77, 195, 0.90) 0%,
+    rgba(221, 81, 145, 0.76) 20%,
+    rgba(232, 85, 96, 0.62) 38%,
+    rgba(235, 104, 81, 0.46) 54%,
+    rgba(238, 123, 107, 0.30) 68%,
+    rgba(238, 123, 107, 0.16) 80%,
+    rgba(238, 123, 107, 0.05) 92%,
     rgba(238, 123, 107, 0) 100%
   );
-  filter: blur(48px);
+  filter: blur(62px);
   opacity: 0;
   transition: height 1.15s cubic-bezier(0.34, 1.56, 0.64, 1),
               opacity 0.75s ease-out;
@@ -287,7 +290,7 @@ const GradientLayer3 = styled.div`
   z-index: 0;
   
   ${UploadArea}:hover & {
-    height: 170%;
+    height: 125%;
     opacity: 0.92;
   }
 `;
@@ -300,15 +303,16 @@ const GradientLayer4 = styled.div`
   height: 0%;
   background-image: linear-gradient(
     0deg,
-    rgba(232, 85, 96, 0.92) 0%,
-    rgba(235, 104, 81, 0.82) 26%,
-    rgba(238, 123, 107, 0.7) 48%,
-    rgba(241, 142, 127, 0.54) 68%,
-    rgba(245, 161, 147, 0.28) 86%,
-    rgba(245, 161, 147, 0.1) 96%,
+    rgba(232, 85, 96, 0.94) 0%,
+    rgba(235, 104, 81, 0.80) 24%,
+    rgba(238, 123, 107, 0.66) 44%,
+    rgba(241, 142, 127, 0.50) 60%,
+    rgba(245, 161, 147, 0.32) 74%,
+    rgba(245, 161, 147, 0.16) 86%,
+    rgba(245, 161, 147, 0.04) 95%,
     rgba(245, 161, 147, 0) 100%
   );
-  filter: blur(40px);
+  filter: blur(56px);
   opacity: 0;
   transition: height 1.25s cubic-bezier(0.34, 1.56, 0.64, 1),
               opacity 0.82s ease-out;
@@ -317,7 +321,7 @@ const GradientLayer4 = styled.div`
   z-index: 0;
   
   ${UploadArea}:hover & {
-    height: 185%;
+    height: 135%;
     opacity: 0.9;
   }
 `;
