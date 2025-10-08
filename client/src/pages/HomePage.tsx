@@ -7,7 +7,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { useModal } from '../contexts/ModalContext';
 import AuthModal from '../components/AuthModal';
 import ProjectThumbnailCanvas from '../components/ProjectThumbnail';
-import GradientLoadingEffect from '../components/GradientLoadingEffect';
 
 const Container = styled.div`
   width: 100vw;
@@ -758,9 +757,6 @@ function HomePage() {
 
   return (
     <Container>
-      {/* Full-screen gradient loading effect */}
-      <GradientLoadingEffect isActive={isUploading} fullscreen />
-      
       {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
       
       {/* Left Sidebar */}

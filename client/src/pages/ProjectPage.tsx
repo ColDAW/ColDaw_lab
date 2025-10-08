@@ -10,6 +10,7 @@ import VersionHistory from '../components/VersionHistory';
 import CollaboratorCursors from '../components/CollaboratorCursors';
 import { useAuth } from '../contexts/AuthContext';
 import { useModal } from '../contexts/ModalContext';
+import GradientLoadingEffect from '../components/GradientLoadingEffect';
 
 const Container = styled.div`
   width: 100vw;
@@ -47,7 +48,10 @@ const Loading = styled.div`
   align-items: center;
   justify-content: center;
   font-size: 18px;
-  color: ${({ theme }) => theme.colors.textSecondary};
+  color: ${({ theme }) => theme.colors.textPrimary};
+  position: relative;
+  z-index: 100;
+  font-weight: 500;
 `;
 
 function ProjectPage() {
@@ -326,7 +330,9 @@ function ProjectPage() {
   if (authLoading || isLoading) {
     return (
       <Container>
-        <Loading>Loading project...</Loading>
+        <GradientLoadingEffect isActive={true} fullscreen>
+          <Loading>Loading project...</Loading>
+        </GradientLoadingEffect>
       </Container>
     );
   }
