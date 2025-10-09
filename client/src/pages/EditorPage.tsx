@@ -541,7 +541,7 @@ const Button = styled.button<{ $variant?: 'primary' | 'secondary' }>`
   }
 `;
 
-function HomePage() {
+function EditorPage() {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const { showAlert, showConfirm, showPrompt } = useModal();
@@ -938,4 +938,4 @@ function HomePage() {
   );
 }
 
-export default HomePage;
+export default EditorPage;

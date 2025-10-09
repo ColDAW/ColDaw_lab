@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import HomePage from './pages/HomePage';
+import LandingPage from './pages/LandingPage';
+import EditorPage from './pages/EditorPage';
 import ProjectPage from './pages/ProjectPage';
 import AccountPage from './pages/AccountPage';
 import { ThemeProvider } from 'styled-components';
@@ -15,7 +16,8 @@ function App() {
         <ModalProvider>
           <BrowserRouter>
             <Routes>
-              <Route path="/" element={<HomePage />} />
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/editor" element={<EditorPage />} />
               <Route 
                 path="/project/:projectId" 
                 element={
