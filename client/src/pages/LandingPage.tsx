@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { 
   Play, Users, Music, Download,
-  Volume2, Mic, Layers, Sparkles
+  Volume2, Layers, Sparkles
 } from 'lucide-react';
 import thumbnail_vid from '../img/thumbnail_vid.mp4';
 
