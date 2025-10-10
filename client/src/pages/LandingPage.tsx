@@ -399,15 +399,18 @@ const ClipCard = styled.div<{
   height: 70px;
   @media (max-width: 768px) {
     position: static !important;
-    width: 95vw !important;
-    min-width: 0;
-    max-width: 99vw;
+    width: ${props => Math.floor(props.$width * 0.7)}px !important;
+    min-width: 90px;
+    max-width: 200px;
+    height: 50px;
     left: unset !important;
     top: unset !important;
-    margin: 0.5rem 0;
+    margin: 0.3rem 0;
     transform: none !important;
     opacity: 1 !important;
     z-index: 1;
+    padding: 0.6rem 0.4rem;
+    border-radius: 12px;
   }
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -944,8 +947,9 @@ const LandingPage: React.FC = () => {
           <Logo>ColDAW</Logo>
           <NavLinks>
             <NavLink href="#features">Features</NavLink>
-            <NavLink href="#pricing">Pricing</NavLink>
-            <NavLink href="#support">Support</NavLink>
+            <NavLink href="#documentation">Documentation</NavLink>
+            <NavLink href="#downloads">Download</NavLink>
+            
           </NavLinks>
           <CTAButton onClick={handleGetStarted}>Editor</CTAButton>
         </Nav>
@@ -989,115 +993,219 @@ const LandingPage: React.FC = () => {
       </CompositionDescription>
 
       <CompositionSection ref={compositionRef}>
+        {/* 桌面端：原有绝对定位动画，移动端：分轨横排 */}
         <ClipCardsContainer ref={cardsContainerRef} $isVisible={cardsVisible}>
-          {clipCardsData.map((card) => {
-            const { finalX, finalY, initialX, initialY, delay } = calculateCardPositions(card);
-            const isRemoving = removingCards.has(card.id);
-            
-            return (
-              <ClipCard
-                key={card.id}
-                $finalX={finalX}
-                $finalY={finalY}
-                $initialX={initialX}
-                $initialY={initialY}
-                $width={card.width}
-                $delay={delay}
-                $isVisible={cardsVisible}
-                $isRemoving={isRemoving}
-                style={{
-                  background: `linear-gradient(135deg, ${card.color}60 0%, ${card.color}30 100%)`,
-                  borderColor: `${card.color}80`,
-                  boxShadow: `0 0 16px 2px ${card.color}22, 0 0 32px 4px ${card.color}11, 0 0 0px 0px #0000` // 主色微弱发光
-                }}
-              >
-                {card.badge && (
-                  <CardBadge $type={card.badge}>
-                    {card.badge === 'add' && '+'}
-                    {card.badge === 'remove' && '−'}
-                    {card.badge === 'modify' && '✦'}
-                  </CardBadge>
-                )}
-                <ClipCardContent>
-                  <ClipCardTitle>{card.title}</ClipCardTitle>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    height: '26px',
-                    gap: '2px',
-                  }}>
-                    {Array.from({length: Math.floor(card.width / 4.5)}, (_, i) => {
-                      // 使用卡片的waveformSeed和位置i生成唯一的随机值
-                      const baseSeed = card.waveformSeed || 0;
-                      
-                      // 时域波形：在同一时刻，不同频率成分叠加
-                      // 使用当前采样点位置作为时间
-                      const time = i * 0.15; // 增加时间步进，让变化更快
-                      
-                      // 更强的低频包络（整体音量变化）- 调制整体振幅
-                      const envelope = Math.sin((baseSeed + time) * 0.02) * 0.7 + 0.8;
-                      
-                      // 更强的基频和谐波叠加（时域波形）
-                      const fundamental = Math.sin((baseSeed + time) * 0.3) * 0.65; // 增强基频
-                      const harmonic2 = Math.sin((baseSeed + time) * 0.6 + 0.3) * 0.4; // 增强二次谐波
-                      const harmonic3 = Math.sin((baseSeed + time) * 0.9 + 0.6) * 0.3; // 增强三次谐波
-                      const harmonic4 = Math.sin((baseSeed + time) * 1.2 + 0.9) * 0.22; // 增强四次谐波
-                      
-                      // 更强的中频成分
-                      const midFreq1 = Math.sin((baseSeed + time) * 0.45 + 1.2) * 0.35;
-                      const midFreq2 = Math.sin((baseSeed + time) * 0.7 + 1.8) * 0.28;
-                      
-                      // 更强的高频细节和噪声
-                      const highDetail = Math.sin((baseSeed + time) * 2.0 + 2.4) * 0.18;
-                      const noise = Math.sin((baseSeed + time) * 10.5 + 3.3) * 0.15;
-                      
-                      // 添加更多频率成分，创造更复杂的波形
-                      const extra1 = Math.sin((baseSeed + time) * 0.8 + 4.5) * 0.25;
-                      const extra2 = Math.sin((baseSeed + time) * 1.5 + 5.2) * 0.2;
-                      
-                      // 时域叠加：所有频率成分在当前时刻的叠加
-                      const timeSignal = fundamental + harmonic2 + harmonic3 + harmonic4 + 
-                                        midFreq1 + midFreq2 + highDetail + noise + extra1 + extra2;
-                      
-                      // 用包络调制整体振幅
-                      const modulatedSignal = timeSignal * envelope;
-                      
-                      // 更激进的压缩和归一化，增加对比度
-                      const normalized = (modulatedSignal + 2.5) / 5.0;
-                      const compressed = Math.pow(Math.max(0, Math.min(1, normalized)), 0.45); // 降低指数，增加对比
-                      
-                      // 降低静音阈值，保留更多细节
-                      const silenceThreshold = 0.05;
-                      const finalAmplitude = compressed < silenceThreshold ? compressed * 0.2 : compressed;
-                      
-                      // 映射到像素高度，增加动态范围
-                      const height = 1.5 + finalAmplitude * 24;
-                      
-                      return (
-                        <div
-                          key={i}
-                          style={{
-                            width: '1.8px',
-                            height: `${Math.max(1.5, Math.min(26, height))}px`,
-                            background: 'rgba(255,255,255,0.35)',
-                            borderRadius: '0.4px',
-                            transition: 'height 0.4s ease-out'
-                          }}
-                        />
-                      );
-                    })}
-                  </div>
-                </ClipCardContent>
-              </ClipCard>
-            );
-          })}
+          {/* 桌面端渲染所有卡片，移动端分轨渲染 */}
+          {/* 移动端分轨横排渲染 */}
+          {Array.from({ length: 4 }).map((_, rowIdx) => (
+            <div
+              key={rowIdx}
+              className="daw-track-row"
+            >
+              {clipCardsData.filter(card => card.row === rowIdx).map(card => {
+                const { finalX, finalY, initialX, initialY, delay } = calculateCardPositions(card);
+                const isRemoving = removingCards.has(card.id);
+                return (
+                  <ClipCard
+                    key={card.id}
+                    $finalX={finalX}
+                    $finalY={finalY}
+                    $initialX={initialX}
+                    $initialY={initialY}
+                    $width={card.width}
+                    $delay={delay}
+                    $isVisible={cardsVisible}
+                    $isRemoving={isRemoving}
+                    style={{
+                      background: `linear-gradient(135deg, ${card.color}60 0%, ${card.color}30 100%)`,
+                      borderColor: `${card.color}80`,
+                      boxShadow: `0 0 16px 2px ${card.color}22, 0 0 32px 4px ${card.color}11, 0 0 0px 0px #0000`
+                    }}
+                  >
+                    {card.badge && (
+                      <CardBadge $type={card.badge}>
+                        {card.badge === 'add' && '+'}
+                        {card.badge === 'remove' && '−'}
+                        {card.badge === 'modify' && '✦'}
+                      </CardBadge>
+                    )}
+                    <ClipCardContent>
+                      <ClipCardTitle>{card.title}</ClipCardTitle>
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        height: '18px',
+                        gap: '1.2px',
+                        overflow: 'hidden',
+                        width: '100%'
+                      }}>
+                        {Array.from({length: Math.max(15, Math.floor(Math.min(card.width * 0.7, 180) / 2.8))}, (_, i) => {
+                          // 移动端波形渲染，缩小卡片后调整波形密度和数量
+                          const baseSeed = card.waveformSeed || Math.abs(card.id.charCodeAt(0) * 1000 + card.id.charCodeAt(1) * 100);
+                          const time = i * 2;
+                          const envelope = Math.sin((baseSeed + time) * 0.02) * 0.7 + 0.8;
+                          const fundamental = Math.sin((baseSeed + time) * 0.3) * 0.65;
+                          const harmonic2 = Math.sin((baseSeed + time) * 0.6 + 0.3) * 0.4;
+                          const harmonic3 = Math.sin((baseSeed + time) * 0.9 + 0.6) * 0.3;
+                          const harmonic4 = Math.sin((baseSeed + time) * 1.2 + 0.9) * 0.22;
+                          const midFreq1 = Math.sin((baseSeed + time) * 0.45 + 1.2) * 0.35;
+                          const midFreq2 = Math.sin((baseSeed + time) * 0.7 + 1.8) * 0.28;
+                          const highDetail = Math.sin((baseSeed + time) * 2.0 + 2.4) * 0.18;
+                          const noise = Math.sin((baseSeed + time) * 10.5 + 3.3) * 0.15;
+                          const extra1 = Math.sin((baseSeed + time) * 0.8 + 4.5) * 0.25;
+                          const extra2 = Math.sin((baseSeed + time) * 1.5 + 5.2) * 0.2;
+                          const timeSignal = fundamental + harmonic2 + harmonic3 + harmonic4 + midFreq1 + midFreq2 + highDetail + noise + extra1 + extra2;
+                          const modulatedSignal = timeSignal * envelope;
+                          const normalized = (modulatedSignal + 1) / 4.0;
+                          const compressed = Math.pow(Math.max(0, Math.min(1, normalized)), 0.45);
+                          const silenceThreshold = 0.05;
+                          const finalAmplitude = compressed < silenceThreshold ? compressed * 0.2 : compressed;
+                          const height = Math.max(2, 1 + finalAmplitude * 16); // 移动端更小的波形高度
+                          return (
+                            <div
+                              key={i}
+                              style={{
+                                width: '1.2px',
+                                height: `${height}px`,
+                                background: 'rgba(255, 255, 255, 0.4)',
+                                borderRadius: '0.4px',
+                                transition: 'height 0.4s ease-out',
+                                flexShrink: 0
+                              }}
+                            />
+                          );
+                        })}
+                      </div>
+                    </ClipCardContent>
+                  </ClipCard>
+                );
+              })}
+            </div>
+          ))}
+          {/* 桌面端原有绝对定位动画卡片 */}
+          <div className="daw-desktop-cards">
+            {clipCardsData.map((card) => {
+              const { finalX, finalY, initialX, initialY, delay } = calculateCardPositions(card);
+              const isRemoving = removingCards.has(card.id);
+              return (
+                <ClipCard
+                  key={card.id}
+                  $finalX={finalX}
+                  $finalY={finalY}
+                  $initialX={initialX}
+                  $initialY={initialY}
+                  $width={card.width}
+                  $delay={delay}
+                  $isVisible={cardsVisible}
+                  $isRemoving={isRemoving}
+                  style={{
+                    background: `linear-gradient(135deg, ${card.color}60 0%, ${card.color}30 100%)`,
+                    borderColor: `${card.color}80`,
+                    boxShadow: `0 0 16px 2px ${card.color}22, 0 0 32px 4px ${card.color}11, 0 0 0px 0px #0000`
+                  }}
+                >
+                  {card.badge && (
+                    <CardBadge $type={card.badge}>
+                      {card.badge === 'add' && '+'}
+                      {card.badge === 'remove' && '−'}
+                      {card.badge === 'modify' && '✦'}
+                    </CardBadge>
+                  )}
+                  <ClipCardContent>
+                    <ClipCardTitle>{card.title}</ClipCardTitle>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      height: '26px',
+                      gap: '1.8px',
+                      overflow: 'hidden',
+                      width: '100%'
+                    }}>
+                      {Array.from({length: Math.max(30, Math.floor(card.width / 3.2))}, (_, i) => {
+                        // 桌面端波形渲染，至少显示30个波形条
+                        const baseSeed = card.waveformSeed || Math.abs(card.id.charCodeAt(0) * 1000 + card.id.charCodeAt(1) * 100);
+                        const time = i * 2;
+                        const envelope = Math.sin((baseSeed + time) * 0.02) * 0.7 + 0.8;
+                        const fundamental = Math.sin((baseSeed + time) * 0.3) * 0.65;
+                        const harmonic2 = Math.sin((baseSeed + time) * 0.6 + 0.3) * 0.4;
+                        const harmonic3 = Math.sin((baseSeed + time) * 0.9 + 0.6) * 0.3;
+                        const harmonic4 = Math.sin((baseSeed + time) * 1.2 + 0.9) * 0.22;
+                        const midFreq1 = Math.sin((baseSeed + time) * 0.45 + 1.2) * 0.35;
+                        const midFreq2 = Math.sin((baseSeed + time) * 0.7 + 1.8) * 0.28;
+                        const highDetail = Math.sin((baseSeed + time) * 2.0 + 2.4) * 0.18;
+                        const noise = Math.sin((baseSeed + time) * 10.5 + 3.3) * 0.15;
+                        const extra1 = Math.sin((baseSeed + time) * 0.8 + 4.5) * 0.25;
+                        const extra2 = Math.sin((baseSeed + time) * 1.5 + 5.2) * 0.2;
+                        const timeSignal = fundamental + harmonic2 + harmonic3 + harmonic4 + midFreq1 + midFreq2 + highDetail + noise + extra1 + extra2;
+                        const modulatedSignal = timeSignal * envelope;
+                        const normalized = (modulatedSignal + 1) / 4.0;
+                        const compressed = Math.pow(Math.max(0, Math.min(1, normalized)), 0.45);
+                        const silenceThreshold = 0.05;
+                        const finalAmplitude = compressed < silenceThreshold ? compressed * 0.2 : compressed;
+                        const height = Math.max(3, 2 + finalAmplitude * 24); // 确保最小高度为3px
+                        return (
+                          <div
+                            key={i}
+                            style={{
+                              width: '1.2px',
+                              height: `${height}px`,
+                              background: 'rgba(255, 255, 255, 0.4)',
+                              borderRadius: '0.4px',
+                              transition: 'height 0.4s ease-out',
+                              flexShrink: 0
+                            }}
+                          />
+                        );
+                      })}
+                    </div>
+                  </ClipCardContent>
+                </ClipCard>
+              );
+            })}
+          </div>
         </ClipCardsContainer>
+        {/* 响应式样式：移动端分轨横排，桌面端隐藏分轨行，移动端隐藏桌面绝对定位卡片 */}
+        <style>{`
+          @media (max-width: 768px) {
+            .daw-track-row {
+              display: flex;
+              flex-direction: row;
+              gap: 0.3rem;
+              overflow-x: auto;
+              padding: 0.15rem 0.1rem;
+              min-height: 60px;
+              align-items: flex-start;
+              width: 100vw;
+              padding-left: calc(0.5rem + var(--row-offset, 0px));
+            }
+            .daw-track-row:nth-child(1) {
+              --row-offset: 0px;
+            }
+            .daw-track-row:nth-child(2) {
+              --row-offset: 20px;
+            }
+            .daw-track-row:nth-child(3) {
+              --row-offset: -10px;
+            }
+            .daw-track-row:nth-child(4) {
+              --row-offset: 15px;
+            }
+            .daw-desktop-cards {
+              display: none !important;
+            }
+          }
+          @media (min-width: 769px) {
+            .daw-track-row {
+              display: none !important;
+            }
+          }
+        `}</style>
       </CompositionSection>
 
       <FeaturesSection id="features">
-        <SectionTitle>Collaborative Creation Redefined</SectionTitle>
+        <SectionTitle>Smart. Fast. Seamless.</SectionTitle>
         <SectionSubtitle>
-          From personal studios to team collaboration, ColDAW provides a seamless creative experience.
+          From solo artists to full-scale teams, ColDAW streamlines how ideas evolve by connecting creativity, collaboration, and version control into one fluid workspace.
         </SectionSubtitle>
         
         <FeaturesGrid>
