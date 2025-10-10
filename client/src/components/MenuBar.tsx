@@ -3,7 +3,6 @@ import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import {
   Upload,
-  Download,
   GitBranch,
   Clock,
   Users,
@@ -17,6 +16,8 @@ import { projectApi, versionApi } from '../api/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useModal } from '../contexts/ModalContext';
 import GradientLoadingEffect from './GradientLoadingEffect';
+import ExportFormatSelector, { ExportFormat } from './ExportFormatSelector';
+import { generateTouchDesignerProject } from '../utils/touchDesignerGenerator';
 
 interface MenuBarProps {
   onToggleHistory?: () => void;
@@ -305,48 +306,127 @@ function MenuBar({ onToggleHistory, onVersionCommitted, currentVersionId, onFile
     }
   };
 
-  const handleDownload = async () => {
+  const handleFormatDownload = async (format: ExportFormat) => {
     if (!currentProject || !currentVersionId) {
       await showAlert({ message: 'No version selected to download', type: 'warning' });
       return;
     }
-    
+
     try {
-      const response = await versionApi.downloadVersion(currentProject.id, currentVersionId);
-      
-      // Get content type from response headers
-      const contentType = response.headers['content-type'] || 'application/octet-stream';
-      
-      // Create blob from response with correct content type
-      const blob = new Blob([response.data], { type: contentType });
-      
-      // Get filename from Content-Disposition header or create default
-      const contentDisposition = response.headers['content-disposition'];
-      let filename = `${currentProject.name}-${currentVersionId.substring(0, 8)}.als`;
-      
-      if (contentDisposition) {
-        const filenameMatch = contentDisposition.match(/filename="(.+)"/);
-        if (filenameMatch && filenameMatch[1]) {
-          filename = filenameMatch[1];
-        }
+      switch (format.id) {
+        case 'ableton':
+          await downloadAbletonFormat();
+          break;
+        case 'json':
+          await downloadJSONFormat();
+          break;
+        case 'touchdesigner':
+          await downloadTouchDesignerFormat();
+          break;
+        case 'logic':
+          await downloadLogicFormat();
+          break;
+        default:
+          await showAlert({ message: 'Unsupported export format', type: 'error' });
+          return;
       }
-      
-      // Create download link and trigger download
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      
-      console.log('Download completed:', filename);
     } catch (error) {
       console.error('Error downloading version:', error);
       await showAlert({ message: 'Failed to download version', type: 'error' });
     }
   };
+
+  const downloadAbletonFormat = async () => {
+    const response = await versionApi.downloadVersion(currentProject!.id, currentVersionId!);
+    
+    // Get content type from response headers
+    const contentType = response.headers['content-type'] || 'application/octet-stream';
+    
+    // Create blob from response with correct content type
+    const blob = new Blob([response.data], { type: contentType });
+    
+    // Get filename from Content-Disposition header or create default
+    const contentDisposition = response.headers['content-disposition'];
+    let filename = `${currentProject!.name}-${currentVersionId!.substring(0, 8)}.als`;
+    
+    if (contentDisposition) {
+      const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+      if (filenameMatch && filenameMatch[1]) {
+        filename = filenameMatch[1];
+      }
+    }
+    
+    // Create download link and trigger download
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+    
+    console.log('Ableton download completed:', filename);
+  };
+
+  const downloadJSONFormat = async () => {
+    // Get the current project data
+    const versionData = await projectApi.getVersion(currentProject!.id, currentVersionId!);
+    
+    const jsonData = JSON.stringify(versionData.data, null, 2);
+    const blob = new Blob([jsonData], { type: 'application/json' });
+    const filename = `${currentProject!.name}-${currentVersionId!.substring(0, 8)}.json`;
+    
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+    
+    console.log('JSON download completed:', filename);
+  };
+
+  const downloadTouchDesignerFormat = async () => {
+    // Get the current project data
+    const versionData = await projectApi.getVersion(currentProject!.id, currentVersionId!);
+    
+    // Generate TouchDesigner .toe file using the specialized generator
+    const toeData = generateTouchDesignerProject(
+      versionData.data, 
+      currentProject!.name, 
+      currentVersionId!
+    );
+    const blob = new Blob([toeData], { type: 'application/octet-stream' });
+    const filename = `${currentProject!.name}-${currentVersionId!.substring(0, 8)}.toe`;
+    
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+    
+    console.log('TouchDesigner download completed:', filename);
+    await showAlert({ 
+      message: `TouchDesigner project exported as ${filename}. The project contains DAT→CHOP setup ready for use.`, 
+      type: 'success' 
+    });
+  };
+
+  const downloadLogicFormat = async () => {
+    // For now, show a message that Logic Pro export is not implemented
+    await showAlert({ 
+      message: 'Logic Pro export is not yet implemented. Please use another format.', 
+      type: 'warning' 
+    });
+  };
+
+
 
   const handleBranch = async () => {
     if (!currentProject) return;
@@ -400,10 +480,7 @@ function MenuBar({ onToggleHistory, onVersionCommitted, currentVersionId, onFile
           <Upload />
           {isImporting ? 'Importing...' : 'Import'}
         </Button>
-        <Button onClick={handleDownload}>
-          <Download />
-          Download
-        </Button>
+        <ExportFormatSelector onFormatSelect={handleFormatDownload} />
         <Button onClick={handleBranch}>
           <GitBranch />
           Branch
