@@ -374,6 +374,14 @@ const ClipCardsContainer = styled.div<{ $isVisible: boolean }>`
   height: 360px;
   position: relative;
   margin: 2rem 0;
+  @media (max-width: 768px) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: auto;
+    min-height: 0;
+    padding: 0 0.5rem;
+  }
 `;
 
 const ClipCard = styled.div<{ 
@@ -389,6 +397,18 @@ const ClipCard = styled.div<{
   position: absolute;
   width: ${props => props.$width}px;
   height: 70px;
+  @media (max-width: 768px) {
+    position: static !important;
+    width: 95vw !important;
+    min-width: 0;
+    max-width: 99vw;
+    left: unset !important;
+    top: unset !important;
+    margin: 0.5rem 0;
+    transform: none !important;
+    opacity: 1 !important;
+    z-index: 1;
+  }
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 16px;
@@ -411,6 +431,12 @@ const ClipCard = styled.div<{
       : `translate(${props.$initialX - props.$finalX}px, ${props.$initialY - props.$finalY}px) scale(1.15)`;
   }};
   opacity: ${props => props.$isRemoving ? 0 : (props.$isVisible ? 1 : 0)};
+  @media (max-width: 768px) {
+    left: unset !important;
+    top: unset !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
   
   /* 动画过渡 - 慢速吸附效果（无弹跳） */
   transition: 
