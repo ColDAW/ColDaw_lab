@@ -984,9 +984,8 @@ const LandingPage: React.FC = () => {
       </VideoContainer>
 
       <CompositionDescription>
-        Transform your creative workflow with intuitive track management that adapts to your style. 
-        Organize multiple audio layers, adjust timing with precision, and maintain perfect synchronization 
-        across all elements of your composition.
+        Transform your creative workflow with our powerful track management tool that works with your favorite DAWs. 
+        Organize music projects, collaborate seamlessly, and maintain perfect synchronization.
       </CompositionDescription>
 
       <CompositionSection ref={compositionRef}>
