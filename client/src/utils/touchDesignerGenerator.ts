@@ -203,7 +203,7 @@ export class TouchDesignerGenerator {
   private generateConnections(project: TouchDesignerProject): void {
     if (!this.projectData || !this.projectData.tracks) return;
 
-    this.projectData.tracks.forEach((track: any, index: number) => {
+    this.projectData.tracks.forEach((_track: any, index: number) => {
       // Connect track chain: osc -> fx -> mix
       project.network.connections.push({
         from: `track_${index}_osc`,
@@ -292,7 +292,7 @@ export class TouchDesignerGenerator {
     return table;
   }
 
-  private getTrackFrequency(track: any, index: number): number {
+  private getTrackFrequency(_track: any, index: number): number {
     // Generate different frequencies for different tracks
     const baseFreqs = [440, 554, 659, 784, 880, 988, 1108]; // A4, C#5, E5, G5, A5, B5, C#6
     return baseFreqs[index % baseFreqs.length];
