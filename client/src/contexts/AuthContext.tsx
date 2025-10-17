@@ -14,7 +14,8 @@ interface AuthContextType {
   token: string | null;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name: string) => Promise<void>;
+  sendVerificationCode: (email: string) => Promise<void>;
+  register: (email: string, password: string, name: string, verificationCode: string) => Promise<void>;
   logout: () => Promise<void>;
   isLoading: boolean;
 }
@@ -78,9 +79,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const register = async (email: string, password: string, name: string) => {
+  const sendVerificationCode = async (email: string) => {
     try {
-      const response = await authApi.register(email, password, name);
+      await authApi.sendVerificationCode(email);
+    } catch (error) {
+      console.error('Failed to send verification code:', error);
+      throw error;
+    }
+  };
+
+  const register = async (email: string, password: string, name: string, verificationCode: string) => {
+    try {
+      const response = await authApi.register(email, password, name, verificationCode);
       
       // Auto login after registration
       localStorage.setItem('coldaw_token', response.token);
@@ -120,6 +130,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         token,
         isAuthenticated: !!user && !!token,
         login,
+        sendVerificationCode,
         register,
         logout,
         isLoading,

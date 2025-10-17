@@ -10,6 +10,9 @@ const JWT_SECRET = process.env.JWT_SECRET || 'coldaw-secret-key-change-in-produc
 const JWT_EXPIRES_IN = '7d'; // Token 有效期 7 天
 const SALT_ROUNDS = 10;
 
+// 临时存储验证码（生产环境中应使用 Redis 或数据库）
+const verificationCodes = new Map<string, { code: string; expiresAt: number }>();
+
 // Generate JWT token
 function generateToken(userId: string): string {
   return jwt.sign(
@@ -20,20 +23,71 @@ function generateToken(userId: string): string {
 }
 
 /**
+ * POST /api/auth/send-verification
+ * Send verification code to email
+ */
+router.post('/send-verification', async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+
+    // Check if user already exists
+    const existingUser = await db.getUserByEmail(email);
+    if (existingUser) {
+      return res.status(409).json({ error: 'User with this email already exists' });
+    }
+
+    // Generate 6-digit verification code
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+    // Store verification code
+    verificationCodes.set(email.toLowerCase(), { code, expiresAt });
+
+    // In a real application, you would send the code via email
+    // For now, we'll log it to console for testing
+    console.log(`Verification code for ${email}: ${code}`);
+
+    res.json({ message: 'Verification code sent successfully' });
+  } catch (error) {
+    console.error('Send verification error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
  * POST /api/auth/register
- * Register a new user account
+ * Register a new user account with verification code
  */
 router.post('/register', async (req, res) => {
   try {
-    const { email, password, name } = req.body;
+    const { email, password, name, verificationCode } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' });
+    if (!email || !password || !verificationCode) {
+      return res.status(400).json({ error: 'Email, password, and verification code are required' });
     }
 
     // Validate password strength
     if (password.length < 6) {
       return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    }
+
+    // Verify the verification code
+    const storedVerification = verificationCodes.get(email.toLowerCase());
+    if (!storedVerification) {
+      return res.status(400).json({ error: 'No verification code found for this email' });
+    }
+
+    if (Date.now() > storedVerification.expiresAt) {
+      verificationCodes.delete(email.toLowerCase());
+      return res.status(400).json({ error: 'Verification code has expired' });
+    }
+
+    if (storedVerification.code !== verificationCode) {
+      return res.status(400).json({ error: 'Invalid verification code' });
     }
 
     // Check if user already exists
@@ -56,6 +110,9 @@ router.post('/register', async (req, res) => {
     };
 
     await db.insertUser(newUser);
+
+    // Clear the verification code after successful registration
+    verificationCodes.delete(email.toLowerCase());
 
     // Generate JWT token
     const token = generateToken(newUser.id);

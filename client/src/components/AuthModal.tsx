@@ -128,9 +128,12 @@ function AuthModal({ onClose }: AuthModalProps) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login, register } = useAuth();
+  const [isVerificationStep, setIsVerificationStep] = useState(false);
+
+  const { login, sendVerificationCode, register } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -141,15 +144,28 @@ function AuthModal({ onClose }: AuthModalProps) {
       if (isLogin) {
         // 登录使用 email
         await login(email, password);
-      } else {
-        // 注册需要 email, password, name
-        if (!email || !name) {
-          throw new Error('Please enter all required fields');
+        if (onClose) {
+          onClose();
         }
-        await register(email, password, name);
-      }
-      if (onClose) {
-        onClose();
+      } else {
+        if (!isVerificationStep) {
+          // 第一步：发送验证码
+          if (!email || !name || !password) {
+            throw new Error('Please enter all required fields');
+          }
+          await sendVerificationCode(email);
+          setIsVerificationStep(true);
+
+        } else {
+          // 第二步：验证码验证并注册
+          if (!verificationCode) {
+            throw new Error('Please enter verification code');
+          }
+          await register(email, password, name, verificationCode);
+          if (onClose) {
+            onClose();
+          }
+        }
       }
     } catch (err: any) {
       setError(err.message || 'Operation failed, please try again');
@@ -162,43 +178,70 @@ function AuthModal({ onClose }: AuthModalProps) {
     setIsLogin(!isLogin);
     setError('');
     setName('');
+    setIsVerificationStep(false);
+
+    setVerificationCode('');
   };
 
   return (
     <Overlay onClick={onClose}>
       <Modal onClick={(e) => e.stopPropagation()}>
-        <Title>{isLogin ? 'Login' : 'Sign Up'}</Title>
+        <Title>
+          {isLogin ? 'Login' : (isVerificationStep ? 'Verify Email' : 'Sign Up')}
+        </Title>
         <Form onSubmit={handleSubmit}>
-          <Input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            autoFocus
-          />
-          {!isLogin && (
-            <Input
-              type="text"
-              placeholder="Name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              minLength={2}
-              maxLength={50}
-            />
+          {!isVerificationStep && (
+            <>
+              <Input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoFocus
+              />
+              {!isLogin && (
+                <Input
+                  type="text"
+                  placeholder="Name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  minLength={2}
+                  maxLength={50}
+                />
+              )}
+              <Input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+              />
+            </>
           )}
-          <Input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={6}
-          />
+          {isVerificationStep && (
+            <>
+              <p style={{ color: '#b0b0b0', fontSize: '14px', textAlign: 'center', margin: '0 0 16px 0' }}>
+                We've sent a verification code to {email}
+              </p>
+              <Input
+                type="text"
+                placeholder="Enter verification code"
+                value={verificationCode}
+                onChange={(e) => setVerificationCode(e.target.value)}
+                required
+                autoFocus
+                maxLength={6}
+              />
+            </>
+          )}
           {error && <ErrorMessage>{error}</ErrorMessage>}
           <Button type="submit" disabled={isLoading}>
-            {isLoading ? 'Processing...' : isLogin ? 'Login' : 'Sign Up'}
+            {isLoading ? 'Processing...' : 
+             isLogin ? 'Login' : 
+             isVerificationStep ? 'Verify & Sign Up' : 'Send Verification Code'}
           </Button>
           {onClose && (
             <SecondaryButton type="button" onClick={onClose}>
@@ -206,12 +249,14 @@ function AuthModal({ onClose }: AuthModalProps) {
             </SecondaryButton>
           )}
         </Form>
-        <ToggleText>
-          {isLogin ? "Don't have an account?" : 'Already have an account?'}
-          <button type="button" onClick={toggleMode}>
-            {isLogin ? 'Sign Up' : 'Login'}
-          </button>
-        </ToggleText>
+        {!isVerificationStep && (
+          <ToggleText>
+            {isLogin ? "Don't have an account?" : 'Already have an account?'}
+            <button type="button" onClick={toggleMode}>
+              {isLogin ? 'Sign Up' : 'Login'}
+            </button>
+          </ToggleText>
+        )}
       </Modal>
     </Overlay>
   );

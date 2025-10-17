@@ -35,17 +35,34 @@ const SidebarFooter = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  padding-top: ${({ theme }) => theme.spacing.lg};
+  padding-top: ${({ theme }) => theme.spacing.sm};
+  padding-bottom: ${({ theme }) => theme.spacing.sm};
   border-top: 1px solid ${({ theme }) => theme.colors.borderColor};
+  margin-top: auto;
 `;
 
 const Logo = styled.div`
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 400;
   font-family: 'Poppins', ${({ theme }) => theme.fonts.sans};
   color: ${({ theme }) => theme.colors.textSecondary};
   text-align: center;
-  padding: ${({ theme }) => theme.spacing.md};
+  padding: ${({ theme }) => theme.spacing.sm};
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+`;
+
+const VersionBadge = styled.span`
+  background: ${({ theme }) => theme.colors.primary};
+  color: white;
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: 8px;
+  text-transform: uppercase;
 `;
 
 const UserSection = styled.div`
@@ -796,7 +813,10 @@ function EditorPage() {
         </SidebarContent>
         
         <SidebarFooter>
-          <Logo>ColDAW</Logo>
+          <Logo>
+            ColDAW
+            <VersionBadge>beta</VersionBadge>
+          </Logo>
         </SidebarFooter>
       </Sidebar>
       

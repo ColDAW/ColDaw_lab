@@ -9,19 +9,20 @@ export const theme = {
     textSecondary: '#b0b0b0',
     textTertiary: '#707070',
     
-    primary: '#E41394',
-    accentOrange: '#E41394',
-    accentRed: '#E41394',
-    accentGreen: '#E41394',
-    accentBlue: '#E41394',
-    accentYellow: '#E41394',
+    primary: 'linear-gradient(123deg, #FF9B58 -83.38%, #E0387E 113%)',
+    primarySolid: '#E0387E', // 纯色版本用于边框等
+    accentOrange: 'linear-gradient(123deg, #FF9B58 -83.38%, #E0387E 113%)',
+    accentRed: 'linear-gradient(123deg, #FF9B58 -83.38%, #E0387E 113%)',
+    accentGreen: 'linear-gradient(123deg, #FF9B58 -83.38%, #E0387E 113%)',
+    accentBlue: 'linear-gradient(123deg, #FF9B58 -83.38%, #E0387E 113%)',
+    accentYellow: 'linear-gradient(123deg, #FF9B58 -83.38%, #E0387E 113%)',
     
     borderColor: '#2a2a2a',
     borderActive: '#404040',
     
-    error: '#E41394',
-    success: '#E41394',
-    warning: '#E41394',
+    error: '#E0387E',
+    success: '#FF9B58',
+    warning: '#E0387E',
   },
   
   spacing: {

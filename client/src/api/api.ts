@@ -54,12 +54,19 @@ export const authApi = {
     return response.data;
   },
   
-  // Register
-  async register(email: string, password: string, name: string) {
+  // Send verification code
+  async sendVerificationCode(email: string) {
+    const response = await api.post('/auth/send-verification', { email });
+    return response.data;
+  },
+
+  // Register with verification code
+  async register(email: string, password: string, name: string, verificationCode: string) {
     const response = await api.post('/auth/register', { 
       email, 
       password, 
-      name 
+      name,
+      verificationCode
     });
     return response.data;
   },
