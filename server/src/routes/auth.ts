@@ -3,15 +3,14 @@ import { db, User } from '../database/init';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
+import { emailService, VerificationCodeService } from '../services/email';
+import { redisService } from '../services/redis';
 
 const router = Router();
 
 const JWT_SECRET = process.env.JWT_SECRET || 'coldaw-secret-key-change-in-production';
 const JWT_EXPIRES_IN = '7d'; // Token 有效期 7 天
 const SALT_ROUNDS = 10;
-
-// 临时存储验证码（生产环境中应使用 Redis 或数据库）
-const verificationCodes = new Map<string, { code: string; expiresAt: number }>();
 
 // Generate JWT token
 function generateToken(userId: string): string {
@@ -34,24 +33,44 @@ router.post('/send-verification', async (req, res) => {
       return res.status(400).json({ error: 'Email is required' });
     }
 
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: 'Invalid email format' });
+    }
+
     // Check if user already exists
     const existingUser = await db.getUserByEmail(email);
     if (existingUser) {
       return res.status(409).json({ error: 'User with this email already exists' });
     }
 
-    // Generate 6-digit verification code
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
+    // Check if verification code already exists and is still valid
+    const existingCodeTTL = await VerificationCodeService.getTTL(email);
+    if (existingCodeTTL > 0) {
+      const remainingMinutes = Math.ceil(existingCodeTTL / 60);
+      return res.status(429).json({ 
+        error: `Verification code already sent. Please wait ${remainingMinutes} minutes before requesting a new one.` 
+      });
+    }
 
-    // Store verification code
-    verificationCodes.set(email.toLowerCase(), { code, expiresAt });
+    // Generate and store verification code
+    const code = await VerificationCodeService.generateAndStore(email);
 
-    // In a real application, you would send the code via email
-    // For now, we'll log it to console for testing
-    console.log(`Verification code for ${email}: ${code}`);
-
-    res.json({ message: 'Verification code sent successfully' });
+    // Send verification email
+    try {
+      await emailService.sendVerificationCode(email, code);
+      res.json({ message: 'Verification code sent successfully' });
+    } catch (emailError) {
+      console.error('Email sending failed:', emailError);
+      // 如果邮件发送失败，在开发环境中仍然可以在控制台看到验证码
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`Development mode - Verification code for ${email}: ${code}`);
+        res.json({ message: 'Verification code generated (check console in development mode)' });
+      } else {
+        res.status(500).json({ error: 'Failed to send verification email' });
+      }
+    }
   } catch (error) {
     console.error('Send verification error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -75,19 +94,10 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'Password must be at least 6 characters' });
     }
 
-    // Verify the verification code
-    const storedVerification = verificationCodes.get(email.toLowerCase());
-    if (!storedVerification) {
-      return res.status(400).json({ error: 'No verification code found for this email' });
-    }
-
-    if (Date.now() > storedVerification.expiresAt) {
-      verificationCodes.delete(email.toLowerCase());
-      return res.status(400).json({ error: 'Verification code has expired' });
-    }
-
-    if (storedVerification.code !== verificationCode) {
-      return res.status(400).json({ error: 'Invalid verification code' });
+    // Verify the verification code using Redis
+    const isCodeValid = await VerificationCodeService.verify(email, verificationCode);
+    if (!isCodeValid) {
+      return res.status(400).json({ error: 'Invalid or expired verification code' });
     }
 
     // Check if user already exists
@@ -110,9 +120,6 @@ router.post('/register', async (req, res) => {
     };
 
     await db.insertUser(newUser);
-
-    // Clear the verification code after successful registration
-    verificationCodes.delete(email.toLowerCase());
 
     // Generate JWT token
     const token = generateToken(newUser.id);

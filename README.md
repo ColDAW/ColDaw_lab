@@ -1262,11 +1262,44 @@ MIT License
 ### 已完成
 - [x] 基础项目上传和可视化
 - [x] 版本控制系统
-- [x] 用户认证
+- [x] 用户认证与邮箱验证
 - [x] VST3 插件
 - [x] 实时协作在线状态
 - [x] PostgreSQL 数据库集成
+- [x] Redis 缓存与验证码存储
+- [x] 生产级邮件发送服务
 - [x] Railway 部署配置
+
+---
+
+## 🚀 生产部署
+
+### Railway 部署说明
+
+1. **快速设置**：运行 `./railway-setup.sh` 查看部署清单
+2. **详细指南**：查看 [RAILWAY_DEPLOY_GUIDE.md](RAILWAY_DEPLOY_GUIDE.md)
+3. **环境变量模板**：参考 [.env.example](.env.example)
+
+### 主要服务组件
+
+- **应用服务器**: Node.js + Express (TypeScript)
+- **数据库**: PostgreSQL (Railway 管理)
+- **缓存**: Redis (用于验证码存储)
+- **邮件服务**: SMTP (支持 Gmail/QQ/163 等)
+- **文件存储**: 本地文件系统
+
+### 健康检查
+
+部署后访问 `/api/health` 端点检查所有服务状态：
+```json
+{
+  "status": "ok",
+  "services": {
+    "redis": "healthy",
+    "email": "healthy"
+  }
+}
+```
 
 ---
 

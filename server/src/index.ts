@@ -11,6 +11,8 @@ import versionRoutes from './routes/version';
 import authRoutes from './routes/auth';
 import { initDatabase } from './database/init';
 import { setupSocketHandlers } from './socket/handlers';
+import { redisService } from './services/redis';
+import { emailService } from './services/email';
 
 dotenv.config();
 
@@ -43,10 +45,17 @@ app.use('/api/versions', versionRoutes);
 // Health check endpoints
 app.get('/api/health', async (req, res) => {
   try {
+    const redisHealthy = redisService.isHealthy();
+    const emailHealthy = await emailService.isHealthy();
+    
     res.json({ 
       status: 'ok', 
       timestamp: new Date().toISOString(),
-      message: 'Server is running'
+      message: 'Server is running',
+      services: {
+        redis: redisHealthy ? 'healthy' : 'unhealthy',
+        email: emailHealthy ? 'healthy' : 'unhealthy'
+      }
     });
   } catch (error: any) {
     res.status(500).json({ 
@@ -98,15 +107,29 @@ const projectsDir = path.join(__dirname, '..', 'projects');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 if (!fs.existsSync(projectsDir)) fs.mkdirSync(projectsDir, { recursive: true });
 
-// Initialize database
-// Initialize database (includes clearing stale collaborators)
-initDatabase()
-  .then(() => {
+// Initialize services
+async function initializeServices() {
+  try {
+    // Initialize database
+    await initDatabase();
     console.log('✅ Database initialization completed');
-  })
-  .catch((error) => {
-    console.error('❌ Database initialization failed, but server will continue:', error);
-  });
+    
+    // Initialize Redis
+    await redisService.connect();
+    console.log('✅ Redis connection established');
+    
+    // Initialize email service
+    await emailService.initialize();
+    console.log('✅ Email service initialized');
+    
+  } catch (error) {
+    console.error('❌ Service initialization error:', error);
+    // Continue server startup even if some services fail
+  }
+}
+
+// Start service initialization
+initializeServices();
 
 // Setup Socket.io for real-time collaboration
 setupSocketHandlers(io);
