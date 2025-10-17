@@ -45,14 +45,15 @@ router.post('/send-verification', async (req, res) => {
       return res.status(409).json({ error: 'User with this email already exists' });
     }
 
+    // 注释掉频繁操作限制，允许用户随时重新发送验证码
     // Check if verification code already exists and is still valid
-    const existingCodeTTL = await VerificationCodeService.getTTL(email);
-    if (existingCodeTTL > 0) {
-      const remainingMinutes = Math.ceil(existingCodeTTL / 60);
-      return res.status(429).json({ 
-        error: `Verification code already sent. Please wait ${remainingMinutes} minutes before requesting a new one.` 
-      });
-    }
+    // const existingCodeTTL = await VerificationCodeService.getTTL(email);
+    // if (existingCodeTTL > 0) {
+    //   const remainingMinutes = Math.ceil(existingCodeTTL / 60);
+    //   return res.status(429).json({ 
+    //     error: `Verification code already sent. Please wait ${remainingMinutes} minutes before requesting a new one.` 
+    //   });
+    // }
 
     // Generate and store verification code
     const code = await VerificationCodeService.generateAndStore(email);
