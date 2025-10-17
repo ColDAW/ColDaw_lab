@@ -380,7 +380,7 @@ function ProjectPage() {
               zoom={zoom}
               onZoomChange={setZoom}
             />
-            <ArrangementView tracks={projectData.tracks} tempo={projectData.tempo} zoom={zoom} />
+            <ArrangementView tracks={projectData.tracks} tempo={projectData.tempo} zoom={zoom} onZoomChange={setZoom} />
             <CollaboratorCursors />
           </>
         )}

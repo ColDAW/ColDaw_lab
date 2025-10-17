@@ -29,7 +29,7 @@
   --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
   
   /* Typography */
-  --font-mono: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+  --font-mono: 'Poppins', 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
   --font-sans: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', sans-serif;
   
   /* Spacing */

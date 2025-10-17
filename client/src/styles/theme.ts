@@ -9,19 +9,19 @@ export const theme = {
     textSecondary: '#b0b0b0',
     textTertiary: '#707070',
     
-    primary: '#0088ff',
-    accentOrange: '#ff5500',
-    accentRed: '#ff0055',
-    accentGreen: '#00ff88',
-    accentBlue: '#0088ff',
-    accentYellow: '#ffcc00',
+    primary: '#ff69b4',
+    accentOrange: '#ff69b4',
+    accentRed: '#ff1493',
+    accentGreen: '#ff69b4',
+    accentBlue: '#ff69b4',
+    accentYellow: '#ff69b4',
     
     borderColor: '#2a2a2a',
     borderActive: '#404040',
     
-    error: '#ff0055',
-    success: '#00ff88',
-    warning: '#ffcc00',
+    error: '#ff1493',
+    success: '#ff69b4',
+    warning: '#ff69b4',
   },
   
   spacing: {
@@ -39,9 +39,9 @@ export const theme = {
   },
   
   fonts: {
-    mono: "'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace",
+    mono: "'Poppins', 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace",
     sans: "'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', sans-serif",
-    logo: '"Righteous", "Impact", "Haettenschweiler", "Arial Black", sans-serif',
+    logo: "'Poppins', 'Righteous', 'Impact', 'Haettenschweiler', 'Arial Black', sans-serif",
   },
 };
 

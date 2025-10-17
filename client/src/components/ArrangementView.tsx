@@ -96,13 +96,9 @@ const TrackName = styled.div`
 `;
 
 const TrackTypeIndicator = styled.div<{ $trackType: 'audio' | 'midi' | 'return' | 'master' }>`
-  background: ${({ theme, $trackType }) => {
-    if ($trackType === 'midi') return theme.colors.primary || '#3B82F6';
-    if ($trackType === 'audio') return theme.colors.success || '#10B981';
-    if ($trackType === 'return') return theme.colors.accentYellow || '#8B5CF6';
-    return theme.colors.accentOrange || '#F59E0B'; // master
-  }};
-  color: white;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.4);
   font-size: 10px;
   font-weight: 600;
   width: 16px;
@@ -277,9 +273,10 @@ interface ArrangementViewProps {
   tracks: Track[];
   tempo?: number;
   zoom?: number;
+  onZoomChange?: (newZoom: number) => void;
 }
 
-function ArrangementView({ tracks, zoom = 1 }: ArrangementViewProps) {
+function ArrangementView({ tracks, zoom = 1, onZoomChange }: ArrangementViewProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const timeRulerRef = useRef<HTMLDivElement>(null);
   const { pendingData, hasPendingChanges } = useStore();
@@ -388,6 +385,19 @@ function ArrangementView({ tracks, zoom = 1 }: ArrangementViewProps) {
       timeRulerRef.current.scrollLeft = scrollRef.current.scrollLeft;
     }
   };
+
+  // Handle zoom gesture
+  const handleWheel = (e: React.WheelEvent) => {
+    if (!onZoomChange) return;
+    
+    // Check if this is a pinch gesture (metaKey on Mac for trackpad pinch)
+    if (e.metaKey || e.ctrlKey) {
+      e.preventDefault();
+      const zoomDelta = -e.deltaY * 0.01; // Adjust sensitivity
+      const newZoom = Math.max(0.5, Math.min(3, zoom + zoomDelta));
+      onZoomChange(newZoom);
+    }
+  };
   
   useEffect(() => {
     // 计算最大 beat 数
@@ -427,7 +437,7 @@ function ArrangementView({ tracks, zoom = 1 }: ArrangementViewProps) {
         </RulerScrollContainer>
       </TimeRuler>
       
-      <ScrollContainer ref={scrollRef} onScroll={handleScroll}>
+      <ScrollContainer ref={scrollRef} onScroll={handleScroll} onWheel={handleWheel}>
         <TracksContainer $width={totalWidth}>
           {displayTracksWithDiff.map((track, trackIndex) => (
             <TrackRow key={track.id}>
