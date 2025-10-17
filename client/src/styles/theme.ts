@@ -9,19 +9,19 @@ export const theme = {
     textSecondary: '#b0b0b0',
     textTertiary: '#707070',
     
-    primary: '#ff69b4',
-    accentOrange: '#ff69b4',
-    accentRed: '#ff1493',
-    accentGreen: '#ff69b4',
-    accentBlue: '#ff69b4',
-    accentYellow: '#ff69b4',
+    primary: '#E41394',
+    accentOrange: '#E41394',
+    accentRed: '#E41394',
+    accentGreen: '#E41394',
+    accentBlue: '#E41394',
+    accentYellow: '#E41394',
     
     borderColor: '#2a2a2a',
     borderActive: '#404040',
     
-    error: '#ff1493',
-    success: '#ff69b4',
-    warning: '#ff69b4',
+    error: '#E41394',
+    success: '#E41394',
+    warning: '#E41394',
   },
   
   spacing: {

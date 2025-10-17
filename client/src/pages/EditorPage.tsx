@@ -532,7 +532,7 @@ const Button = styled.button<{ $variant?: 'primary' | 'secondary' }>`
   
   &:hover {
     background: ${({ theme, $variant }) => 
-      $variant === 'primary' ? '#ff6611' : theme.colors.bgHover};
+      $variant === 'primary' ? '#B9117A' : theme.colors.bgHover};
   }
   
   &:disabled {

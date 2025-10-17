@@ -46,7 +46,7 @@ const BranchButton = styled.button<{ $isActive: boolean }>`
   
   &:hover {
     background: ${({ theme, $isActive }) =>
-      $isActive ? '#ff6611' : theme.colors.bgTertiary};
+      $isActive ? '#B9117A' : theme.colors.bgTertiary};
   }
 `;
 

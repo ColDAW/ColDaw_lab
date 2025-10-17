@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import {
-  Upload,
+  Download,
   GitBranch,
   Clock,
   Users,
@@ -477,7 +477,7 @@ function MenuBar({ onToggleHistory, onVersionCommitted, currentVersionId, onFile
       <ButtonGroup>
         <Button onClick={handleImport} disabled={isImporting}>
           <GradientLoadingEffect isActive={isImporting} fullscreen={false} />
-          <Upload />
+          <Download />
           {isImporting ? 'Importing...' : 'Import'}
         </Button>
         <ExportFormatSelector onFormatSelect={handleFormatDownload} />

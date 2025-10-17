@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
-import { ChevronDown, FileText, Music, Box, Disc3 } from 'lucide-react';
+import { ChevronDown, FileText, ArrowUp, Box, Disc3 } from 'lucide-react';
 
 interface ExportFormat {
   id: string;
@@ -20,7 +20,7 @@ const exportFormats: ExportFormat[] = [
     id: 'ableton',
     name: 'Ableton Live',
     extension: '.als',
-    icon: <Music size={16} />,
+    icon: <ArrowUp size={16} />,
     description: 'Ableton Live Set format'
   },
   {
@@ -184,8 +184,8 @@ export default function ExportFormatSelector({ onFormatSelect, disabled = false 
         onClick={handleButtonClick}
         disabled={disabled}
       >
-        <Music size={16} />
-        Download
+        <ArrowUp size={16} />
+        Export
         <ChevronDown size={14} />
       </DownloadButton>
 
