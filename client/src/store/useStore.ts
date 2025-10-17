@@ -40,7 +40,7 @@ interface Branch {
   created_at: number;
 }
 
-interface Track {
+export interface Track {
   id: string;
   name: string;
   type: 'audio' | 'midi' | 'return' | 'master';
@@ -53,7 +53,7 @@ interface Track {
   devices: any[];
 }
 
-interface Clip {
+export interface Clip {
   id: string;
   name: string;
   startTime: number;
@@ -62,13 +62,14 @@ interface Clip {
   loopEnd: number;
   isLooping: boolean;
   color: number;
+  clipType?: 'audio' | 'midi'; // Differentiate between audio and MIDI clips
   samplePath?: string;
   pitchCoarse?: number;
   pitchFine?: number;
   gain?: number;
 }
 
-interface ProjectData {
+export interface ProjectData {
   name: string;
   tempo: number;
   timeSignatureNumerator: number;

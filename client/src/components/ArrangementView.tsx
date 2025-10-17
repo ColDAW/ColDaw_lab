@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
-import { useStore } from '../store/useStore';
+import { useStore, type Clip, type Track } from '../store/useStore';
 
 // 渐变调色板 - 每个轨道按顺序使用一种颜色
 const TRACK_COLORS = [
@@ -101,6 +101,7 @@ const ClipBox = styled.div<{
   $width: number; 
   $trackIndex: number;
   $isLooping: boolean;
+  $clipType?: 'audio' | 'midi';
   $diffType?: 'added' | 'removed' | 'modified' | null;
 }>`
   position: absolute;
@@ -108,20 +109,26 @@ const ClipBox = styled.div<{
   top: 8px;
   width: ${({ $width }) => $width}px;
   height: calc(100% - 16px);
-  background: ${({ $trackIndex, $diffType }) => {
+  background: ${({ $trackIndex, $clipType, $diffType }) => {
     const color = TRACK_COLORS[$trackIndex % TRACK_COLORS.length];
     if ($diffType === 'removed') {
       return `linear-gradient(135deg, ${color}33 0%, ${color}20 100%)`; // 20% opacity for removed clips
     }
-    return `linear-gradient(135deg, ${color}E6 0%, ${color}CC 100%)`; // 90% to 80% opacity gradient
+    // Different styles for MIDI vs Audio clips
+    if ($clipType === 'midi') {
+      return `linear-gradient(135deg, ${color}F0 0%, ${color}D9 50%, ${color}CC 100%)`; // Slightly brighter for MIDI
+    }
+    return `linear-gradient(135deg, ${color}E6 0%, ${color}CC 100%)`; // 90% to 80% opacity gradient for Audio
   }};
   opacity: ${({ $diffType }) => $diffType === 'removed' ? 0.4 : 1};
-  border: 1px solid ${({ $trackIndex, $diffType }) => {
+  border: 1px solid ${({ $trackIndex, $clipType, $diffType }) => {
     const baseColor = TRACK_COLORS[$trackIndex % TRACK_COLORS.length];
     if ($diffType === 'added') return '#22c55e';
     if ($diffType === 'removed') return '#ef4444';
     if ($diffType === 'modified') return '#f97316';
-    return `${baseColor}80`; // 50% opacity for more visible border
+    // Different border styles for clip types
+    if ($clipType === 'midi') return `${baseColor}A0`; // Slightly more opaque border for MIDI
+    return `${baseColor}80`; // 50% opacity for audio clips
   }};
   border-width: ${({ $diffType }) => $diffType ? '2px' : '1px'};
   border-radius: 6px;
@@ -132,10 +139,33 @@ const ClipBox = styled.div<{
   box-shadow: 
     0 1px 3px rgba(0, 0, 0, 0.12),
     0 1px 2px rgba(0, 0, 0, 0.24),
-    0 0 0 1px ${({ $trackIndex }) => {
+    0 0 0 1px ${({ $trackIndex, $clipType }) => {
       const color = TRACK_COLORS[$trackIndex % TRACK_COLORS.length];
-      return `${color}40`; // 25% opacity for subtle glow
+      // MIDI clips get a slightly more visible glow
+      const opacity = $clipType === 'midi' ? '50' : '40';
+      return `${color}${opacity}`;
     }};
+  
+  /* Add a subtle pattern for MIDI clips */
+  ${({ $clipType }) => $clipType === 'midi' && `
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 2px,
+        rgba(255, 255, 255, 0.05) 2px,
+        rgba(255, 255, 255, 0.05) 4px
+      );
+      border-radius: inherit;
+      pointer-events: none;
+    }
+  `}
   
   &:hover {
     transform: translateY(-1px) scale(1.01);
@@ -244,24 +274,6 @@ const BeatMark = styled.div<{ $position: number }>`
   padding: 2px 4px;
   font-family: ${({ theme }) => theme.fonts.mono};
 `;
-
-interface Clip {
-  id: string;
-  name: string;
-  startTime: number;
-  endTime: number;
-  loopStart: number;
-  loopEnd: number;
-  isLooping: boolean;
-  color: number;
-  samplePath?: string;
-}
-
-interface Track {
-  id: string;
-  name: string;
-  clips: Clip[];
-}
 
 interface ArrangementViewProps {
   tracks: Track[];
@@ -441,8 +453,9 @@ function ArrangementView({ tracks, zoom = 1 }: ArrangementViewProps) {
                       $width={width}
                       $trackIndex={trackIndex}
                       $isLooping={clip.isLooping}
+                      $clipType={clip.clipType}
                       $diffType={clip.diffType}
-                      title={`${clip.name} ${diffLabel}\nStart: ${clip.startTime.toFixed(2)}\nEnd: ${clip.endTime.toFixed(2)}`}
+                      title={`${clip.name} ${diffLabel}\nType: ${clip.clipType || 'unknown'}\nStart: ${clip.startTime.toFixed(2)}\nEnd: ${clip.endTime.toFixed(2)}`}
                     >
                       <ClipName>{clip.name}</ClipName>
                       {clip.diffType && <DiffBadge $type={clip.diffType} />}

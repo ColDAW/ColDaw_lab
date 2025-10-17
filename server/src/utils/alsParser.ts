@@ -162,36 +162,59 @@ export class ALSParser {
     const clips: ALSClip[] = [];
     
     try {
-      // 参考 als_bridge notebook: 从 DeviceChain -> MainSequencer -> Sample -> ArrangerAutomation -> Events -> AudioClip/MidiClip
+      // Collect clips from both sources
+      const allClips: any[] = [];
+      
+      // Method 1: 从 DeviceChain -> MainSequencer -> Sample -> ArrangerAutomation -> Events -> AudioClip/MidiClip (主要用于Audio clips)
       const mainSequencer = trackData.DeviceChain?.[0]?.MainSequencer?.[0];
       const sample = mainSequencer?.Sample?.[0];
       const arrangerAutomation = sample?.ArrangerAutomation?.[0];
-      const events = arrangerAutomation?.Events?.[0];
+      const arrangerEvents = arrangerAutomation?.Events?.[0];
       
-      if (!events) {
-        // No events in track
-        return clips;
+      if (arrangerEvents) {
+        let audioClips = arrangerEvents.AudioClip;
+        let midiClips = arrangerEvents.MidiClip;
+        
+        if (audioClips) {
+          if (!Array.isArray(audioClips)) {
+            audioClips = [audioClips];
+          }
+          allClips.push(...audioClips.map((clip: any) => ({ ...clip, type: 'audio' })));
+        }
+        
+        if (midiClips) {
+          if (!Array.isArray(midiClips)) {
+            midiClips = [midiClips];
+          }
+          allClips.push(...midiClips.map((clip: any) => ({ ...clip, type: 'midi' })));
+        }
       }
       
-      // Look for both AudioClip and MidiClip in events
-      let audioClips = events?.AudioClip;
-      let midiClips = events?.MidiClip;
-      
-      // Collect all clips
-      const allClips: any[] = [];
-      
-      if (audioClips) {
-        if (!Array.isArray(audioClips)) {
-          audioClips = [audioClips];
+      // Method 2: 从 TakeLanes -> TakeLane -> ClipAutomation -> Events -> MidiClip (主要用于MIDI clips)
+      const takeLanes = trackData.TakeLanes?.[0]?.TakeLanes?.[0];
+      if (takeLanes && Array.isArray(takeLanes.TakeLane)) {
+        // Process all TakeLanes
+        for (const takeLane of takeLanes.TakeLane) {
+          const takeLaneEvents = takeLane?.ClipAutomation?.[0]?.Events?.[0];
+          if (takeLaneEvents) {
+            let audioClips = takeLaneEvents.AudioClip;
+            let midiClips = takeLaneEvents.MidiClip;
+            
+            if (audioClips) {
+              if (!Array.isArray(audioClips)) {
+                audioClips = [audioClips];
+              }
+              allClips.push(...audioClips.map((clip: any) => ({ ...clip, type: 'audio' })));
+            }
+            
+            if (midiClips) {
+              if (!Array.isArray(midiClips)) {
+                midiClips = [midiClips];
+              }
+              allClips.push(...midiClips.map((clip: any) => ({ ...clip, type: 'midi' })));
+            }
+          }
         }
-        allClips.push(...audioClips.map((clip: any) => ({ ...clip, type: 'audio' })));
-      }
-      
-      if (midiClips) {
-        if (!Array.isArray(midiClips)) {
-          midiClips = [midiClips];
-        }
-        allClips.push(...midiClips.map((clip: any) => ({ ...clip, type: 'midi' })));
       }
       
       if (allClips.length === 0) {
@@ -201,7 +224,9 @@ export class ALSParser {
 
       // Only log summary if there are many clips to avoid Railway log rate limits
       if (allClips.length > 50) {
-        console.log(`Processing track with ${allClips.length} clips (Audio: ${audioClips?.length || 0}, MIDI: ${midiClips?.length || 0})`);
+        const audioCount = allClips.filter(clip => clip.type === 'audio').length;
+        const midiCount = allClips.filter(clip => clip.type === 'midi').length;
+        console.log(`Processing track with ${allClips.length} clips (Audio: ${audioCount}, MIDI: ${midiCount})`);
       }
 
       allClips.forEach((clip: any, index: number) => {
