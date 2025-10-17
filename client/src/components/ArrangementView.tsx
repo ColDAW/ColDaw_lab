@@ -121,10 +121,10 @@ const ClipBox = styled.div<{
     if ($diffType === 'added') return '#22c55e';
     if ($diffType === 'removed') return '#ef4444';
     if ($diffType === 'modified') return '#f97316';
-    return `${baseColor}60`; // 40% opacity for subtle border
+    return `${baseColor}80`; // 50% opacity for more visible border
   }};
   border-width: ${({ $diffType }) => $diffType ? '2px' : '1px'};
-  border-radius: 12px;
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: visible;
@@ -134,23 +134,19 @@ const ClipBox = styled.div<{
     0 1px 2px rgba(0, 0, 0, 0.24),
     0 0 0 1px ${({ $trackIndex }) => {
       const color = TRACK_COLORS[$trackIndex % TRACK_COLORS.length];
-      return `${color}30`; // 19% opacity for very subtle glow
+      return `${color}40`; // 25% opacity for subtle glow
     }};
   
-  ${({ $isLooping }) => $isLooping && `
-    border-style: dashed;
-  `}
-  
   &:hover {
-    transform: translateY(-3px) scale(1.02);
+    transform: translateY(-1px) scale(1.01);
     box-shadow: 
-      0 4px 12px rgba(0, 0, 0, 0.2),
-      0 2px 6px rgba(0, 0, 0, 0.15),
-      0 0 0 2px ${({ $trackIndex }) => {
+      0 2px 8px rgba(0, 0, 0, 0.15),
+      0 1px 4px rgba(0, 0, 0, 0.1),
+      0 0 0 1px ${({ $trackIndex }) => {
         const color = TRACK_COLORS[$trackIndex % TRACK_COLORS.length];
-        return `${color}50`; // 31% opacity for stronger glow on hover
+        return `${color}50`; // 31% opacity for subtle glow on hover
       }};
-    filter: brightness(1.1);
+    filter: brightness(1.05);
     z-index: 10;
   }
   
