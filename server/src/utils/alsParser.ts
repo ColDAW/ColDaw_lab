@@ -87,28 +87,49 @@ export class ALSParser {
     const timeSignatureNumerator = parseInt(timeSignature.TimeSignatureNumerator?.[0]?.$ ?.Value || '4');
     const timeSignatureDenominator = parseInt(timeSignature.TimeSignatureDenominator?.[0]?.$ ?.Value || '4');
 
-    // Extract tracks
+    // Extract tracks - preserve original order by processing them together
     const tracks: ALSTrack[] = [];
     let globalTrackIndex = 0;
     
-    // Audio tracks
-    if (liveSet.Tracks?.[0]?.AudioTrack) {
-      liveSet.Tracks[0].AudioTrack.forEach((track: any) => {
-        tracks.push(this.extractTrack(track, 'audio', globalTrackIndex++));
-      });
-    }
-
-    // MIDI tracks
-    if (liveSet.Tracks?.[0]?.MidiTrack) {
-      liveSet.Tracks[0].MidiTrack.forEach((track: any) => {
-        tracks.push(this.extractTrack(track, 'midi', globalTrackIndex++));
-      });
-    }
-
-    // Return tracks
-    if (liveSet.Tracks?.[0]?.ReturnTrack) {
-      liveSet.Tracks[0].ReturnTrack.forEach((track: any) => {
-        tracks.push(this.extractTrack(track, 'return', globalTrackIndex++));
+    // Get all track collections and their original indices
+    const tracksNode = liveSet.Tracks?.[0];
+    if (tracksNode) {
+      // Create array to store tracks with their original order
+      const orderedTracks: Array<{track: any, type: 'audio' | 'midi' | 'return', originalIndex: number}> = [];
+      
+      // Process AudioTracks
+      if (tracksNode.AudioTrack) {
+        tracksNode.AudioTrack.forEach((track: any, index: number) => {
+          // Get original index from XML attributes if available
+          const originalIndex = track.$?.Id ? parseInt(track.$.Id) : (index * 100); // fallback ordering
+          orderedTracks.push({track, type: 'audio', originalIndex});
+        });
+      }
+      
+      // Process MidiTracks  
+      if (tracksNode.MidiTrack) {
+        tracksNode.MidiTrack.forEach((track: any, index: number) => {
+          // Get original index from XML attributes if available
+          const originalIndex = track.$?.Id ? parseInt(track.$.Id) : (index * 100 + 50); // fallback ordering
+          orderedTracks.push({track, type: 'midi', originalIndex});
+        });
+      }
+      
+      // Process ReturnTracks
+      if (tracksNode.ReturnTrack) {
+        tracksNode.ReturnTrack.forEach((track: any, index: number) => {
+          // Return tracks typically come after regular tracks
+          const originalIndex = track.$?.Id ? parseInt(track.$.Id) : (1000 + index); // fallback ordering
+          orderedTracks.push({track, type: 'return', originalIndex});
+        });
+      }
+      
+      // Sort by original index to preserve ALS track order
+      orderedTracks.sort((a, b) => a.originalIndex - b.originalIndex);
+      
+      // Extract tracks in their original order
+      orderedTracks.forEach(({track, type}) => {
+        tracks.push(this.extractTrack(track, type, globalTrackIndex++));
       });
     }
 

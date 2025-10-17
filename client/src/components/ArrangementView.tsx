@@ -72,11 +72,17 @@ const TrackLabel = styled.div`
   padding: 0 ${({ theme }) => theme.spacing.md};
   display: flex;
   align-items: center;
+  justify-content: space-between;
   background: ${({ theme }) => theme.colors.bgSecondary};
   border-right: 1px solid ${({ theme }) => theme.colors.borderColor};
   position: sticky;
   left: 0;
   z-index: 2;
+`;
+
+const TrackInfo = styled.div`
+  flex: 1;
+  overflow: hidden;
 `;
 
 const TrackName = styled.div`
@@ -87,7 +93,26 @@ const TrackName = styled.div`
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 100%;
+`;
+
+const TrackTypeIndicator = styled.div<{ $trackType: 'audio' | 'midi' | 'return' | 'master' }>`
+  background: ${({ theme, $trackType }) => {
+    if ($trackType === 'midi') return theme.colors.primary || '#3B82F6';
+    if ($trackType === 'audio') return theme.colors.success || '#10B981';
+    if ($trackType === 'return') return theme.colors.accentYellow || '#8B5CF6';
+    return theme.colors.accentOrange || '#F59E0B'; // master
+  }};
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: ${({ theme }) => theme.spacing.xs};
 `;
 
 const ClipLane = styled.div`
@@ -109,29 +134,25 @@ const ClipBox = styled.div<{
   top: 8px;
   width: ${({ $width }) => $width}px;
   height: calc(100% - 16px);
-  background: ${({ $trackIndex, $clipType, $diffType }) => {
+  background: ${({ $trackIndex, $diffType }) => {
     const color = TRACK_COLORS[$trackIndex % TRACK_COLORS.length];
     if ($diffType === 'removed') {
       return `linear-gradient(135deg, ${color}33 0%, ${color}20 100%)`; // 20% opacity for removed clips
     }
-    // Different styles for MIDI vs Audio clips
-    if ($clipType === 'midi') {
-      return `linear-gradient(135deg, ${color}F0 0%, ${color}D9 50%, ${color}CC 100%)`; // Slightly brighter for MIDI
-    }
-    return `linear-gradient(135deg, ${color}E6 0%, ${color}CC 100%)`; // 90% to 80% opacity gradient for Audio
+    // Unified clip style regardless of type
+    return `linear-gradient(135deg, ${color}E6 0%, ${color}CC 100%)`; // 90% to 80% opacity gradient
   }};
   opacity: ${({ $diffType }) => $diffType === 'removed' ? 0.4 : 1};
-  border: 1px solid ${({ $trackIndex, $clipType, $diffType }) => {
+  border: 1px solid ${({ $trackIndex, $diffType }) => {
     const baseColor = TRACK_COLORS[$trackIndex % TRACK_COLORS.length];
     if ($diffType === 'added') return '#22c55e';
     if ($diffType === 'removed') return '#ef4444';
     if ($diffType === 'modified') return '#f97316';
-    // Different border styles for clip types
-    if ($clipType === 'midi') return `${baseColor}A0`; // Slightly more opaque border for MIDI
-    return `${baseColor}80`; // 50% opacity for audio clips
+    // Unified border style regardless of clip type
+    return `${baseColor}80`; // 50% opacity
   }};
   border-width: ${({ $diffType }) => $diffType ? '2px' : '1px'};
-  border-radius: 6px;
+  border-radius: 3px;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: visible;
@@ -139,33 +160,10 @@ const ClipBox = styled.div<{
   box-shadow: 
     0 1px 3px rgba(0, 0, 0, 0.12),
     0 1px 2px rgba(0, 0, 0, 0.24),
-    0 0 0 1px ${({ $trackIndex, $clipType }) => {
+    0 0 0 1px ${({ $trackIndex }) => {
       const color = TRACK_COLORS[$trackIndex % TRACK_COLORS.length];
-      // MIDI clips get a slightly more visible glow
-      const opacity = $clipType === 'midi' ? '50' : '40';
-      return `${color}${opacity}`;
+      return `${color}40`; // Unified glow opacity
     }};
-  
-  /* Add a subtle pattern for MIDI clips */
-  ${({ $clipType }) => $clipType === 'midi' && `
-    &::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: repeating-linear-gradient(
-        45deg,
-        transparent,
-        transparent 2px,
-        rgba(255, 255, 255, 0.05) 2px,
-        rgba(255, 255, 255, 0.05) 4px
-      );
-      border-radius: inherit;
-      pointer-events: none;
-    }
-  `}
   
   &:hover {
     transform: translateY(-1px) scale(1.01);
@@ -434,7 +432,14 @@ function ArrangementView({ tracks, zoom = 1 }: ArrangementViewProps) {
           {displayTracksWithDiff.map((track, trackIndex) => (
             <TrackRow key={track.id}>
               <TrackLabel>
-                <TrackName>{track.name}</TrackName>
+                <TrackInfo>
+                  <TrackName>{track.name}</TrackName>
+                </TrackInfo>
+                <TrackTypeIndicator $trackType={track.type}>
+                  {track.type === 'audio' ? 'A' : 
+                   track.type === 'midi' ? 'M' : 
+                   track.type === 'return' ? 'R' : 'M'}
+                </TrackTypeIndicator>
               </TrackLabel>
               <ClipLane>
                 {track.allClips.map((clip, idx) => {
