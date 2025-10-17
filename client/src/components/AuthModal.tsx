@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -132,8 +132,19 @@ function AuthModal({ onClose }: AuthModalProps) {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isVerificationStep, setIsVerificationStep] = useState(false);
+  const [resendCountdown, setResendCountdown] = useState(0);
 
   const { login, sendVerificationCode, register } = useAuth();
+
+  // 倒计时效果
+  React.useEffect(() => {
+    if (resendCountdown > 0) {
+      const timer = setTimeout(() => {
+        setResendCountdown(resendCountdown - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendCountdown]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -155,6 +166,7 @@ function AuthModal({ onClose }: AuthModalProps) {
           }
           await sendVerificationCode(email);
           setIsVerificationStep(true);
+          setResendCountdown(60); // 60秒倒计时
 
         } else {
           // 第二步：验证码验证并注册
@@ -168,7 +180,73 @@ function AuthModal({ onClose }: AuthModalProps) {
         }
       }
     } catch (err: any) {
-      setError(err.message || 'Operation failed, please try again');
+      let errorMessage = 'Operation failed, please try again';
+      
+      if (err.response) {
+        const status = err.response.status;
+        const data = err.response.data;
+        
+        switch (status) {
+          case 409:
+            errorMessage = 'This email is already registered. Please try logging in instead.';
+            break;
+          case 429:
+            errorMessage = data.error || 'Too many requests. Please wait a moment before trying again.';
+            break;
+          case 400:
+            errorMessage = data.error || 'Invalid input. Please check your information.';
+            break;
+          case 500:
+            errorMessage = 'Server error. Please try again later.';
+            break;
+          default:
+            errorMessage = data.error || `Error ${status}: ${err.message}`;
+        }
+      } else if (err.code === 'ECONNABORTED') {
+        errorMessage = 'Request timeout. Please check your internet connection and try again.';
+      } else if (err.code === 'ERR_NETWORK') {
+        errorMessage = 'Network error. Please check your internet connection.';
+      } else {
+        errorMessage = err.message || errorMessage;
+      }
+      
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    if (resendCountdown > 0) return;
+    
+    setError('');
+    setIsLoading(true);
+    
+    try {
+      await sendVerificationCode(email);
+      setResendCountdown(60);
+    } catch (err: any) {
+      let errorMessage = 'Failed to send verification code';
+      
+      if (err.response) {
+        const status = err.response.status;
+        const data = err.response.data;
+        
+        switch (status) {
+          case 429:
+            errorMessage = data.error || 'Too many requests. Please wait before trying again.';
+            break;
+          case 409:
+            errorMessage = 'This email is already registered.';
+            break;
+          default:
+            errorMessage = data.error || errorMessage;
+        }
+      } else if (err.code === 'ECONNABORTED') {
+        errorMessage = 'Request timeout. Please try again.';
+      }
+      
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -179,7 +257,7 @@ function AuthModal({ onClose }: AuthModalProps) {
     setError('');
     setName('');
     setIsVerificationStep(false);
-
+    setResendCountdown(0);
     setVerificationCode('');
   };
 
@@ -235,6 +313,25 @@ function AuthModal({ onClose }: AuthModalProps) {
                 autoFocus
                 maxLength={6}
               />
+              <div style={{ textAlign: 'center', marginTop: '16px' }}>
+                <button
+                  type="button"
+                  onClick={handleResendCode}
+                  disabled={resendCountdown > 0 || isLoading}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: resendCountdown > 0 ? '#707070' : '#EB5A72',
+                    cursor: resendCountdown > 0 ? 'not-allowed' : 'pointer',
+                    fontSize: '14px',
+                    textDecoration: 'underline'
+                  }}
+                >
+                  {resendCountdown > 0 
+                    ? `Resend code in ${resendCountdown}s` 
+                    : 'Resend verification code'}
+                </button>
+              </div>
             </>
           )}
           {error && <ErrorMessage>{error}</ErrorMessage>}

@@ -46,6 +46,28 @@ SMTP_PORT=587
 SMTP_SECURE=false
 ```
 
+#### 推荐的第三方邮件服务（更可靠）
+
+如果传统邮箱服务连接有问题，建议使用专业邮件服务：
+
+**SendGrid 配置:**
+```bash
+SMTP_HOST=smtp.sendgrid.net
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=apikey
+SMTP_PASS=your-sendgrid-api-key
+```
+
+**Mailgun 配置:**
+```bash
+SMTP_HOST=smtp.mailgun.org
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=your-mailgun-username
+SMTP_PASS=your-mailgun-password
+```
+
 ### 3. 必要的环境变量
 
 确保在 Railway 中设置以下环境变量：
@@ -112,12 +134,60 @@ NODE_ENV=production
 
 ### 8. 故障排查
 
+#### 常见错误码及解决方案
+
+**409 Conflict - 用户已存在**
+- 错误信息：用户尝试注册已存在的邮箱
+- 解决方案：提示用户使用登录功能
+
+**429 Too Many Requests - 频率限制**
+- 错误信息：验证码发送过于频繁
+- 解决方案：等待倒计时结束后重试（60秒）
+
+**ECONNABORTED - 请求超时**
+- 错误信息：邮件发送超过60秒超时
+- 解决方案：检查SMTP服务器响应速度，可能需要更换邮箱服务商
+
+**ETIMEDOUT - 连接超时**
+- 错误信息：无法连接到SMTP服务器
+- 解决方案：检查网络连接和SMTP服务器配置
+
+#### 邮件发送问题
+
 如果邮件发送失败：
 
-1. 检查环境变量是否正确设置
-2. 确认邮箱服务器设置正确
-3. 检查应用专用密码是否有效
-4. 查看 Railway 部署日志中的错误信息
+1. **检查环境变量配置**
+   ```bash
+   # 确保所有必要的环境变量都已设置
+   SMTP_HOST=smtp.gmail.com
+   SMTP_PORT=587
+   SMTP_SECURE=false
+   SMTP_USER=your-email@gmail.com
+   SMTP_PASS=your-app-password
+   ```
+
+2. **Gmail 特定问题**
+   - 确保启用了两步验证
+   - 使用应用专用密码，不是普通密码
+   - 检查是否开启了"允许不够安全的应用访问"
+
+3. **网络连接问题**
+   - Railway 服务器可能被某些 SMTP 服务器阻止
+   - 尝试使用不同的 SMTP 端口（25, 465, 587）
+   - 考虑使用第三方邮件服务（SendGrid, Mailgun 等）
+
+4. **推荐的邮箱服务商**
+   - **Gmail**: 最常用，但可能有连接问题
+   - **Outlook**: `smtp-mail.outlook.com:587`
+   - **SendGrid**: 专业邮件服务，更稳定
+   - **Mailgun**: 开发者友好的邮件API
+
+5. **故障排查步骤**
+   - 查看 Railway 部署日志中的具体错误
+   - 测试本地环境是否能正常发送邮件
+   - 尝试 `telnet smtp.gmail.com 587` 测试连接
+
+#### Redis 连接问题
 
 如果 Redis 连接失败：
 

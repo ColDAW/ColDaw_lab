@@ -16,33 +16,58 @@ class EmailService {
 
   async initialize(): Promise<void> {
     try {
+      // 检查必要的环境变量
+      if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+        console.warn('SMTP credentials not configured. Email service will be disabled.');
+        return;
+      }
+
       // 支持多种邮箱服务配置
       const emailConfig: EmailConfig = {
         host: process.env.SMTP_HOST || 'smtp.gmail.com',
         port: parseInt(process.env.SMTP_PORT || '587'),
         secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
         auth: {
-          user: process.env.SMTP_USER || '',
-          pass: process.env.SMTP_PASS || '',
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASS,
         },
       };
 
-      this.transporter = nodemailer.createTransport(emailConfig);
+      console.log(`Initializing email service with ${emailConfig.host}:${emailConfig.port}`);
 
-      // 验证配置是否正确
+      // 添加连接选项来处理超时
+      const transporterOptions = {
+        ...emailConfig,
+        connectionTimeout: 10000, // 10 seconds
+        greetingTimeout: 10000,   // 10 seconds
+        socketTimeout: 15000,     // 15 seconds
+        pool: true,
+        maxConnections: 5,
+        maxMessages: 100,
+      };
+
+      this.transporter = nodemailer.createTransport(transporterOptions);
+
+      // 验证配置是否正确（使用超时）
       if (this.transporter) {
-        await this.transporter.verify();
+        const verifyPromise = this.transporter.verify();
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('SMTP verification timeout')), 10000);
+        });
+        
+        await Promise.race([verifyPromise, timeoutPromise]);
       }
       console.log('Email service initialized successfully');
     } catch (error) {
       console.error('Failed to initialize email service:', error);
-      throw error;
+      // 不抛出错误，让服务器继续启动
+      this.transporter = null;
     }
   }
 
   async sendVerificationCode(email: string, code: string): Promise<void> {
     if (!this.transporter) {
-      throw new Error('Email service not initialized');
+      throw new Error('Email service not available - SMTP not configured');
     }
 
     const htmlTemplate = this.generateVerificationEmailHTML(code);
@@ -59,11 +84,27 @@ class EmailService {
     };
 
     try {
-      await this.transporter.sendMail(mailOptions);
+      // 添加发送超时
+      const sendPromise = this.transporter.sendMail(mailOptions);
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Email send timeout')), 30000); // 30 seconds
+      });
+      
+      await Promise.race([sendPromise, timeoutPromise]);
       console.log(`Verification email sent to: ${email}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to send verification email:', error);
-      throw error;
+      
+      // 提供更具体的错误信息
+      if (error.code === 'ETIMEDOUT' || error.code === 'ECONNABORTED') {
+        throw new Error('Email server connection timeout - please try again later');
+      } else if (error.code === 'EAUTH') {
+        throw new Error('Email authentication failed - check SMTP credentials');
+      } else if (error.message === 'Email send timeout') {
+        throw new Error('Email sending timeout - please try again');
+      } else {
+        throw new Error(`Email service error: ${error.message}`);
+      }
     }
   }
 
@@ -126,13 +167,13 @@ class EmailService {
             margin: 20px 0;
         }
         .warning {
-            background: rgba(224, 56, 126, 0.1);
-            border: 1px solid rgba(224, 56, 126, 0.3);
+            background: rgba(235, 90, 114, 0.1);
+            border: 1px solid rgba(235, 90, 114, 0.3);
             border-radius: 8px;
             padding: 15px;
             margin: 20px 0;
             font-size: 14px;
-            color: #E0387E;
+            color: #EB5A72;
         }
         .footer {
             background: #0a0a0a;
@@ -143,7 +184,7 @@ class EmailService {
             border-top: 1px solid #2a2a2a;
         }
         .footer a {
-            color: #E0387E;
+            color: #EB5A72;
             text-decoration: none;
         }
     </style>
@@ -185,7 +226,13 @@ class EmailService {
     }
 
     try {
-      await this.transporter.verify();
+      // 快速健康检查，不等待太久
+      const verifyPromise = this.transporter.verify();
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Health check timeout')), 5000);
+      });
+      
+      await Promise.race([verifyPromise, timeoutPromise]);
       return true;
     } catch (error) {
       console.error('Email service health check failed:', error);

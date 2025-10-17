@@ -11,7 +11,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 30000, // 30 second timeout
+  timeout: 60000, // 60 second timeout for email sending
 });
 
 // Request interceptor: automatically add token
@@ -54,10 +54,35 @@ export const authApi = {
     return response.data;
   },
   
-  // Send verification code
+  // Send verification code with retry
   async sendVerificationCode(email: string) {
-    const response = await api.post('/auth/send-verification', { email });
-    return response.data;
+    let lastError;
+    const maxRetries = 2;
+    
+    for (let i = 0; i < maxRetries + 1; i++) {
+      try {
+        const response = await api.post('/auth/send-verification', { email });
+        return response.data;
+      } catch (error: any) {
+        lastError = error;
+        
+        // Don't retry for client errors (4xx)
+        if (error.response && error.response.status >= 400 && error.response.status < 500) {
+          throw error;
+        }
+        
+        // Don't retry on the last attempt
+        if (i === maxRetries) {
+          break;
+        }
+        
+        // Wait before retrying (exponential backoff)
+        const delay = Math.min(1000 * Math.pow(2, i), 5000);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+    
+    throw lastError;
   },
 
   // Register with verification code
