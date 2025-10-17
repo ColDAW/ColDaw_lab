@@ -2,6 +2,24 @@ import { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import { useStore } from '../store/useStore';
 
+// 渐变调色板 - 每个轨道按顺序使用一种颜色
+const TRACK_COLORS = [
+  '#C9A511',
+  '#53A21F', 
+  '#1CA231',
+  '#1CA26C',
+  '#1CA2A2',
+  '#297DA5',
+  '#3C5BAD',
+  '#553FAD',
+  '#7932A9',
+  '#881BA3',
+  '#A51AA3',
+  '#A31C86',
+  '#A31CA3',
+  '#891BA3'
+];
+
 const Container = styled.div`
   flex: 1;
   display: flex;
@@ -81,7 +99,7 @@ const ClipLane = styled.div`
 const ClipBox = styled.div<{ 
   $left: number; 
   $width: number; 
-  $color: number;
+  $trackIndex: number;
   $isLooping: boolean;
   $diffType?: 'added' | 'removed' | 'modified' | null;
 }>`
@@ -90,47 +108,71 @@ const ClipBox = styled.div<{
   top: 8px;
   width: ${({ $width }) => $width}px;
   height: calc(100% - 16px);
-  background: ${({ $color, $diffType }) => {
-    const hue = ($color * 360) / 69;
+  background: ${({ $trackIndex, $diffType }) => {
+    const color = TRACK_COLORS[$trackIndex % TRACK_COLORS.length];
     if ($diffType === 'removed') {
-      return `hsla(${hue}, 70%, 50%, 0.3)`;
+      return `linear-gradient(135deg, ${color}33 0%, ${color}20 100%)`; // 20% opacity for removed clips
     }
-    return `hsl(${hue}, 70%, 50%)`;
+    return `linear-gradient(135deg, ${color}E6 0%, ${color}CC 100%)`; // 90% to 80% opacity gradient
   }};
   opacity: ${({ $diffType }) => $diffType === 'removed' ? 0.4 : 1};
-  border: 1px solid ${({ $color, $diffType }) => {
-    const hue = ($color * 360) / 69;
+  border: 1px solid ${({ $trackIndex, $diffType }) => {
+    const baseColor = TRACK_COLORS[$trackIndex % TRACK_COLORS.length];
     if ($diffType === 'added') return '#22c55e';
     if ($diffType === 'removed') return '#ef4444';
     if ($diffType === 'modified') return '#f97316';
-    return `hsl(${hue}, 70%, 35%)`;
+    return `${baseColor}60`; // 40% opacity for subtle border
   }};
   border-width: ${({ $diffType }) => $diffType ? '2px' : '1px'};
-  border-radius: 3px;
+  border-radius: 12px;
   cursor: pointer;
-  transition: all 0.1s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: visible;
+  backdrop-filter: blur(10px);
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.12),
+    0 1px 2px rgba(0, 0, 0, 0.24),
+    0 0 0 1px ${({ $trackIndex }) => {
+      const color = TRACK_COLORS[$trackIndex % TRACK_COLORS.length];
+      return `${color}30`; // 19% opacity for very subtle glow
+    }};
   
   ${({ $isLooping }) => $isLooping && `
     border-style: dashed;
   `}
   
   &:hover {
-    filter: brightness(1.2);
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 
+      0 4px 12px rgba(0, 0, 0, 0.2),
+      0 2px 6px rgba(0, 0, 0, 0.15),
+      0 0 0 2px ${({ $trackIndex }) => {
+        const color = TRACK_COLORS[$trackIndex % TRACK_COLORS.length];
+        return `${color}50`; // 31% opacity for stronger glow on hover
+      }};
+    filter: brightness(1.1);
+    z-index: 10;
+  }
+  
+  &:active {
+    transform: translateY(-1px) scale(1.01);
+    transition: all 0.1s ease;
   }
 `;
 
 const ClipName = styled.div`
-  padding: 4px 8px;
-  font-size: 11px;
-  color: white;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  padding: 6px 10px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   font-weight: 600;
+  letter-spacing: -0.2px;
+  line-height: 1.2;
+  position: relative;
+  z-index: 2;
 `;
 
 const DiffBadge = styled.div<{ $type: 'added' | 'removed' | 'modified' }>`
@@ -381,7 +423,7 @@ function ArrangementView({ tracks, zoom = 1 }: ArrangementViewProps) {
       
       <ScrollContainer ref={scrollRef} onScroll={handleScroll}>
         <TracksContainer $width={totalWidth}>
-          {displayTracksWithDiff.map((track) => (
+          {displayTracksWithDiff.map((track, trackIndex) => (
             <TrackRow key={track.id}>
               <TrackLabel>
                 <TrackName>{track.name}</TrackName>
@@ -401,7 +443,7 @@ function ArrangementView({ tracks, zoom = 1 }: ArrangementViewProps) {
                       key={`${clip.id}-${idx}`}
                       $left={left}
                       $width={width}
-                      $color={clip.color}
+                      $trackIndex={trackIndex}
                       $isLooping={clip.isLooping}
                       $diffType={clip.diffType}
                       title={`${clip.name} ${diffLabel}\nStart: ${clip.startTime.toFixed(2)}\nEnd: ${clip.endTime.toFixed(2)}`}
