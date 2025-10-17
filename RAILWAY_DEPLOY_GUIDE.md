@@ -46,9 +46,27 @@ SMTP_PORT=587
 SMTP_SECURE=false
 ```
 
+**Zoho Mail:**
+```bash
+SMTP_HOST=smtp.zoho.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=your-email@your-domain.com
+SMTP_PASS=your-zoho-password
+```
+
 #### 推荐的第三方邮件服务（更可靠）
 
 如果传统邮箱服务连接有问题，建议使用专业邮件服务：
+
+**Zoho Mail 配置（推荐）:**
+```bash
+SMTP_HOST=smtp.zoho.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=your-email@your-domain.com
+SMTP_PASS=your-app-password
+```
 
 **SendGrid 配置:**
 ```bash
@@ -64,9 +82,52 @@ SMTP_PASS=your-sendgrid-api-key
 SMTP_HOST=smtp.mailgun.org
 SMTP_PORT=587
 SMTP_SECURE=false
-SMTP_USER=your-mailgun-username
+SMTP_USER=your-mailgun-username@your-domain.com
 SMTP_PASS=your-mailgun-password
 ```
+
+### Zoho Mail 详细设置步骤
+
+#### 1. 注册 Zoho Mail 账户
+1. 访问 [Zoho Mail](https://www.zoho.com/mail/)
+2. 注册免费账户（免费版支持自定义域名）
+3. 添加并验证你的域名
+
+#### 2. 生成应用专用密码
+1. 登录 Zoho Mail 控制台
+2. 进入 "Account Settings" -> "Security"
+3. 启用两步验证（如果尚未启用）
+4. 在 "App Passwords" 部分生成新的应用密码
+5. 为应用命名（如 "ColDAW Railway"）并保存密码
+
+#### 3. Railway 环境变量配置
+```bash
+SMTP_HOST=smtp.zoho.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=your-email@your-domain.com
+SMTP_PASS=your-app-password
+```
+
+#### 4. 域名和DNS设置（如使用自定义域名）
+1. 在 Zoho 中添加你的域名
+2. 设置必要的 DNS 记录：
+   - MX 记录：指向 Zoho 邮件服务器
+   - TXT 记录：用于域名验证和 SPF
+   - CNAME 记录：用于邮件客户端配置
+3. 等待 DNS 传播（通常 24-48 小时）
+
+#### 5. SMTP 配置选项
+Zoho Mail 支持多个 SMTP 端口：
+- **端口 587**（推荐）：STARTTLS
+- **端口 465**：SSL/TLS
+- **端口 25**：标准（可能被 ISP 阻止）
+
+#### 6. 测试配置
+部署后检查：
+- `/api/health` 端点显示 email 服务为 "healthy"
+- 尝试发送验证邮件
+- 检查 Zoho Mail 的发送日志
 
 ### 3. 必要的环境变量
 
@@ -177,15 +238,20 @@ NODE_ENV=production
    - 考虑使用第三方邮件服务（SendGrid, Mailgun 等）
 
 4. **推荐的邮箱服务商**
-   - **Gmail**: 最常用，但可能有连接问题
-   - **Outlook**: `smtp-mail.outlook.com:587`
-   - **SendGrid**: 专业邮件服务，更稳定
-   - **Mailgun**: 开发者友好的邮件API
+   - **Zoho Mail**: 🌟 当前使用，企业级邮件服务，稳定可靠
+   - **Mailgun**: 专业邮件API，开发者友好
+   - **SendGrid**: 专业邮件服务，大量发送
+   - **Gmail**: 最常用，但在 Railway 上可能有连接问题
+   - **Outlook**: `smtp-mail.outlook.com:587`，备用选择
 
 5. **故障排查步骤**
    - 查看 Railway 部署日志中的具体错误
    - 测试本地环境是否能正常发送邮件
-   - 尝试 `telnet smtp.gmail.com 587` 测试连接
+   - **Zoho Mail 用户**: 确认使用的是应用专用密码，不是登录密码
+   - **Zoho Mail 用户**: 检查域名验证状态（如使用自定义域名）
+   - **Zoho Mail 用户**: 确认账户没有达到发送限制
+   - **Zoho Mail 用户**: 检查 Zoho Mail 控制台的活动日志
+   - 尝试 `telnet smtp.zoho.com 587` 测试连接
 
 #### Redis 连接问题
 
