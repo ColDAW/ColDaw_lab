@@ -80,28 +80,63 @@ const Button = styled.button`
   cursor: pointer;
   position: relative;
   overflow: hidden;
+  transition: all 0.3s ease;
   
-  /* Gradient background container - behind text */
+  /* Multi-layer gradient effects on hover */
   &::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(
+      45deg,
+      rgba(137, 170, 248, 0.3) 0%,
+      rgba(183, 112, 252, 0.3) 25%,
+      rgba(210, 77, 195, 0.3) 50%,
+      rgba(232, 85, 96, 0.3) 75%,
+      rgba(245, 161, 147, 0.3) 100%
+    );
+    border-radius: 6px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 0;
+  }
+  
+  &::after {
     content: '';
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: ${({ theme }) => theme.colors.bgTertiary};
+    background: linear-gradient(
+      90deg,
+      rgba(183, 112, 252, 0.08) 0%,
+      rgba(210, 77, 195, 0.08) 30%,
+      rgba(232, 85, 96, 0.08) 70%,
+      rgba(245, 161, 147, 0.08) 100%
+    );
+    border-radius: 6px;
     opacity: 0;
-    transition: opacity 0.2s ease;
-    z-index: 0;
+    transition: opacity 0.3s ease;
+    z-index: 1;
+  }
+  
+  &:hover {
+    color: ${({ theme }) => theme.colors.textPrimary};
+    border-color: rgba(183, 112, 252, 0.4);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(183, 112, 252, 0.2);
   }
   
   &:hover::before {
     opacity: 1;
   }
   
-  &:hover {
-    color: ${({ theme }) => theme.colors.textPrimary};
-    border-color: ${({ theme }) => theme.colors.borderActive};
+  &:hover::after {
+    opacity: 1;
   }
   
   svg {

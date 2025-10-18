@@ -23,58 +23,6 @@ const Modal = styled.div`
   width: 400px;
   max-width: 90%;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-  position: relative;
-  overflow: hidden;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    bottom: -10px;
-    left: 5%;
-    width: 28%;
-    height: 80%;
-    background-image: linear-gradient(
-      0deg,
-      rgba(137, 170, 248, 0.6) 0%,
-      rgba(163, 141, 250, 0.5) 18%,
-      rgba(183, 112, 252, 0.4) 35%,
-      rgba(197, 94, 223, 0.3) 52%,
-      rgba(210, 77, 195, 0.2) 68%,
-      rgba(210, 77, 195, 0) 100%
-    );
-    filter: blur(40px);
-    opacity: 0.8;
-    pointer-events: none;
-    z-index: 0;
-  }
-  
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: -10px;
-    right: 5%;
-    width: 30%;
-    height: 85%;
-    background-image: linear-gradient(
-      0deg,
-      rgba(232, 85, 96, 0.6) 0%,
-      rgba(235, 104, 81, 0.5) 24%,
-      rgba(238, 123, 107, 0.4) 44%,
-      rgba(241, 142, 127, 0.3) 60%,
-      rgba(245, 161, 147, 0.2) 74%,
-      rgba(245, 161, 147, 0) 100%
-    );
-    filter: blur(35px);
-    opacity: 0.7;
-    pointer-events: none;
-    z-index: 0;
-  }
-  
-  /* Ensure content is above gradient layers */
-  > * {
-    position: relative;
-    z-index: 1;
-  }
 `;
 
 const Title = styled.h2`
