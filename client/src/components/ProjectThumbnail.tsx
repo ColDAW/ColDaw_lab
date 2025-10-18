@@ -220,8 +220,9 @@ function ProjectThumbnail({ projectId }: ProjectThumbnailProps) {
       ctx.lineTo(width, y);
       ctx.stroke();
 
-      // Get track color - use the track's color property
-      const color = TRACK_COLORS[track.color % TRACK_COLORS.length];
+      // Get track color - use the track's color property or trackIndex as fallback
+      const colorIndex = typeof track.color === 'number' ? track.color : trackIndex;
+      const color = TRACK_COLORS[colorIndex % TRACK_COLORS.length];
 
       // Draw clips
       const clips = track.clips || [];

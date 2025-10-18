@@ -195,7 +195,6 @@ export default function ExportFormatSelector({ onFormatSelect, disabled = false 
             key={format.id}
             onClick={() => handleFormatSelect(format)}
           >
-            {format.icon}
             <FormatInfo>
               <FormatName>{format.name}</FormatName>
               <FormatDescription>{format.description}</FormatDescription>

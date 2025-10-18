@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import {
-  Download,
+  Upload,
   GitBranch,
   Clock,
   Users,
@@ -39,8 +39,8 @@ const Container = styled.div`
 
 const Logo = styled.div`
   font-size: 15px;
-  font-weight: 900;
-  color: ${({ theme }) => theme.colors.accentOrange};
+  font-weight: 400;
+  color: ${({ theme }) => theme.colors.textPrimary};
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -79,77 +79,30 @@ const Button = styled.button`
   gap: ${({ theme }) => theme.spacing.sm};
   cursor: pointer;
   position: relative;
-  overflow: hidden;
   transition: all 0.3s ease;
   
-  /* Multi-layer gradient effects on hover */
-  &::before {
-    content: '';
-    position: absolute;
-    top: -2px;
-    left: -2px;
-    right: -2px;
-    bottom: -2px;
-    background: linear-gradient(
-      45deg,
-      rgba(137, 170, 248, 0.3) 0%,
-      rgba(183, 112, 252, 0.3) 25%,
-      rgba(210, 77, 195, 0.3) 50%,
-      rgba(232, 85, 96, 0.3) 75%,
-      rgba(245, 161, 147, 0.3) 100%
-    );
-    border-radius: 6px;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    z-index: 0;
-  }
-  
-  &::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(
-      90deg,
-      rgba(183, 112, 252, 0.08) 0%,
-      rgba(210, 77, 195, 0.08) 30%,
-      rgba(232, 85, 96, 0.08) 70%,
-      rgba(245, 161, 147, 0.08) 100%
-    );
-    border-radius: 6px;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    z-index: 1;
-  }
-  
+  /* Gradient border on hover */
   &:hover {
     color: ${({ theme }) => theme.colors.textPrimary};
-    border-color: rgba(183, 112, 252, 0.4);
+    background: transparent;
+    border: 1px solid transparent;
+    background-image: linear-gradient(${({ theme }) => theme.colors.bgSecondary}, ${({ theme }) => theme.colors.bgSecondary}),
+                      linear-gradient(45deg, 
+                        rgba(137, 170, 248, 0.8) 0%,
+                        rgba(183, 112, 252, 0.8) 25%,
+                        rgba(210, 77, 195, 0.8) 50%,
+                        rgba(232, 85, 96, 0.8) 75%,
+                        rgba(245, 161, 147, 0.8) 100%
+                      );
+    background-origin: border-box;
+    background-clip: content-box, border-box;
     transform: translateY(-1px);
     box-shadow: 0 4px 16px rgba(183, 112, 252, 0.2);
-  }
-  
-  &:hover::before {
-    opacity: 1;
-  }
-  
-  &:hover::after {
-    opacity: 1;
   }
   
   svg {
     width: 16px;
     height: 16px;
-    position: relative;
-    z-index: 3;
-  }
-  
-  /* Text needs to be above gradient */
-  & > *:not(div) {
-    position: relative;
-    z-index: 3;
   }
 `;
 
@@ -220,19 +173,32 @@ const InviteButton = styled.button`
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: ${({ theme }) => theme.colors.accentOrange};
-  color: white;
-  border: none;
+  background: transparent;
+  color: ${({ theme }) => theme.colors.textSecondary};
+  border: 1px solid ${({ theme }) => theme.colors.borderColor};
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   margin-left: ${({ theme }) => theme.spacing.sm};
   
   &:hover {
-    background: ${({ theme }) => theme.colors.accentBlue};
+    color: ${({ theme }) => theme.colors.textPrimary};
+    background: transparent;
+    border: 1px solid transparent;
+    background-image: linear-gradient(${({ theme }) => theme.colors.bgSecondary}, ${({ theme }) => theme.colors.bgSecondary}),
+                      linear-gradient(45deg, 
+                        rgba(137, 170, 248, 0.8) 0%,
+                        rgba(183, 112, 252, 0.8) 25%,
+                        rgba(210, 77, 195, 0.8) 50%,
+                        rgba(232, 85, 96, 0.8) 75%,
+                        rgba(245, 161, 147, 0.8) 100%
+                      );
+    background-origin: border-box;
+    background-clip: content-box, border-box;
     transform: scale(1.05);
+    box-shadow: 0 4px 16px rgba(183, 112, 252, 0.2);
   }
   
   svg {
@@ -512,7 +478,7 @@ function MenuBar({ onToggleHistory, onVersionCommitted, currentVersionId, onFile
       <ButtonGroup>
         <Button onClick={handleImport} disabled={isImporting}>
           <GradientLoadingEffect isActive={isImporting} fullscreen={false} />
-          <Download />
+          <Upload />
           {isImporting ? 'Importing...' : 'Import'}
         </Button>
         <ExportFormatSelector onFormatSelect={handleFormatDownload} />
