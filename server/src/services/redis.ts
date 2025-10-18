@@ -13,35 +13,58 @@ class RedisService {
       // Railway Redis URL format: redis://default:password@host:port
       const redisUrl = process.env.REDIS_URL || process.env.REDISCLOUD_URL || 'redis://localhost:6379';
       
+      console.log('🔍 Redis connection attempt to:', redisUrl.replace(/\/\/.*@/, '//***:***@')); // 隐藏密码
+      
       this.client = createClient({
         url: redisUrl,
         socket: {
-          connectTimeout: 10000,
-          reconnectStrategy: (retries) => Math.min(retries * 50, 1000)
+          connectTimeout: 15000,  // 增加连接超时时间
+          reconnectStrategy: (retries) => {
+            if (retries > 5) {
+              console.error('❌ Redis reconnection failed after 5 attempts');
+              return false;
+            }
+            const delay = Math.min(retries * 1000, 5000);
+            console.log(`🔄 Redis reconnection attempt ${retries} in ${delay}ms`);
+            return delay;
+          }
         }
       });
 
       this.client.on('error', (err) => {
-        console.error('Redis Client Error:', err);
+        console.error('❌ Redis Client Error:', err.message);
         this.isConnected = false;
       });
 
       this.client.on('connect', () => {
-        console.log('Redis Client Connected');
+        console.log('✅ Redis Client Connected');
         this.isConnected = true;
       });
 
       this.client.on('disconnect', () => {
-        console.log('Redis Client Disconnected');
+        console.log('⚠️ Redis Client Disconnected');
         this.isConnected = false;
+      });
+
+      this.client.on('reconnecting', () => {
+        console.log('🔄 Redis Client Reconnecting...');
       });
 
       await this.client.connect();
       this.isConnected = true;
-      console.log('Redis connection established successfully');
-    } catch (error) {
-      console.error('Failed to connect to Redis:', error);
+      console.log('✅ Redis connection established successfully');
+    } catch (error: any) {
+      console.error('❌ Failed to connect to Redis:', error.message);
       this.isConnected = false;
+      
+      // 在开发环境中，如果Redis连接失败，给出启动建议
+      if (process.env.NODE_ENV === 'development') {
+        console.log('💡 本地开发环境Redis连接失败解决方案:');
+        console.log('1. 安装Redis: brew install redis');
+        console.log('2. 启动Redis: brew services start redis');
+        console.log('3. 或使用Docker: docker run -d -p 6379:6379 redis:alpine');
+      }
+      
       throw error;
     }
   }

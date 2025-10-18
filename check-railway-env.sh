@@ -5,8 +5,16 @@ echo "======================================"
 
 echo ""
 echo "🚨 当前问题分析："
-echo "错误: 'Email service not available - SMTP not configured'"
-echo "原因: Railway 生产环境中 SMTP 环境变量未正确设置"
+echo "✅ Email service initialized - 邮件服务正常"  
+echo "❌ Redis disconnected - 这是核心问题！"
+echo "原因: 验证码存储依赖Redis，Redis断开导致整个验证流程失败"
+echo ""
+
+echo "📊 必需的服务和环境变量："
+echo ""
+echo "🔴 1. Redis服务 (最关键!)"
+echo "   在Railway控制台添加Redis数据库服务"
+echo "   自动生成: REDIS_URL=redis://default:password@host:port"
 echo ""
 
 echo "📧 必需的邮箱环境变量（基于Zoho Mail官方配置）："

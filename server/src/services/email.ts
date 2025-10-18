@@ -272,6 +272,9 @@ class EmailService {
 export class VerificationCodeService {
   private static readonly CODE_PREFIX = 'verification_code:';
   private static readonly CODE_EXPIRY = 600; // 10 minutes in seconds
+  
+  // 内存备份存储（当Redis不可用时）
+  private static memoryStore = new Map<string, { code: string; expiry: number }>();
 
   static async generateAndStore(email: string): Promise<string> {
     // 生成6位数字验证码
@@ -279,13 +282,24 @@ export class VerificationCodeService {
     const key = this.CODE_PREFIX + email.toLowerCase();
 
     try {
-      // 存储到Redis，设置10分钟过期
-      await redisService.set(key, code, this.CODE_EXPIRY);
-      console.log(`Generated verification code for ${email}: ${code}`);
+      // 优先尝试存储到Redis
+      if (redisService.isHealthy()) {
+        await redisService.set(key, code, this.CODE_EXPIRY);
+        console.log(`✅ Generated verification code for ${email}: ${code} (stored in Redis)`);
+      } else {
+        // Redis不可用时，使用内存存储作为备选
+        const expiry = Date.now() + (this.CODE_EXPIRY * 1000);
+        this.memoryStore.set(key, { code, expiry });
+        console.log(`⚠️ Generated verification code for ${email}: ${code} (stored in memory - Redis unavailable)`);
+      }
       return code;
     } catch (error) {
-      console.error('Failed to store verification code:', error);
-      throw error;
+      console.error('❌ Failed to store verification code in Redis, falling back to memory:', error);
+      // 即使Redis失败，也使用内存存储
+      const expiry = Date.now() + (this.CODE_EXPIRY * 1000);
+      this.memoryStore.set(key, { code, expiry });
+      console.log(`⚠️ Generated verification code for ${email}: ${code} (fallback to memory storage)`);
+      return code;
     }
   }
 
@@ -293,10 +307,29 @@ export class VerificationCodeService {
     const key = this.CODE_PREFIX + email.toLowerCase();
 
     try {
-      const storedCode = await redisService.get(key);
+      let storedCode: string | null = null;
+      
+      // 优先从Redis获取
+      if (redisService.isHealthy()) {
+        storedCode = await redisService.get(key);
+      }
+      
+      // 如果Redis中没有或Redis不可用，尝试内存存储
+      if (!storedCode) {
+        const memoryData = this.memoryStore.get(key);
+        if (memoryData) {
+          // 检查是否过期
+          if (Date.now() < memoryData.expiry) {
+            storedCode = memoryData.code;
+          } else {
+            // 过期则删除
+            this.memoryStore.delete(key);
+          }
+        }
+      }
       
       if (!storedCode) {
-        console.log(`No verification code found for ${email}`);
+        console.log(`❌ No verification code found for ${email}`);
         return false;
       }
 
@@ -304,15 +337,22 @@ export class VerificationCodeService {
       
       if (isValid) {
         // 验证成功后删除验证码
-        await redisService.delete(key);
-        console.log(`Verification successful for ${email}`);
+        try {
+          if (redisService.isHealthy()) {
+            await redisService.delete(key);
+          }
+        } catch (redisError) {
+          console.warn('Failed to delete code from Redis:', redisError);
+        }
+        this.memoryStore.delete(key); // 同时清理内存存储
+        console.log(`✅ Verification successful for ${email}`);
       } else {
-        console.log(`Invalid verification code for ${email}`);
+        console.log(`❌ Invalid verification code for ${email}`);
       }
 
       return isValid;
     } catch (error) {
-      console.error('Failed to verify code:', error);
+      console.error('❌ Failed to verify code:', error);
       throw error;
     }
   }
@@ -320,19 +360,43 @@ export class VerificationCodeService {
   static async exists(email: string): Promise<boolean> {
     const key = this.CODE_PREFIX + email.toLowerCase();
     try {
-      return await redisService.exists(key);
+      if (redisService.isHealthy()) {
+        return await redisService.exists(key);
+      } else {
+        // 检查内存存储
+        const memoryData = this.memoryStore.get(key);
+        return memoryData !== undefined && Date.now() < memoryData.expiry;
+      }
     } catch (error) {
       console.error('Failed to check code existence:', error);
-      return false;
+      // 检查内存存储作为备选
+      const memoryData = this.memoryStore.get(key);
+      return memoryData !== undefined && Date.now() < memoryData.expiry;
     }
   }
 
   static async getTTL(email: string): Promise<number> {
     const key = this.CODE_PREFIX + email.toLowerCase();
     try {
-      return await redisService.getTTL(key);
+      if (redisService.isHealthy()) {
+        return await redisService.getTTL(key);
+      } else {
+        // 计算内存存储的TTL
+        const memoryData = this.memoryStore.get(key);
+        if (memoryData) {
+          const remainingTime = Math.max(0, Math.floor((memoryData.expiry - Date.now()) / 1000));
+          return remainingTime;
+        }
+        return -1;
+      }
     } catch (error) {
       console.error('Failed to get code TTL:', error);
+      // 检查内存存储作为备选
+      const memoryData = this.memoryStore.get(key);
+      if (memoryData) {
+        const remainingTime = Math.max(0, Math.floor((memoryData.expiry - Date.now()) / 1000));
+        return remainingTime;
+      }
       return -1;
     }
   }
