@@ -1,0 +1,100 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Build outputs
+/client/dist/
+/server/dist/
+/server/public/
+/vst-plugin/build/
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+
+# Project specific
+/server/projects/
+/server/uploads/
+
+# Redis dump
+dump.rdb
+
+# VST Plugin specific
+*.vst3
+*.component
+*.dll
+*.so
+*.dylib
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+
+# Audio files
+*.wav
+*.mp3
+*.aif
+*.aiff
+*.flac
+*.als
+
+# Compressed files
+*.zip
+*.tar.gz
+*.rar
+
+# Package files
+*.dmg
+*.pkg
+*.msi
+*.exe
+
+# System files
+*.cache
+*.tmp
