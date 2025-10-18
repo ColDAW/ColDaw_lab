@@ -121,6 +121,13 @@ class PostgresDatabase {
     );
   }
 
+  async deleteUser(id: string): Promise<void> {
+    await this.getPool().query(
+      'DELETE FROM users WHERE id = $1',
+      [id]
+    );
+  }
+
   // Project methods
   async getProjects(): Promise<Project[]> {
     const result = await this.getPool().query<Project>(

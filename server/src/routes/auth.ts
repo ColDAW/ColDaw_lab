@@ -39,9 +39,10 @@ router.post('/send-verification', async (req, res) => {
       return res.status(400).json({ error: 'Invalid email format' });
     }
 
-    // Check if user already exists
+    // Check if user already exists (allow test user to register multiple times)
+    const testEmail = 'deng1876888691@gmail.com';
     const existingUser = await db.getUserByEmail(email);
-    if (existingUser) {
+    if (existingUser && email !== testEmail) {
       return res.status(409).json({ error: 'User with this email already exists' });
     }
 
@@ -101,10 +102,17 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'Invalid or expired verification code' });
     }
 
-    // Check if user already exists
+    // Check if user already exists (allow test user to re-register)
+    const testEmail = 'deng1876888691@gmail.com';
     const existingUser = await db.getUserByEmail(email);
-    if (existingUser) {
+    if (existingUser && email !== testEmail) {
       return res.status(409).json({ error: 'User with this email already exists' });
+    }
+
+    // For test email, delete existing user if exists
+    if (existingUser && email === testEmail) {
+      await db.deleteUser(existingUser.id);
+      console.log(`🧪 Test user ${testEmail} deleted and will be re-created`);
     }
 
     // Hash password

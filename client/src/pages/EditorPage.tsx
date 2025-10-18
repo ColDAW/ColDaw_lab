@@ -85,13 +85,50 @@ const UserAvatar = styled.div`
   min-width: 48px;
   min-height: 48px;
   border-radius: 50%;
-  background: linear-gradient(135deg, ${({ theme }) => theme.colors.accentOrange}, ${({ theme }) => theme.colors.accentBlue});
+  background: linear-gradient(135deg, 
+    rgba(137, 170, 248, 1) 0%,
+    rgba(183, 112, 252, 1) 25%,
+    rgba(210, 77, 195, 1) 50%,
+    rgba(232, 85, 96, 1) 75%,
+    rgba(245, 161, 147, 1) 100%
+  );
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 20px;
   font-weight: 700;
   color: white;
+  position: relative;
+  transition: all 0.3s ease;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(135deg, 
+      rgba(137, 170, 248, 0.8) 0%,
+      rgba(183, 112, 252, 0.8) 25%,
+      rgba(210, 77, 195, 0.8) 50%,
+      rgba(232, 85, 96, 0.8) 75%,
+      rgba(245, 161, 147, 0.8) 100%
+    );
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: -1;
+  }
+  
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 16px rgba(183, 112, 252, 0.4);
+  }
+  
+  &:hover::before {
+    opacity: 1;
+  }
 `;
 
 const UserDetails = styled.div`
@@ -130,11 +167,35 @@ const AccountButton = styled.button`
   justify-content: center;
   gap: ${({ theme }) => theme.spacing.xs};
   cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(183, 112, 252, 0.1) 50%,
+      transparent 100%
+    );
+    transition: left 0.5s ease;
+  }
   
   &:hover {
     background: ${({ theme }) => theme.colors.bgHover};
     color: ${({ theme }) => theme.colors.textPrimary};
-    border-color: ${({ theme }) => theme.colors.borderActive};
+    border-color: rgba(183, 112, 252, 0.4);
+    box-shadow: 0 2px 12px rgba(183, 112, 252, 0.15);
+  }
+  
+  &:hover::before {
+    left: 100%;
   }
   
   svg {
@@ -158,15 +219,78 @@ const NavItem = styled.div<{ $active?: boolean }>`
   color: ${({ theme, $active }) => $active ? theme.colors.textPrimary : theme.colors.textSecondary};
   background: ${({ theme, $active }) => $active ? theme.colors.bgTertiary : 'transparent'};
   font-size: 13px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  
+  ${({ $active }) => $active && `
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 3px;
+      height: 100%;
+      background: linear-gradient(
+        180deg,
+        rgba(137, 170, 248, 1) 0%,
+        rgba(183, 112, 252, 1) 25%,
+        rgba(210, 77, 195, 1) 50%,
+        rgba(232, 85, 96, 1) 75%,
+        rgba(245, 161, 147, 1) 100%
+      );
+      border-radius: 0 2px 2px 0;
+    }
+    
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(
+        90deg,
+        rgba(183, 112, 252, 0.05) 0%,
+        rgba(210, 77, 195, 0.03) 50%,
+        transparent 100%
+      );
+      pointer-events: none;
+    }
+  `}
   
   &:hover {
     background: ${({ theme }) => theme.colors.bgTertiary};
     color: ${({ theme }) => theme.colors.textPrimary};
+    
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      width: 2px;
+      height: 0%;
+      background: linear-gradient(
+        180deg,
+        rgba(183, 112, 252, 0.6) 0%,
+        rgba(210, 77, 195, 0.6) 50%,
+        rgba(232, 85, 96, 0.6) 100%
+      );
+      transform: translateY(-50%);
+      transition: height 0.3s ease;
+      border-radius: 0 1px 1px 0;
+    }
+  }
+  
+  &:hover::before {
+    height: 70%;
   }
   
   svg {
     width: 16px;
     height: 16px;
+    position: relative;
+    z-index: 1;
   }
 `;
 
@@ -396,12 +520,67 @@ const ProjectCard = styled.div`
   border-radius: 10px;
   overflow: hidden;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(
+      135deg,
+      rgba(137, 170, 248, 0.4) 0%,
+      rgba(183, 112, 252, 0.4) 25%,
+      rgba(210, 77, 195, 0.4) 50%,
+      rgba(232, 85, 96, 0.4) 75%,
+      rgba(245, 161, 147, 0.4) 100%
+    );
+    border-radius: 12px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: -1;
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      135deg,
+      rgba(183, 112, 252, 0.02) 0%,
+      rgba(210, 77, 195, 0.02) 50%,
+      rgba(232, 85, 96, 0.02) 100%
+    );
+    border-radius: 10px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 0;
+  }
   
   &:hover {
-    border-color: ${({ theme }) => theme.colors.borderActive};
-    transform: translateY(-2px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3),
+                0 4px 12px rgba(183, 112, 252, 0.15);
+  }
+  
+  &:hover::before {
+    opacity: 1;
+  }
+  
+  &:hover::after {
+    opacity: 1;
+  }
+  
+  /* Ensure content is above gradient layers */
+  > * {
+    position: relative;
+    z-index: 1;
   }
 `;
 
@@ -454,22 +633,62 @@ const IconButton = styled.button`
   justify-content: center;
   gap: ${({ theme }) => theme.spacing.xs};
   font-size: 11px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: radial-gradient(
+      circle,
+      rgba(183, 112, 252, 0.15) 0%,
+      rgba(210, 77, 195, 0.15) 50%,
+      transparent 100%
+    );
+    transform: translate(-50%, -50%);
+    transition: width 0.4s ease, height 0.4s ease;
+    border-radius: 50%;
+  }
   
   &:hover {
     background: ${({ theme }) => theme.colors.bgHover};
     color: ${({ theme }) => theme.colors.textPrimary};
-    border-color: ${({ theme }) => theme.colors.borderActive};
+    border-color: rgba(183, 112, 252, 0.4);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 12px rgba(183, 112, 252, 0.2);
+  }
+  
+  &:hover::after {
+    width: 120px;
+    height: 120px;
   }
   
   &:hover.delete {
     background: ${({ theme }) => theme.colors.error};
     color: white;
     border-color: ${({ theme }) => theme.colors.error};
+    box-shadow: 0 3px 12px rgba(244, 67, 54, 0.3);
+  }
+  
+  &:hover.delete::after {
+    background: radial-gradient(
+      circle,
+      rgba(244, 67, 54, 0.2) 0%,
+      rgba(244, 67, 54, 0.1) 50%,
+      transparent 100%
+    );
   }
   
   svg {
     width: 12px;
     height: 12px;
+    position: relative;
+    z-index: 1;
   }
 `;
 
@@ -522,9 +741,26 @@ const TextInput = styled.input`
   color: ${({ theme }) => theme.colors.textPrimary};
   font-size: 13px;
   margin-bottom: ${({ theme }) => theme.spacing.md};
+  position: relative;
+  transition: all 0.3s ease;
   
   &:focus {
-    border-color: ${({ theme }) => theme.colors.accentOrange};
+    border: 1px solid transparent;
+    background: linear-gradient(${({ theme }) => theme.colors.bgTertiary}, ${({ theme }) => theme.colors.bgTertiary}) padding-box,
+                linear-gradient(90deg, 
+                  rgba(137, 170, 248, 0.6) 0%,
+                  rgba(183, 112, 252, 0.6) 25%,
+                  rgba(210, 77, 195, 0.6) 50%,
+                  rgba(232, 85, 96, 0.6) 75%,
+                  rgba(245, 161, 147, 0.6) 100%
+                ) border-box;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(183, 112, 252, 0.1);
+  }
+  
+  &:hover:not(:focus) {
+    border-color: rgba(183, 112, 252, 0.4);
+    box-shadow: 0 2px 8px rgba(183, 112, 252, 0.1);
   }
 `;
 
@@ -538,23 +774,83 @@ const ButtonGroup = styled.div`
 const Button = styled.button<{ $variant?: 'primary' | 'secondary' }>`
   padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.lg};
   background: ${({ theme, $variant }) => 
-    $variant === 'primary' ? theme.colors.accentOrange : theme.colors.bgTertiary};
+    $variant === 'primary' ? '#2a2a2a' : theme.colors.bgTertiary};
   color: ${({ theme }) => theme.colors.textPrimary};
   border: 1px solid ${({ theme, $variant }) => 
-    $variant === 'primary' ? theme.colors.accentOrange : theme.colors.borderColor};
+    $variant === 'primary' ? 'transparent' : theme.colors.borderColor};
   border-radius: 6px;
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  
+  /* Multi-layer gradient for primary button */
+  ${({ $variant }) => $variant === 'primary' && `
+    &::before {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      background: linear-gradient(
+        45deg,
+        rgba(137, 170, 248, 0.8) 0%,
+        rgba(183, 112, 252, 0.8) 25%,
+        rgba(210, 77, 195, 0.8) 50%,
+        rgba(232, 85, 96, 0.8) 75%,
+        rgba(245, 161, 147, 0.8) 100%
+      );
+      border-radius: 6px;
+      z-index: -2;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(
+        90deg,
+        rgba(183, 112, 252, 0.15) 0%,
+        rgba(210, 77, 195, 0.15) 30%,
+        rgba(232, 85, 96, 0.15) 70%,
+        rgba(245, 161, 147, 0.15) 100%
+      );
+      border-radius: 6px;
+      z-index: -1;
+      opacity: 1;
+      transition: opacity 0.3s ease;
+    }
+    
+    &:hover::before {
+      opacity: 1;
+    }
+    
+    &:hover::after {
+      opacity: 0.8;
+    }
+  `}
   
   &:hover {
     background: ${({ theme, $variant }) => 
-      $variant === 'primary' ? '#B9117A' : theme.colors.bgHover};
+      $variant === 'primary' ? '#2a2a2a' : theme.colors.bgHover};
+    transform: translateY(-1px);
+    ${({ $variant }) => $variant === 'primary' && `
+      box-shadow: 0 4px 20px rgba(183, 112, 252, 0.3);
+    `}
   }
   
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+    transform: none;
   }
 `;
 
