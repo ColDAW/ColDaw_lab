@@ -83,30 +83,37 @@ const Button = styled.button`
   position: relative;
   transition: all 0.3s ease;
   
-  /* Gradient border effect */
-  &:hover {
-    color: ${({ theme }) => theme.colors.textPrimary};
-    background: transparent;
-    border: 1px solid transparent;
-    background-clip: padding-box;
-    background-image: linear-gradient(transparent, transparent),
-                      linear-gradient(45deg, 
-                        rgba(137, 170, 248, 0.8) 0%,
-                        rgba(183, 112, 252, 0.8) 25%,
-                        rgba(210, 77, 195, 0.8) 50%,
-                        rgba(232, 85, 96, 0.8) 75%,
-                        rgba(245, 161, 147, 0.8) 100%
-                      );
-    background-origin: border-box;
-    border-image: linear-gradient(45deg, 
+  /* Pseudo-element for gradient border that preserves border-radius */
+  &::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    background: linear-gradient(45deg, 
       rgba(137, 170, 248, 0.8) 0%,
       rgba(183, 112, 252, 0.8) 25%,
       rgba(210, 77, 195, 0.8) 50%,
       rgba(232, 85, 96, 0.8) 75%,
       rgba(245, 161, 147, 0.8) 100%
-    ) 1;
+    );
+    border-radius: 6px;
+    padding: 1px;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: xor;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+  
+  &:hover {
+    color: ${({ theme }) => theme.colors.textPrimary};
+    background: transparent;
+    border-color: transparent;
     transform: translateY(-1px);
     box-shadow: 0 4px 16px rgba(183, 112, 252, 0.2);
+  }
+  
+  &:hover::before {
+    opacity: 1;
   }
   
   svg {
@@ -191,20 +198,39 @@ const InviteButton = styled.button`
   cursor: pointer;
   transition: all 0.3s ease;
   margin-left: ${({ theme }) => theme.spacing.sm};
+  position: relative;
   
-  &:hover {
-    color: ${({ theme }) => theme.colors.textPrimary};
-    background: transparent;
-    border: 1px solid transparent;
-    border-image: linear-gradient(45deg, 
+  /* Pseudo-element for gradient border that preserves border-radius */
+  &::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    background: linear-gradient(45deg, 
       rgba(137, 170, 248, 0.8) 0%,
       rgba(183, 112, 252, 0.8) 25%,
       rgba(210, 77, 195, 0.8) 50%,
       rgba(232, 85, 96, 0.8) 75%,
       rgba(245, 161, 147, 0.8) 100%
-    ) 1;
+    );
+    border-radius: 50%;
+    padding: 1px;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: xor;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+  
+  &:hover {
+    color: ${({ theme }) => theme.colors.textPrimary};
+    background: transparent;
+    border-color: transparent;
     transform: scale(1.05);
     box-shadow: 0 4px 16px rgba(183, 112, 252, 0.2);
+  }
+  
+  &:hover::before {
+    opacity: 1;
   }
   
   svg {

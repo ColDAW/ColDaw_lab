@@ -2,45 +2,113 @@
 #include "PluginEditor.h"
 
 //==============================================================================
+ColDAWLookAndFeel::ColDAWLookAndFeel()
+{
+    // Initialize gradient colors matching web theme
+    gradientColors.add(juce::Colour(0xff89AAF8)); // rgba(137, 170, 248, 0.8)
+    gradientColors.add(juce::Colour(0xffB770FC)); // rgba(183, 112, 252, 0.8)
+    gradientColors.add(juce::Colour(0xffD24DC3)); // rgba(210, 77, 195, 0.8)
+    gradientColors.add(juce::Colour(0xffE85560)); // rgba(232, 85, 96, 0.8)
+    gradientColors.add(juce::Colour(0xffF5A193)); // rgba(245, 161, 147, 0.8)
+}
+
+void ColDAWLookAndFeel::drawButtonBackground (juce::Graphics& g,
+                                            juce::Button& button,
+                                            const juce::Colour&,
+                                            bool shouldDrawButtonAsHighlighted,
+                                            bool)
+{
+    auto bounds = button.getLocalBounds().toFloat();
+    auto cornerSize = 6.0f; // Match web theme border-radius
+    
+    // Always draw transparent background
+    g.setColour(juce::Colours::transparentBlack);
+    g.fillRoundedRectangle(bounds, cornerSize);
+    
+    // Draw border
+    if (shouldDrawButtonAsHighlighted)
+    {
+        // Create gradient border on hover        
+        // Draw gradient border effect
+        juce::ColourGradient gradient(gradientColors[0], bounds.getTopLeft(),
+                                    gradientColors[4], bounds.getBottomRight(), false);
+        
+        for (int i = 1; i < gradientColors.size() - 1; ++i)
+        {
+            gradient.addColour(static_cast<double>(i) / (gradientColors.size() - 1), gradientColors[i]);
+        }
+        
+        g.setGradientFill(gradient);
+        g.drawRoundedRectangle(bounds, cornerSize, 2.0f);
+    }
+    else
+    {
+        // Normal border
+        g.setColour(juce::Colour(0xff2a2a2a)); // borderColor
+        g.drawRoundedRectangle(bounds, cornerSize, 1.0f);
+    }
+}
+
+void ColDAWLookAndFeel::drawButtonText (juce::Graphics& g,
+                                      juce::TextButton& button,
+                                      bool shouldDrawButtonAsHighlighted,
+                                      bool)
+{
+    auto font = juce::FontOptions(13.0f, juce::Font::plain); // Use consistent font
+    g.setFont(font);
+    
+    auto textColour = shouldDrawButtonAsHighlighted ? 
+        juce::Colour(0xffffffff) : juce::Colour(0xffb0b0b0); // textPrimary : textSecondary
+    
+    g.setColour(textColour);
+    
+    auto bounds = button.getLocalBounds();
+    g.drawText(button.getButtonText(), bounds, juce::Justification::centred);
+}
+
+//==============================================================================
 ColDawExportEditor::ColDawExportEditor (ColDawExportProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
-    // Set size - compact interface
-    setSize (400, 550);
+    // Set size - increased for better spacing
+    setSize (400, 600);
     
-    // Title - uppercase, minimal
+    // Apply custom look and feel
+    setLookAndFeel(&customLookAndFeel);
+    
+    // Title - uppercase, minimal with updated font size
     addAndMakeVisible(titleLabel);
     titleLabel.setText("ColDAW", juce::dontSendNotification);
-    titleLabel.setFont(juce::FontOptions(16.0f, juce::Font::bold));
+    titleLabel.setFont(juce::FontOptions(18.0f, juce::Font::bold)); // Slightly larger
     titleLabel.setColour(juce::Label::textColourId, textPrimary);
     titleLabel.setJustificationType(juce::Justification::centredLeft);
     
-    // Login status
+    // Login status with better typography
     addAndMakeVisible(loginStatusLabel);
     loginStatusLabel.setText("NOT LOGGED IN", juce::dontSendNotification);
-    loginStatusLabel.setFont(juce::FontOptions(10.0f));
-    loginStatusLabel.setColour(juce::Label::textColourId, accentOrange);
+    loginStatusLabel.setFont(juce::FontOptions(11.0f, juce::Font::bold)); // Slightly larger
+    loginStatusLabel.setColour(juce::Label::textColourId, accentPrimary);
     loginStatusLabel.setJustificationType(juce::Justification::centredLeft);
     
-    // Username
+    // Username with consistent label styling
     addAndMakeVisible(usernameLabel);
     usernameLabel.setText("EMAIL", juce::dontSendNotification);
-    usernameLabel.setFont(juce::FontOptions(10.0f, juce::Font::bold));
+    usernameLabel.setFont(juce::FontOptions(11.0f, juce::Font::bold)); // Consistent with web
     usernameLabel.setColour(juce::Label::textColourId, textSecondary);
     
     addAndMakeVisible(usernameEditor);
     usernameEditor.setColour(juce::TextEditor::backgroundColourId, bgSecondary);
     usernameEditor.setColour(juce::TextEditor::textColourId, textPrimary);
     usernameEditor.setColour(juce::TextEditor::outlineColourId, borderColor);
-    usernameEditor.setColour(juce::TextEditor::focusedOutlineColourId, accentOrange);
+    usernameEditor.setColour(juce::TextEditor::focusedOutlineColourId, accentPrimary);
     usernameEditor.setBorder(juce::BorderSize<int>(1));
-    usernameEditor.setFont(juce::FontOptions(12.0f));
+    usernameEditor.setFont(juce::FontOptions(13.0f)); // Match web font size
     usernameEditor.addListener(this);
     
-    // Password
+    // Password with consistent styling
     addAndMakeVisible(passwordLabel);
     passwordLabel.setText("PASSWORD", juce::dontSendNotification);
-    passwordLabel.setFont(juce::FontOptions(10.0f, juce::Font::bold));
+    passwordLabel.setFont(juce::FontOptions(11.0f, juce::Font::bold));
     passwordLabel.setColour(juce::Label::textColourId, textSecondary);
     
     addAndMakeVisible(passwordEditor);
@@ -48,50 +116,50 @@ ColDawExportEditor::ColDawExportEditor (ColDawExportProcessor& p)
     passwordEditor.setColour(juce::TextEditor::backgroundColourId, bgSecondary);
     passwordEditor.setColour(juce::TextEditor::textColourId, textPrimary);
     passwordEditor.setColour(juce::TextEditor::outlineColourId, borderColor);
-    passwordEditor.setColour(juce::TextEditor::focusedOutlineColourId, accentOrange);
+    passwordEditor.setColour(juce::TextEditor::focusedOutlineColourId, accentPrimary);
     passwordEditor.setBorder(juce::BorderSize<int>(1));
-    passwordEditor.setFont(juce::FontOptions(12.0f));
+    passwordEditor.setFont(juce::FontOptions(13.0f)); // Match web font size
     passwordEditor.addListener(this);
     
-    // Login button - minimal style
+    // Login button - updated with modern styling
     addAndMakeVisible(loginButton);
     loginButton.setButtonText("LOGIN");
     loginButton.addListener(this);
-    loginButton.setColour(juce::TextButton::buttonColourId, bgSecondary);
-    loginButton.setColour(juce::TextButton::buttonOnColourId, accentOrange);
-    loginButton.setColour(juce::TextButton::textColourOffId, textPrimary);
-    loginButton.setColour(juce::TextButton::textColourOnId, bgPrimary);
+    loginButton.setColour(juce::TextButton::buttonColourId, juce::Colours::transparentBlack);
+    loginButton.setColour(juce::TextButton::buttonOnColourId, bgHover);
+    loginButton.setColour(juce::TextButton::textColourOffId, textSecondary);
+    loginButton.setColour(juce::TextButton::textColourOnId, textPrimary);
     
     // Logout button
     addAndMakeVisible(logoutButton);
     logoutButton.setButtonText("LOGOUT");
     logoutButton.addListener(this);
-    logoutButton.setColour(juce::TextButton::buttonColourId, bgSecondary);
+    logoutButton.setColour(juce::TextButton::buttonColourId, juce::Colours::transparentBlack);
     logoutButton.setColour(juce::TextButton::textColourOffId, textSecondary);
     logoutButton.setVisible(false);
     
-    // Select file button - first
+    // Select file button - updated styling
     addAndMakeVisible(selectFileButton);
     selectFileButton.setButtonText("SELECT FILE");
     selectFileButton.addListener(this);
-    selectFileButton.setColour(juce::TextButton::buttonColourId, bgSecondary);
-    selectFileButton.setColour(juce::TextButton::textColourOffId, textPrimary);
+    selectFileButton.setColour(juce::TextButton::buttonColourId, juce::Colours::transparentBlack);
+    selectFileButton.setColour(juce::TextButton::textColourOffId, textSecondary);
     
-    // Use detected file button - shown when file is detected
+    // Use detected file button - updated styling
     addAndMakeVisible(useDetectedButton);
     useDetectedButton.setButtonText("USE DETECTED FILE");
     useDetectedButton.addListener(this);
-    useDetectedButton.setColour(juce::TextButton::buttonColourId, accentOrange.darker(0.3f));
-    useDetectedButton.setColour(juce::TextButton::textColourOffId, textPrimary);
+    useDetectedButton.setColour(juce::TextButton::buttonColourId, juce::Colours::transparentBlack);
+    useDetectedButton.setColour(juce::TextButton::textColourOffId, accentPrimary);
     useDetectedButton.setVisible(false);
     
-    // Export button - prominent orange, second
+    // Export button - primary accent color
     addAndMakeVisible(exportButton);
     exportButton.setButtonText("EXPORT TO ColDAW");
     exportButton.addListener(this);
-    exportButton.setColour(juce::TextButton::buttonColourId, accentOrange);
-    exportButton.setColour(juce::TextButton::textColourOffId, bgPrimary);
-    exportButton.setColour(juce::TextButton::buttonOnColourId, accentOrange.brighter(0.2f));
+    exportButton.setColour(juce::TextButton::buttonColourId, accentPrimary);
+    exportButton.setColour(juce::TextButton::textColourOffId, textPrimary);
+    exportButton.setColour(juce::TextButton::buttonOnColourId, accentPrimary.brighter(0.2f));
     exportButton.setEnabled(false);
     
     // Auto-export toggle
@@ -100,30 +168,30 @@ ColDawExportEditor::ColDawExportEditor (ColDawExportProcessor& p)
     autoExportToggle.addListener(this);
     autoExportToggle.setToggleState(audioProcessor.getAutoExport(), juce::dontSendNotification);
     autoExportToggle.setColour(juce::ToggleButton::textColourId, textSecondary);
-    autoExportToggle.setColour(juce::ToggleButton::tickColourId, accentOrange);
+    autoExportToggle.setColour(juce::ToggleButton::tickColourId, accentPrimary);
     
-    // Status label
+    // Status label with improved readability
     addAndMakeVisible(statusLabel);
     statusLabel.setText(audioProcessor.getStatusMessage(), juce::dontSendNotification);
-    statusLabel.setFont(juce::FontOptions(10.0f));
-    statusLabel.setColour(juce::Label::textColourId, accentOrange);
+    statusLabel.setFont(juce::FontOptions(11.0f));
+    statusLabel.setColour(juce::Label::textColourId, accentPrimary);
     statusLabel.setJustificationType(juce::Justification::centred);
     
-    // Current file
+    // Current file with improved typography
     addAndMakeVisible(currentFileLabel);
     currentFileLabel.setText("PROJECT", juce::dontSendNotification);
-    currentFileLabel.setFont(juce::FontOptions(10.0f, juce::Font::bold));
+    currentFileLabel.setFont(juce::FontOptions(11.0f, juce::Font::bold));
     currentFileLabel.setColour(juce::Label::textColourId, textSecondary);
     
     addAndMakeVisible(currentFileValue);
     currentFileValue.setText("NONE", juce::dontSendNotification);
-    currentFileValue.setFont(juce::FontOptions(11.0f));
+    currentFileValue.setFont(juce::FontOptions(13.0f)); // Better readability
     currentFileValue.setColour(juce::Label::textColourId, textPrimary);
     
-    // Project Path
+    // Project Path with consistent styling
     addAndMakeVisible(projectPathLabel);
     projectPathLabel.setText("PROJECT PATH", juce::dontSendNotification);
-    projectPathLabel.setFont(juce::FontOptions(10.0f, juce::Font::bold));
+    projectPathLabel.setFont(juce::FontOptions(11.0f, juce::Font::bold));
     projectPathLabel.setColour(juce::Label::textColourId, textSecondary);
     
     addAndMakeVisible(projectPathEditor);
@@ -131,15 +199,15 @@ ColDawExportEditor::ColDawExportEditor (ColDawExportProcessor& p)
     projectPathEditor.setColour(juce::TextEditor::backgroundColourId, bgSecondary);
     projectPathEditor.setColour(juce::TextEditor::textColourId, textPrimary);
     projectPathEditor.setColour(juce::TextEditor::outlineColourId, borderColor);
-    projectPathEditor.setColour(juce::TextEditor::focusedOutlineColourId, accentOrange);
+    projectPathEditor.setColour(juce::TextEditor::focusedOutlineColourId, accentPrimary);
     projectPathEditor.setBorder(juce::BorderSize<int>(1));
-    projectPathEditor.setFont(juce::FontOptions(12.0f));
+    projectPathEditor.setFont(juce::FontOptions(13.0f));
     projectPathEditor.addListener(this);
     
-    // User ID
+    // User ID with consistent styling
     addAndMakeVisible(userIdLabel);
     userIdLabel.setText("USER ID", juce::dontSendNotification);
-    userIdLabel.setFont(juce::FontOptions(10.0f, juce::Font::bold));
+    userIdLabel.setFont(juce::FontOptions(11.0f, juce::Font::bold));
     userIdLabel.setColour(juce::Label::textColourId, textSecondary);
     
     addAndMakeVisible(userIdEditor);
@@ -147,15 +215,15 @@ ColDawExportEditor::ColDawExportEditor (ColDawExportProcessor& p)
     userIdEditor.setColour(juce::TextEditor::backgroundColourId, bgSecondary);
     userIdEditor.setColour(juce::TextEditor::textColourId, textPrimary);
     userIdEditor.setColour(juce::TextEditor::outlineColourId, borderColor);
-    userIdEditor.setColour(juce::TextEditor::focusedOutlineColourId, accentOrange);
+    userIdEditor.setColour(juce::TextEditor::focusedOutlineColourId, accentPrimary);
     userIdEditor.setBorder(juce::BorderSize<int>(1));
-    userIdEditor.setFont(juce::FontOptions(12.0f));
+    userIdEditor.setFont(juce::FontOptions(13.0f));
     userIdEditor.addListener(this);
     
-    // Author
+    // Author with consistent styling
     addAndMakeVisible(authorLabel);
     authorLabel.setText("AUTHOR", juce::dontSendNotification);
-    authorLabel.setFont(juce::FontOptions(10.0f, juce::Font::bold));
+    authorLabel.setFont(juce::FontOptions(11.0f, juce::Font::bold));
     authorLabel.setColour(juce::Label::textColourId, textSecondary);
     
     addAndMakeVisible(authorEditor);
@@ -163,9 +231,9 @@ ColDawExportEditor::ColDawExportEditor (ColDawExportProcessor& p)
     authorEditor.setColour(juce::TextEditor::backgroundColourId, bgSecondary);
     authorEditor.setColour(juce::TextEditor::textColourId, textPrimary);
     authorEditor.setColour(juce::TextEditor::outlineColourId, borderColor);
-    authorEditor.setColour(juce::TextEditor::focusedOutlineColourId, accentOrange);
+    authorEditor.setColour(juce::TextEditor::focusedOutlineColourId, accentPrimary);
     authorEditor.setBorder(juce::BorderSize<int>(1));
-    authorEditor.setFont(juce::FontOptions(12.0f));
+    authorEditor.setFont(juce::FontOptions(13.0f));
     authorEditor.addListener(this);
     
     // Start timer to update status
@@ -175,6 +243,7 @@ ColDawExportEditor::ColDawExportEditor (ColDawExportProcessor& p)
 ColDawExportEditor::~ColDawExportEditor()
 {
     stopTimer();
+    setLookAndFeel(nullptr);
 }
 
 //==============================================================================
@@ -191,75 +260,78 @@ void ColDawExportEditor::paint (juce::Graphics& g)
 
 void ColDawExportEditor::resized()
 {
-    auto area = getLocalBounds().reduced(20);
-    int margin = 12;  // Tight teenage engineering spacing
+    auto area = getLocalBounds().reduced(24); // Increased padding to match web style
+    int margin = 16;  // Match web theme spacing (md)
+    int smallMargin = 8; // Match web theme spacing (sm)
     
-    // Title section - compact
-    titleLabel.setBounds(area.removeFromTop(24));
-    area.removeFromTop(4);
-    loginStatusLabel.setBounds(area.removeFromTop(16));
-    area.removeFromTop(20);
-    
-    // Login section
-    usernameLabel.setBounds(area.removeFromTop(14));
-    area.removeFromTop(4);
-    usernameEditor.setBounds(area.removeFromTop(28));
+    // Title section - more spacious
+    titleLabel.setBounds(area.removeFromTop(28));
+    area.removeFromTop(smallMargin);
+    loginStatusLabel.setBounds(area.removeFromTop(18));
     area.removeFromTop(margin);
     
-    passwordLabel.setBounds(area.removeFromTop(14));
-    area.removeFromTop(4);
-    passwordEditor.setBounds(area.removeFromTop(28));
+    // Login section with better spacing
+    usernameLabel.setBounds(area.removeFromTop(16));
+    area.removeFromTop(smallMargin);
+    usernameEditor.setBounds(area.removeFromTop(32)); // Taller inputs
     area.removeFromTop(margin);
     
-    auto buttonRow = area.removeFromTop(32);
-    loginButton.setBounds(buttonRow.removeFromLeft(180));
-    buttonRow.removeFromLeft(8);
+    passwordLabel.setBounds(area.removeFromTop(16));
+    area.removeFromTop(smallMargin);
+    passwordEditor.setBounds(area.removeFromTop(32));
+    area.removeFromTop(margin);
+    
+    // Button row with better spacing
+    auto buttonRow = area.removeFromTop(36); // Taller buttons
+    loginButton.setBounds(buttonRow.removeFromLeft(160));
+    buttonRow.removeFromLeft(smallMargin);
     logoutButton.setBounds(buttonRow);
-    area.removeFromTop(20);
+    area.removeFromTop(static_cast<int>(margin * 1.5)); // Extra space after login section
     
-    // Project Path - above select file button
-    projectPathLabel.setBounds(area.removeFromTop(14));
-    area.removeFromTop(4);
-    projectPathEditor.setBounds(area.removeFromTop(28));
+    // Project Path section
+    projectPathLabel.setBounds(area.removeFromTop(16));
+    area.removeFromTop(smallMargin);
+    projectPathEditor.setBounds(area.removeFromTop(32));
     area.removeFromTop(margin);
     
-    // Action buttons
-    selectFileButton.setBounds(area.removeFromTop(28));
-    area.removeFromTop(margin);
+    // Action buttons with consistent height
+    selectFileButton.setBounds(area.removeFromTop(32));
+    area.removeFromTop(smallMargin);
     
     // Use detected button (conditionally shown)
     if (useDetectedButton.isVisible())
     {
-        useDetectedButton.setBounds(area.removeFromTop(28));
-        area.removeFromTop(margin);
+        useDetectedButton.setBounds(area.removeFromTop(32));
+        area.removeFromTop(smallMargin);
     }
     
-    exportButton.setBounds(area.removeFromTop(36));  // Larger export button
+    // Export button - more prominent
+    exportButton.setBounds(area.removeFromTop(40));  // Taller primary button
     area.removeFromTop(margin);
     
-    autoExportToggle.setBounds(area.removeFromTop(24));
+    autoExportToggle.setBounds(area.removeFromTop(28));
     area.removeFromTop(margin);
     
-    // Status
-    statusLabel.setBounds(area.removeFromTop(20));
+    // Status section
+    statusLabel.setBounds(area.removeFromTop(24));
     area.removeFromTop(margin);
     
-    // Current file
-    currentFileLabel.setBounds(area.removeFromTop(14));
-    area.removeFromTop(4);
-    currentFileValue.setBounds(area.removeFromTop(20));
+    // Current file section
+    currentFileLabel.setBounds(area.removeFromTop(16));
+    area.removeFromTop(smallMargin);
+    currentFileValue.setBounds(area.removeFromTop(22));
     area.removeFromTop(margin);
     
-    // User ID
-    userIdLabel.setBounds(area.removeFromTop(14));
-    area.removeFromTop(4);
-    userIdEditor.setBounds(area.removeFromTop(28));
+    // User ID section
+    userIdLabel.setBounds(area.removeFromTop(16));
+    area.removeFromTop(smallMargin);
+    userIdEditor.setBounds(area.removeFromTop(32));
     area.removeFromTop(margin);
     
-    // Author
-    authorLabel.setBounds(area.removeFromTop(14));
-    area.removeFromTop(4);
-    authorEditor.setBounds(area.removeFromTop(28));
+    // Author section
+    authorLabel.setBounds(area.removeFromTop(16));
+    area.removeFromTop(smallMargin);
+    authorEditor.setBounds(area.removeFromTop(32));
 }
 
 void ColDawExportEditor::timerCallback()
