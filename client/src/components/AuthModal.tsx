@@ -17,11 +17,64 @@ const Overlay = styled.div`
 
 const Modal = styled.div`
   background: ${({ theme }) => theme.colors.bgSecondary};
-  border-radius: 8px;
+  border-radius: 12px;
+  border: 1px solid ${({ theme }) => theme.colors.borderColor};
   padding: ${({ theme }) => theme.spacing.xl};
   width: 400px;
   max-width: 90%;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 5%;
+    width: 28%;
+    height: 80%;
+    background-image: linear-gradient(
+      0deg,
+      rgba(137, 170, 248, 0.6) 0%,
+      rgba(163, 141, 250, 0.5) 18%,
+      rgba(183, 112, 252, 0.4) 35%,
+      rgba(197, 94, 223, 0.3) 52%,
+      rgba(210, 77, 195, 0.2) 68%,
+      rgba(210, 77, 195, 0) 100%
+    );
+    filter: blur(40px);
+    opacity: 0.8;
+    pointer-events: none;
+    z-index: 0;
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    right: 5%;
+    width: 30%;
+    height: 85%;
+    background-image: linear-gradient(
+      0deg,
+      rgba(232, 85, 96, 0.6) 0%,
+      rgba(235, 104, 81, 0.5) 24%,
+      rgba(238, 123, 107, 0.4) 44%,
+      rgba(241, 142, 127, 0.3) 60%,
+      rgba(245, 161, 147, 0.2) 74%,
+      rgba(245, 161, 147, 0) 100%
+    );
+    filter: blur(35px);
+    opacity: 0.7;
+    pointer-events: none;
+    z-index: 0;
+  }
+  
+  /* Ensure content is above gradient layers */
+  > * {
+    position: relative;
+    z-index: 1;
+  }
 `;
 
 const Title = styled.h2`
@@ -43,13 +96,28 @@ const Input = styled.input`
   padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md};
   font-size: 14px;
   border: 1px solid ${({ theme }) => theme.colors.borderColor};
-  border-radius: 4px;
+  border-radius: 6px;
   background: ${({ theme }) => theme.colors.bgPrimary};
   color: ${({ theme }) => theme.colors.textPrimary};
   outline: none;
+  transition: all 0.3s ease;
   
   &:focus {
-    border-color: ${({ theme }) => theme.colors.primary};
+    border: 1px solid transparent;
+    background: linear-gradient(${({ theme }) => theme.colors.bgPrimary}, ${({ theme }) => theme.colors.bgPrimary}) padding-box,
+                linear-gradient(90deg, 
+                  rgba(137, 170, 248, 0.6) 0%,
+                  rgba(183, 112, 252, 0.6) 25%,
+                  rgba(210, 77, 195, 0.6) 50%,
+                  rgba(232, 85, 96, 0.6) 75%,
+                  rgba(245, 161, 147, 0.6) 100%
+                ) border-box;
+    box-shadow: 0 0 0 3px rgba(183, 112, 252, 0.1);
+  }
+  
+  &:hover:not(:focus) {
+    border-color: rgba(183, 112, 252, 0.4);
+    box-shadow: 0 2px 8px rgba(183, 112, 252, 0.1);
   }
   
   &::placeholder {
@@ -61,16 +129,67 @@ const Button = styled.button`
   padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md};
   font-size: 14px;
   font-weight: 600;
-  background: ${({ theme }) => theme.colors.primary};
+  background: #2a2a2a;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(
+      45deg,
+      rgba(137, 170, 248, 0.8) 0%,
+      rgba(183, 112, 252, 0.8) 25%,
+      rgba(210, 77, 195, 0.8) 50%,
+      rgba(232, 85, 96, 0.8) 75%,
+      rgba(245, 161, 147, 0.8) 100%
+    );
+    border-radius: 6px;
+    z-index: -2;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      90deg,
+      rgba(183, 112, 252, 0.15) 0%,
+      rgba(210, 77, 195, 0.15) 30%,
+      rgba(232, 85, 96, 0.15) 70%,
+      rgba(245, 161, 147, 0.15) 100%
+    );
+    border-radius: 6px;
+    z-index: -1;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+  }
   
   &:hover {
-    opacity: 0.9;
     transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(183, 112, 252, 0.3);
+  }
+  
+  &:hover::before {
+    opacity: 1;
+  }
+  
+  &:hover::after {
+    opacity: 0.8;
   }
   
   &:disabled {

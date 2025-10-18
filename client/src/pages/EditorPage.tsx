@@ -56,12 +56,12 @@ const Logo = styled.div`
 `;
 
 const VersionBadge = styled.span`
-  background: ${({ theme }) => theme.colors.primary};
-  color: white;
+  background: white;
+  color: black;
   font-size: 10px;
   font-weight: 500;
   padding: 2px 6px;
-  border-radius: 8px;
+  border-radius: 3px;
   text-transform: uppercase;
 `;
 
@@ -86,11 +86,11 @@ const UserAvatar = styled.div`
   min-height: 48px;
   border-radius: 50%;
   background: linear-gradient(135deg, 
-    rgba(137, 170, 248, 1) 0%,
-    rgba(183, 112, 252, 1) 25%,
-    rgba(210, 77, 195, 1) 50%,
-    rgba(232, 85, 96, 1) 75%,
-    rgba(245, 161, 147, 1) 100%
+    rgba(137, 170, 248, 0.7) 0%,
+    rgba(183, 112, 252, 0.7) 25%,
+    rgba(210, 77, 195, 0.7) 50%,
+    rgba(232, 85, 96, 0.7) 75%,
+    rgba(245, 161, 147, 0.7) 100%
   );
   display: flex;
   align-items: center;
@@ -109,11 +109,11 @@ const UserAvatar = styled.div`
     right: -2px;
     bottom: -2px;
     background: linear-gradient(135deg, 
-      rgba(137, 170, 248, 0.8) 0%,
-      rgba(183, 112, 252, 0.8) 25%,
-      rgba(210, 77, 195, 0.8) 50%,
-      rgba(232, 85, 96, 0.8) 75%,
-      rgba(245, 161, 147, 0.8) 100%
+      rgba(137, 170, 248, 0.5) 0%,
+      rgba(183, 112, 252, 0.5) 25%,
+      rgba(210, 77, 195, 0.5) 50%,
+      rgba(232, 85, 96, 0.5) 75%,
+      rgba(245, 161, 147, 0.5) 100%
     );
     border-radius: 50%;
     opacity: 0;
@@ -123,7 +123,7 @@ const UserAvatar = styled.div`
   
   &:hover {
     transform: scale(1.05);
-    box-shadow: 0 4px 16px rgba(183, 112, 252, 0.4);
+    box-shadow: 0 4px 16px rgba(183, 112, 252, 0.3);
   }
   
   &:hover::before {
@@ -219,78 +219,15 @@ const NavItem = styled.div<{ $active?: boolean }>`
   color: ${({ theme, $active }) => $active ? theme.colors.textPrimary : theme.colors.textSecondary};
   background: ${({ theme, $active }) => $active ? theme.colors.bgTertiary : 'transparent'};
   font-size: 13px;
-  position: relative;
-  overflow: hidden;
-  transition: all 0.3s ease;
-  
-  ${({ $active }) => $active && `
-    &::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 3px;
-      height: 100%;
-      background: linear-gradient(
-        180deg,
-        rgba(137, 170, 248, 1) 0%,
-        rgba(183, 112, 252, 1) 25%,
-        rgba(210, 77, 195, 1) 50%,
-        rgba(232, 85, 96, 1) 75%,
-        rgba(245, 161, 147, 1) 100%
-      );
-      border-radius: 0 2px 2px 0;
-    }
-    
-    &::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: linear-gradient(
-        90deg,
-        rgba(183, 112, 252, 0.05) 0%,
-        rgba(210, 77, 195, 0.03) 50%,
-        transparent 100%
-      );
-      pointer-events: none;
-    }
-  `}
   
   &:hover {
     background: ${({ theme }) => theme.colors.bgTertiary};
     color: ${({ theme }) => theme.colors.textPrimary};
-    
-    &::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 50%;
-      width: 2px;
-      height: 0%;
-      background: linear-gradient(
-        180deg,
-        rgba(183, 112, 252, 0.6) 0%,
-        rgba(210, 77, 195, 0.6) 50%,
-        rgba(232, 85, 96, 0.6) 100%
-      );
-      transform: translateY(-50%);
-      transition: height 0.3s ease;
-      border-radius: 0 1px 1px 0;
-    }
-  }
-  
-  &:hover::before {
-    height: 70%;
   }
   
   svg {
     width: 16px;
     height: 16px;
-    position: relative;
-    z-index: 1;
   }
 `;
 
@@ -520,67 +457,12 @@ const ProjectCard = styled.div`
   border-radius: 10px;
   overflow: hidden;
   cursor: pointer;
-  transition: all 0.3s ease;
-  position: relative;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: -2px;
-    left: -2px;
-    right: -2px;
-    bottom: -2px;
-    background: linear-gradient(
-      135deg,
-      rgba(137, 170, 248, 0.4) 0%,
-      rgba(183, 112, 252, 0.4) 25%,
-      rgba(210, 77, 195, 0.4) 50%,
-      rgba(232, 85, 96, 0.4) 75%,
-      rgba(245, 161, 147, 0.4) 100%
-    );
-    border-radius: 12px;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    z-index: -1;
-  }
-  
-  &::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(
-      135deg,
-      rgba(183, 112, 252, 0.02) 0%,
-      rgba(210, 77, 195, 0.02) 50%,
-      rgba(232, 85, 96, 0.02) 100%
-    );
-    border-radius: 10px;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    z-index: 0;
-  }
+  transition: all 0.2s ease;
   
   &:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3),
-                0 4px 12px rgba(183, 112, 252, 0.15);
-  }
-  
-  &:hover::before {
-    opacity: 1;
-  }
-  
-  &:hover::after {
-    opacity: 1;
-  }
-  
-  /* Ensure content is above gradient layers */
-  > * {
-    position: relative;
-    z-index: 1;
+    border-color: ${({ theme }) => theme.colors.borderActive};
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
   }
 `;
 

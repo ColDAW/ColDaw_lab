@@ -140,7 +140,7 @@
         
         .verification-code {
             display: inline-block;
-            background: #2a2a2a;
+            background: linear-gradient(135deg, #2a2a2a 0%, #404040 100%);
             color: white;
             font-size: 36px;
             font-weight: bold;
@@ -148,54 +148,8 @@
             border-radius: 12px;
             letter-spacing: 8px;
             margin: 20px 0;
-            position: relative;
-            overflow: hidden;
-            z-index: 2;
-        }
-        
-        /* Multi-layer gradient effects for verification code */
-        .verification-code::before {
-            content: '';
-            position: absolute;
-            bottom: -5px;
-            left: 10%;
-            width: 35%;
-            height: 120%;
-            background-image: linear-gradient(
-                0deg,
-                rgba(137, 170, 248, 0.9) 0%,
-                rgba(163, 141, 250, 0.75) 18%,
-                rgba(183, 112, 252, 0.6) 35%,
-                rgba(197, 94, 223, 0.45) 52%,
-                rgba(210, 77, 195, 0.3) 68%,
-                rgba(210, 77, 195, 0) 100%
-            );
-            filter: blur(25px);
-            opacity: 1;
-            pointer-events: none;
-            z-index: -1;
-        }
-        
-        .verification-code::after {
-            content: '';
-            position: absolute;
-            bottom: -5px;
-            right: 10%;
-            width: 35%;
-            height: 130%;
-            background-image: linear-gradient(
-                0deg,
-                rgba(232, 85, 96, 0.95) 0%,
-                rgba(235, 104, 81, 0.8) 24%,
-                rgba(238, 123, 107, 0.65) 44%,
-                rgba(241, 142, 127, 0.5) 60%,
-                rgba(245, 161, 147, 0.3) 74%,
-                rgba(245, 161, 147, 0) 100%
-            );
-            filter: blur(20px);
-            opacity: 1;
-            pointer-events: none;
-            z-index: -1;
+            border: 1px solid #505050;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
         }
         
         .description {

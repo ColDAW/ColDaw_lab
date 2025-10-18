@@ -22,20 +22,6 @@ const Sidebar = styled.div`
   padding: ${({ theme }) => theme.spacing.xl};
 `;
 
-const Logo = styled.h1`
-  font-size: 24px;
-  font-weight: 900;
-  letter-spacing: -1px;
-  color: ${({ theme }) => theme.colors.accentOrange};
-  font-family: 'Poppins', ${({ theme }) => theme.fonts.sans};
-  margin-bottom: ${({ theme }) => theme.spacing.xl};
-  cursor: pointer;
-  
-  &:hover {
-    opacity: 0.8;
-  }
-`;
-
 const BackButton = styled.button`
   display: flex;
   align-items: center;
@@ -223,7 +209,13 @@ const UserAvatar = styled.div`
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background: ${({ theme }) => theme.colors.accentBlue};
+  background: linear-gradient(135deg, 
+    rgba(137, 170, 248, 0.7) 0%,
+    rgba(183, 112, 252, 0.7) 25%,
+    rgba(210, 77, 195, 0.7) 50%,
+    rgba(232, 85, 96, 0.7) 75%,
+    rgba(245, 161, 147, 0.7) 100%
+  );
   display: flex;
   align-items: center;
   justify-content: center;
@@ -231,6 +223,37 @@ const UserAvatar = styled.div`
   font-weight: 700;
   color: white;
   margin-bottom: ${({ theme }) => theme.spacing.lg};
+  position: relative;
+  transition: all 0.3s ease;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: -3px;
+    left: -3px;
+    right: -3px;
+    bottom: -3px;
+    background: linear-gradient(135deg, 
+      rgba(137, 170, 248, 0.5) 0%,
+      rgba(183, 112, 252, 0.5) 25%,
+      rgba(210, 77, 195, 0.5) 50%,
+      rgba(232, 85, 96, 0.5) 75%,
+      rgba(245, 161, 147, 0.5) 100%
+    );
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: -1;
+  }
+  
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(183, 112, 252, 0.3);
+  }
+  
+  &:hover::before {
+    opacity: 1;
+  }
 `;
 
 const DangerZone = styled.div`
@@ -286,7 +309,6 @@ function AccountPage() {
   return (
     <Container>
       <Sidebar>
-        <Logo onClick={handleBack}>ColDAW</Logo>
         <BackButton onClick={handleBack}>
           <ArrowLeft />
           Back to Home
