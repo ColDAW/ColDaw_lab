@@ -240,24 +240,126 @@ class EmailService {
             overflow: hidden;
         }
         .header {
-            background: #EB5A72;
+            background: #2a2a2a;
             padding: 40px 20px;
             text-align: center;
+            position: relative;
+            overflow: hidden;
         }
+        
+        /* Multi-layer gradient effects like EditorPage create project card */
+        .header::before {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 5%;
+            width: 28%;
+            height: 100%;
+            background-image: linear-gradient(
+                0deg,
+                rgba(137, 170, 248, 0.88) 0%,
+                rgba(163, 141, 250, 0.72) 18%,
+                rgba(183, 112, 252, 0.58) 35%,
+                rgba(197, 94, 223, 0.42) 52%,
+                rgba(210, 77, 195, 0.26) 68%,
+                rgba(210, 77, 195, 0.12) 82%,
+                rgba(210, 77, 195, 0.04) 94%,
+                rgba(210, 77, 195, 0) 100%
+            );
+            filter: blur(60px);
+            opacity: 0.95;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 25%;
+            width: 32%;
+            height: 110%;
+            background-image: linear-gradient(
+                0deg,
+                rgba(183, 112, 252, 0.92) 0%,
+                rgba(197, 94, 223, 0.78) 22%,
+                rgba(210, 77, 195, 0.64) 40%,
+                rgba(221, 81, 145, 0.48) 56%,
+                rgba(232, 85, 96, 0.32) 70%,
+                rgba(232, 85, 96, 0.18) 82%,
+                rgba(232, 85, 96, 0.06) 92%,
+                rgba(232, 85, 96, 0) 100%
+            );
+            filter: blur(58px);
+            opacity: 0.95;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .header-gradient-3 {
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            width: 26%;
+            height: 105%;
+            background-image: linear-gradient(
+                0deg,
+                rgba(210, 77, 195, 0.90) 0%,
+                rgba(221, 81, 145, 0.76) 20%,
+                rgba(232, 85, 96, 0.62) 38%,
+                rgba(235, 104, 81, 0.46) 54%,
+                rgba(238, 123, 107, 0.30) 68%,
+                rgba(238, 123, 107, 0.16) 80%,
+                rgba(238, 123, 107, 0.05) 92%,
+                rgba(238, 123, 107, 0) 100%
+            );
+            filter: blur(62px);
+            opacity: 0.92;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .header-gradient-4 {
+            position: absolute;
+            bottom: -10px;
+            right: 8%;
+            width: 30%;
+            height: 115%;
+            background-image: linear-gradient(
+                0deg,
+                rgba(232, 85, 96, 0.94) 0%,
+                rgba(235, 104, 81, 0.80) 24%,
+                rgba(238, 123, 107, 0.66) 44%,
+                rgba(241, 142, 127, 0.50) 60%,
+                rgba(245, 161, 147, 0.32) 74%,
+                rgba(245, 161, 147, 0.16) 86%,
+                rgba(245, 161, 147, 0.04) 95%,
+                rgba(245, 161, 147, 0) 100%
+            );
+            filter: blur(56px);
+            opacity: 0.9;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
         .header h1 {
             margin: 0;
             font-size: 32px;
             font-weight: 600;
             color: white;
             text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 2;
         }
+        
         .content {
             padding: 40px 30px;
             text-align: center;
         }
+        
         .verification-code {
             display: inline-block;
-            background: #EB5A72;
+            background: #2a2a2a;
             color: white;
             font-size: 36px;
             font-weight: bold;
@@ -265,7 +367,54 @@ class EmailService {
             border-radius: 12px;
             letter-spacing: 8px;
             margin: 20px 0;
-            box-shadow: 0 8px 32px rgba(235, 90, 114, 0.3);
+            position: relative;
+            overflow: hidden;
+            z-index: 2;
+        }
+        
+        /* Multi-layer gradient effects for verification code */
+        .verification-code::before {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 10%;
+            width: 35%;
+            height: 120%;
+            background-image: linear-gradient(
+                0deg,
+                rgba(137, 170, 248, 0.9) 0%,
+                rgba(163, 141, 250, 0.75) 18%,
+                rgba(183, 112, 252, 0.6) 35%,
+                rgba(197, 94, 223, 0.45) 52%,
+                rgba(210, 77, 195, 0.3) 68%,
+                rgba(210, 77, 195, 0) 100%
+            );
+            filter: blur(25px);
+            opacity: 1;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .verification-code::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            right: 10%;
+            width: 35%;
+            height: 130%;
+            background-image: linear-gradient(
+                0deg,
+                rgba(232, 85, 96, 0.95) 0%,
+                rgba(235, 104, 81, 0.8) 24%,
+                rgba(238, 123, 107, 0.65) 44%,
+                rgba(241, 142, 127, 0.5) 60%,
+                rgba(245, 161, 147, 0.3) 74%,
+                rgba(245, 161, 147, 0) 100%
+            );
+            filter: blur(20px);
+            opacity: 1;
+            pointer-events: none;
+            z-index: -1;
         }
         .description {
             font-size: 16px;
@@ -273,14 +422,56 @@ class EmailService {
             line-height: 1.6;
             margin: 20px 0;
         }
-        .warning {
-            background: rgba(235, 90, 114, 0.1);
-            border: 1px solid rgba(235, 90, 114, 0.3);
+        .notice {
+            background: rgba(42, 42, 42, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 8px;
             padding: 15px;
             margin: 20px 0;
             font-size: 14px;
-            color: #EB5A72;
+            color: #ffffff;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .notice::before {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0%;
+            width: 40%;
+            height: 120%;
+            background-image: linear-gradient(
+                0deg,
+                rgba(183, 112, 252, 0.4) 0%,
+                rgba(197, 94, 223, 0.3) 30%,
+                rgba(210, 77, 195, 0.2) 60%,
+                rgba(210, 77, 195, 0) 100%
+            );
+            filter: blur(15px);
+            opacity: 1;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .notice::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            right: 0%;
+            width: 40%;
+            height: 110%;
+            background-image: linear-gradient(
+                0deg,
+                rgba(232, 85, 96, 0.4) 0%,
+                rgba(235, 104, 81, 0.3) 30%,
+                rgba(238, 123, 107, 0.2) 60%,
+                rgba(241, 142, 127, 0) 100%
+            );
+            filter: blur(12px);
+            opacity: 1;
+            pointer-events: none;
+            z-index: -1;
         }
         .footer {
             background: #0a0a0a;
@@ -291,7 +482,15 @@ class EmailService {
             border-top: 1px solid #2a2a2a;
         }
         .footer a {
-            color: #EB5A72;
+            background: linear-gradient(90deg, 
+                rgba(183, 112, 252, 1) 0%, 
+                rgba(210, 77, 195, 1) 30%, 
+                rgba(232, 85, 96, 1) 70%, 
+                rgba(245, 161, 147, 1) 100%
+            );
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
             text-decoration: none;
         }
     </style>
@@ -299,6 +498,8 @@ class EmailService {
 <body>
     <div class="container">
         <div class="header">
+            <div class="header-gradient-3"></div>
+            <div class="header-gradient-4"></div>
             <h1>ColDAW</h1>
         </div>
         <div class="content">
@@ -310,8 +511,8 @@ class EmailService {
             <p class="description">
                 Enter this code in the verification screen to activate your account and start creating amazing music projects.
             </p>
-            <div class="warning">
-                ⚠️ This code will expire in 10 minutes for security reasons. If you didn't request this verification, please ignore this email.
+            <div class="notice">
+                This code will expire in 10 minutes for security reasons. If you didn't request this verification, please ignore this email.
             </div>
         </div>
         <div class="footer">
