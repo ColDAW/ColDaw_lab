@@ -81,21 +81,18 @@ const Button = styled.button`
   position: relative;
   transition: all 0.3s ease;
   
-  /* Gradient border on hover */
+  /* Gradient border on hover with no background fill */
   &:hover {
     color: ${({ theme }) => theme.colors.textPrimary};
-    background: transparent;
-    border: 1px solid transparent;
-    background-image: linear-gradient(${({ theme }) => theme.colors.bgSecondary}, ${({ theme }) => theme.colors.bgSecondary}),
-                      linear-gradient(45deg, 
-                        rgba(137, 170, 248, 0.8) 0%,
-                        rgba(183, 112, 252, 0.8) 25%,
-                        rgba(210, 77, 195, 0.8) 50%,
-                        rgba(232, 85, 96, 0.8) 75%,
-                        rgba(245, 161, 147, 0.8) 100%
-                      );
-    background-origin: border-box;
-    background-clip: content-box, border-box;
+    background: transparent !important;
+    border: 2px solid;
+    border-image: linear-gradient(45deg, 
+      rgba(137, 170, 248, 0.8) 0%,
+      rgba(183, 112, 252, 0.8) 25%,
+      rgba(210, 77, 195, 0.8) 50%,
+      rgba(232, 85, 96, 0.8) 75%,
+      rgba(245, 161, 147, 0.8) 100%
+    ) 1;
     transform: translateY(-1px);
     box-shadow: 0 4px 16px rgba(183, 112, 252, 0.2);
   }
@@ -185,18 +182,15 @@ const InviteButton = styled.button`
   
   &:hover {
     color: ${({ theme }) => theme.colors.textPrimary};
-    background: transparent;
-    border: 1px solid transparent;
-    background-image: linear-gradient(${({ theme }) => theme.colors.bgSecondary}, ${({ theme }) => theme.colors.bgSecondary}),
-                      linear-gradient(45deg, 
-                        rgba(137, 170, 248, 0.8) 0%,
-                        rgba(183, 112, 252, 0.8) 25%,
-                        rgba(210, 77, 195, 0.8) 50%,
-                        rgba(232, 85, 96, 0.8) 75%,
-                        rgba(245, 161, 147, 0.8) 100%
-                      );
-    background-origin: border-box;
-    background-clip: content-box, border-box;
+    background: transparent !important;
+    border: 2px solid;
+    border-image: linear-gradient(45deg, 
+      rgba(137, 170, 248, 0.8) 0%,
+      rgba(183, 112, 252, 0.8) 25%,
+      rgba(210, 77, 195, 0.8) 50%,
+      rgba(232, 85, 96, 0.8) 75%,
+      rgba(245, 161, 147, 0.8) 100%
+    ) 1;
     transform: scale(1.05);
     box-shadow: 0 4px 16px rgba(183, 112, 252, 0.2);
   }
@@ -216,7 +210,7 @@ function MenuBar({ onToggleHistory, onVersionCommitted, currentVersionId, onFile
   const [isImporting, setIsImporting] = useState(false);
 
   const handleBack = () => {
-    navigate('/');
+    navigate('/editor');
   };
 
   const handleInvite = async () => {

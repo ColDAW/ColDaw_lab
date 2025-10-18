@@ -1,12 +1,21 @@
 import { useEffect, useRef } from 'react';
 
-// Color palette for track visualization (based on Ableton Live colors)
+// Color palette for track visualization (matches ArrangementView colors)
 const TRACK_COLORS = [
-  '#FF5C5C', '#FF9A00', '#FFD700', '#7CFC00', '#00CED1',
-  '#1E90FF', '#9370DB', '#FF69B4', '#DC143C', '#FF8C00',
-  '#FFD700', '#32CD32', '#00BFFF', '#BA55D3', '#FF1493',
-  '#F08080', '#FFA07A', '#F0E68C', '#98FB98', '#AFEEEE',
-  '#87CEEB', '#DDA0DD'
+  '#C9A511',
+  '#53A21F', 
+  '#1CA231',
+  '#1CA26C',
+  '#1CA2A2',
+  '#297DA5',
+  '#3C5BAD',
+  '#553FAD',
+  '#7932A9',
+  '#881BA3',
+  '#A51AA3',
+  '#A31C86',
+  '#A31CA3',
+  '#891BA3'
 ];
 
 interface ProjectThumbnailProps {
