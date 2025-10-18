@@ -16,9 +16,18 @@ class EmailService {
 
   async initialize(): Promise<void> {
     try {
+      // 调试：打印环境变量检查结果
+      console.log('🔍 Email service initialization - Environment variables check:');
+      console.log('SMTP_HOST:', process.env.SMTP_HOST ? 'SET' : 'NOT SET');
+      console.log('SMTP_PORT:', process.env.SMTP_PORT ? 'SET' : 'NOT SET');
+      console.log('SMTP_SECURE:', process.env.SMTP_SECURE ? 'SET' : 'NOT SET');
+      console.log('SMTP_USER:', process.env.SMTP_USER ? 'SET (***@***)' : 'NOT SET');
+      console.log('SMTP_PASS:', process.env.SMTP_PASS ? 'SET (length: ' + process.env.SMTP_PASS.length + ')' : 'NOT SET');
+      
       // 检查必要的环境变量
       if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-        console.warn('SMTP credentials not configured. Email service will be disabled.');
+        console.warn('❌ SMTP credentials not configured. Email service will be disabled.');
+        console.warn('Missing:', !process.env.SMTP_USER ? 'SMTP_USER' : '', !process.env.SMTP_PASS ? 'SMTP_PASS' : '');
         return;
       }
 
