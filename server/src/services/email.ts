@@ -11,11 +11,36 @@ export interface EmailConfig {
   };
 }
 
+// Mailgun API配置接口
+export interface MailgunConfig {
+  apiKey: string;
+  domain: string;
+  region?: 'us' | 'eu';
+}
+
 class EmailService {
   private transporter: nodemailer.Transporter | null = null;
+  private useMailgunAPI: boolean = false;
+  private mailgunConfig: MailgunConfig | null = null;
 
   async initialize(): Promise<void> {
     try {
+      // 检查是否使用Mailgun API
+      const mailgunApiKey = process.env.MAILGUN_API_KEY;
+      const mailgunDomain = process.env.MAILGUN_DOMAIN;
+      
+      if (mailgunApiKey && mailgunDomain) {
+        this.useMailgunAPI = true;
+        this.mailgunConfig = {
+          apiKey: mailgunApiKey,
+          domain: mailgunDomain,
+          region: (process.env.MAILGUN_REGION as 'us' | 'eu') || 'us'
+        };
+        console.log('🔧 Using Mailgun API for email delivery');
+        console.log('✅ Email service initialized with Mailgun API');
+        return;
+      }
+
       // 调试：打印环境变量检查结果
       console.log('🔍 Email service initialization - Environment variables check:');
       console.log('SMTP_HOST:', process.env.SMTP_HOST || 'NOT SET');
@@ -31,11 +56,11 @@ class EmailService {
         return;
       }
 
-      // 支持多种邮箱服务配置
+      // Railway平台优化的SMTP配置
       const emailConfig: EmailConfig = {
-        host: process.env.SMTP_HOST || 'smtp.gmail.com',
-        port: parseInt(process.env.SMTP_PORT || '587'),
-        secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
+        host: process.env.SMTP_HOST || 'smtp.mailgun.org',
+        port: parseInt(process.env.SMTP_PORT || '2525'), // 使用2525端口，Railway更友好
+        secure: process.env.SMTP_SECURE === 'true',
         auth: {
           user: process.env.SMTP_USER,
           pass: process.env.SMTP_PASS,
@@ -44,15 +69,20 @@ class EmailService {
 
       console.log(`🔧 Initializing email service with ${emailConfig.host}:${emailConfig.port} (secure: ${emailConfig.secure})`);
 
-      // 添加连接选项来处理超时
+      // Railway平台优化的连接选项
       const transporterOptions = {
         ...emailConfig,
-        connectionTimeout: 15000, // 15 seconds - 增加超时时间
-        greetingTimeout: 15000,   // 15 seconds
-        socketTimeout: 20000,     // 20 seconds
-        pool: false,              // 禁用连接池，减少复杂性
+        connectionTimeout: 30000,     // 30 seconds
+        greetingTimeout: 30000,       // 30 seconds  
+        socketTimeout: 60000,         // 60 seconds
+        pool: false,                  // 禁用连接池
         maxConnections: 1,
-        maxMessages: 100,
+        maxMessages: 1,               // 每个连接只发送一封邮件
+        requireTLS: false,            // 不强制TLS
+        ignoreTLS: false,
+        tls: {
+          rejectUnauthorized: false   // Railway环境可能需要这个
+        }
       };
 
       this.transporter = nodemailer.createTransport(transporterOptions);
@@ -69,17 +99,23 @@ class EmailService {
   }
 
   async sendVerificationCode(email: string, code: string): Promise<void> {
+    // 优先使用Mailgun API
+    if (this.useMailgunAPI && this.mailgunConfig) {
+      return this.sendViaMailgunAPI(email, code);
+    }
+
+    // 后备SMTP方法
     if (!this.transporter) {
       throw new Error('Email service not available - SMTP not configured');
     }
 
-    // 在生产环境跳过预验证，直接尝试发送
+    // 在Railway生产环境跳过预验证
     if (process.env.NODE_ENV !== 'production') {
       try {
         console.log('🔍 Verifying SMTP connection before sending...');
         const verifyPromise = this.transporter.verify();
         const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('SMTP verification timeout')), 10000);
+          setTimeout(() => reject(new Error('SMTP verification timeout')), 15000);
         });
         
         await Promise.race([verifyPromise, timeoutPromise]);
@@ -89,7 +125,7 @@ class EmailService {
         console.warn('⚠️ 开发环境验证失败，但继续尝试发送邮件...');
       }
     } else {
-      console.log('🚀 Production mode: 跳过SMTP预验证，直接发送邮件（Mailgun配置）');
+      console.log('🚀 Production mode: 跳过SMTP预验证，直接发送邮件');
     }
 
     const htmlTemplate = this.generateVerificationEmailHTML(code);
@@ -97,7 +133,7 @@ class EmailService {
     const mailOptions = {
       from: {
         name: 'ColDAW',
-        address: process.env.SMTP_USER || 'noreply@coldaw.com'
+        address: process.env.FROM_EMAIL || process.env.SMTP_USER || 'noreply@coldaw.app'
       },
       to: email,
       subject: 'ColDAW - Email Verification Code',
@@ -107,10 +143,10 @@ class EmailService {
 
     try {
       console.log(`📧 Sending verification email to: ${email}`);
-      // 添加发送超时
+      // 增加发送超时时间
       const sendPromise = this.transporter.sendMail(mailOptions);
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Email send timeout')), 30000); // 30 seconds
+        setTimeout(() => reject(new Error('Email send timeout')), 60000); // 60 seconds
       });
       
       const result = await Promise.race([sendPromise, timeoutPromise]);
@@ -129,6 +165,53 @@ class EmailService {
       } else {
         throw new Error(`邮件发送失败: ${error.message}`);
       }
+    }
+  }
+
+  // 新增：通过Mailgun API发送邮件
+  private async sendViaMailgunAPI(email: string, code: string): Promise<void> {
+    if (!this.mailgunConfig) {
+      throw new Error('Mailgun API not configured');
+    }
+
+    const htmlTemplate = this.generateVerificationEmailHTML(code);
+    const textTemplate = `Your ColDAW verification code is: ${code}. This code will expire in 10 minutes.`;
+
+    const formData = new FormData();
+    formData.append('from', `ColDAW <${process.env.FROM_EMAIL || 'noreply@coldaw.app'}>`);
+    formData.append('to', email);
+    formData.append('subject', 'ColDAW - Email Verification Code');
+    formData.append('html', htmlTemplate);
+    formData.append('text', textTemplate);
+
+    const baseUrl = this.mailgunConfig.region === 'eu' 
+      ? 'https://api.eu.mailgun.net/v3' 
+      : 'https://api.mailgun.net/v3';
+    
+    const url = `${baseUrl}/${this.mailgunConfig.domain}/messages`;
+
+    try {
+      console.log(`📧 Sending verification email via Mailgun API to: ${email}`);
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Basic ${Buffer.from(`api:${this.mailgunConfig.apiKey}`).toString('base64')}`
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Mailgun API error: ${response.status} - ${errorText}`);
+      }
+
+      const result = await response.json() as { id: string };
+      console.log(`✅ Verification email sent successfully via Mailgun API to: ${email}`);
+      console.log('Message ID:', result.id);
+    } catch (error: any) {
+      console.error('❌ Failed to send verification email via Mailgun API:', error);
+      throw new Error(`邮件发送失败: ${error.message}`);
     }
   }
 
