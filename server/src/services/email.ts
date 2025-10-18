@@ -18,9 +18,9 @@ class EmailService {
     try {
       // 调试：打印环境变量检查结果
       console.log('🔍 Email service initialization - Environment variables check:');
-      console.log('SMTP_HOST:', process.env.SMTP_HOST ? 'SET' : 'NOT SET');
-      console.log('SMTP_PORT:', process.env.SMTP_PORT ? 'SET' : 'NOT SET');
-      console.log('SMTP_SECURE:', process.env.SMTP_SECURE ? 'SET' : 'NOT SET');
+      console.log('SMTP_HOST:', process.env.SMTP_HOST || 'NOT SET');
+      console.log('SMTP_PORT:', process.env.SMTP_PORT || 'NOT SET');
+      console.log('SMTP_SECURE:', process.env.SMTP_SECURE || 'NOT SET');
       console.log('SMTP_USER:', process.env.SMTP_USER ? 'SET (***@***)' : 'NOT SET');
       console.log('SMTP_PASS:', process.env.SMTP_PASS ? 'SET (length: ' + process.env.SMTP_PASS.length + ')' : 'NOT SET');
       
@@ -42,33 +42,27 @@ class EmailService {
         },
       };
 
-      console.log(`Initializing email service with ${emailConfig.host}:${emailConfig.port}`);
+      console.log(`🔧 Initializing email service with ${emailConfig.host}:${emailConfig.port} (secure: ${emailConfig.secure})`);
 
       // 添加连接选项来处理超时
       const transporterOptions = {
         ...emailConfig,
-        connectionTimeout: 10000, // 10 seconds
-        greetingTimeout: 10000,   // 10 seconds
-        socketTimeout: 15000,     // 15 seconds
-        pool: true,
-        maxConnections: 5,
+        connectionTimeout: 15000, // 15 seconds - 增加超时时间
+        greetingTimeout: 15000,   // 15 seconds
+        socketTimeout: 20000,     // 20 seconds
+        pool: false,              // 禁用连接池，减少复杂性
+        maxConnections: 1,
         maxMessages: 100,
       };
 
       this.transporter = nodemailer.createTransport(transporterOptions);
 
-      // 验证配置是否正确（使用超时）
-      if (this.transporter) {
-        const verifyPromise = this.transporter.verify();
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('SMTP verification timeout')), 10000);
-        });
-        
-        await Promise.race([verifyPromise, timeoutPromise]);
-      }
-      console.log('Email service initialized successfully');
+      // 跳过初始验证，改为延迟验证
+      console.log('⚡ Email service transporter created (skipping initial verification)');
+      console.log('✅ Email service initialized');
+      
     } catch (error) {
-      console.error('Failed to initialize email service:', error);
+      console.error('❌ Failed to initialize email service:', error);
       // 不抛出错误，让服务器继续启动
       this.transporter = null;
     }
@@ -77,6 +71,28 @@ class EmailService {
   async sendVerificationCode(email: string, code: string): Promise<void> {
     if (!this.transporter) {
       throw new Error('Email service not available - SMTP not configured');
+    }
+
+    // 在发送前进行实时验证
+    try {
+      console.log('🔍 Verifying SMTP connection before sending...');
+      const verifyPromise = this.transporter.verify();
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('SMTP verification timeout')), 15000);
+      });
+      
+      await Promise.race([verifyPromise, timeoutPromise]);
+      console.log('✅ SMTP connection verified successfully');
+    } catch (verifyError: any) {
+      console.error('❌ SMTP verification failed:', verifyError.message);
+      
+      if (verifyError.code === 'EAUTH') {
+        throw new Error('邮箱认证失败 - 请检查用户名和密码是否正确，如果启用了两步验证，请使用应用专用密码');
+      } else if (verifyError.code === 'ETIMEDOUT' || verifyError.message.includes('timeout')) {
+        throw new Error('邮件服务器连接超时 - Railway服务器可能无法访问Zoho SMTP，请尝试其他邮件服务提供商');
+      } else {
+        throw new Error(`邮件服务验证失败: ${verifyError.message}`);
+      }
     }
 
     const htmlTemplate = this.generateVerificationEmailHTML(code);
@@ -93,26 +109,28 @@ class EmailService {
     };
 
     try {
+      console.log(`📧 Sending verification email to: ${email}`);
       // 添加发送超时
       const sendPromise = this.transporter.sendMail(mailOptions);
       const timeoutPromise = new Promise((_, reject) => {
         setTimeout(() => reject(new Error('Email send timeout')), 30000); // 30 seconds
       });
       
-      await Promise.race([sendPromise, timeoutPromise]);
-      console.log(`Verification email sent to: ${email}`);
+      const result = await Promise.race([sendPromise, timeoutPromise]);
+      console.log(`✅ Verification email sent successfully to: ${email}`);
+      console.log('Message ID:', result.messageId);
     } catch (error: any) {
-      console.error('Failed to send verification email:', error);
+      console.error('❌ Failed to send verification email:', error);
       
       // 提供更具体的错误信息
       if (error.code === 'ETIMEDOUT' || error.code === 'ECONNABORTED') {
-        throw new Error('Email server connection timeout - please try again later');
+        throw new Error('邮件服务器连接超时 - 请稍后重试');
       } else if (error.code === 'EAUTH') {
-        throw new Error('Email authentication failed - check SMTP credentials');
+        throw new Error('邮箱认证失败 - 请检查SMTP凭据');
       } else if (error.message === 'Email send timeout') {
-        throw new Error('Email sending timeout - please try again');
+        throw new Error('邮件发送超时 - 请重新尝试');
       } else {
-        throw new Error(`Email service error: ${error.message}`);
+        throw new Error(`邮件发送失败: ${error.message}`);
       }
     }
   }
