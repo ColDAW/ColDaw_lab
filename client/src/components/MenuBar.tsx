@@ -80,21 +80,37 @@ const Button = styled.button`
   cursor: pointer;
   position: relative;
   transition: all 0.3s ease;
+  overflow: hidden;
   
-  /* Gradient border on hover with no background fill */
-  &:hover {
-    color: ${({ theme }) => theme.colors.textPrimary};
-    background: transparent !important;
-    border: 2px solid;
-    border-image: linear-gradient(45deg, 
+  /* Gradient border effect using pseudo-element to preserve border-radius */
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 6px;
+    padding: 2px;
+    background: linear-gradient(45deg, 
       rgba(137, 170, 248, 0.8) 0%,
       rgba(183, 112, 252, 0.8) 25%,
       rgba(210, 77, 195, 0.8) 50%,
       rgba(232, 85, 96, 0.8) 75%,
       rgba(245, 161, 147, 0.8) 100%
-    ) 1;
+    );
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: xor;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  &:hover {
+    color: ${({ theme }) => theme.colors.textPrimary};
+    background: transparent !important;
     transform: translateY(-1px);
     box-shadow: 0 4px 16px rgba(183, 112, 252, 0.2);
+  }
+  
+  &:hover::before {
+    opacity: 1;
   }
   
   svg {

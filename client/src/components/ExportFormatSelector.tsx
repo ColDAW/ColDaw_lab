@@ -1,6 +1,22 @@
 import React, { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
-import { ChevronDown, FileText, Send, Box, Disc3 } from 'lucide-react';
+import { ChevronDown, FileText, Box, Disc3 } from 'lucide-react';
+
+// Material Symbols file_export icon component
+const FileExportIcon = ({ size = 16 }: { size?: number }) => (
+  <svg 
+    width={size} 
+    height={size} 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path 
+      d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11zm-7-7l-1.5 1.5L12 17l4-4-1.41-1.41L13 13.17V9h-2v4.17z" 
+      fill="currentColor"
+    />
+  </svg>
+);
 
 interface ExportFormat {
   id: string;
@@ -20,7 +36,7 @@ const exportFormats: ExportFormat[] = [
     id: 'ableton',
     name: 'Ableton Live',
     extension: '.als',
-    icon: <Send size={16} />,
+    icon: <FileExportIcon size={16} />,
     description: 'Ableton Live Set format'
   },
   {
@@ -56,18 +72,46 @@ const DownloadButton = styled.button<{ isOpen: boolean }>`
   align-items: center;
   gap: ${({ theme }) => theme.spacing.sm};
   padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md};
-  background: ${({ theme }) => theme.colors.bgTertiary};
-  color: ${({ theme }) => theme.colors.textPrimary};
+  background: transparent;
+  color: ${({ theme }) => theme.colors.textSecondary};
   border: 1px solid ${({ theme }) => theme.colors.borderColor};
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 14px;
+  transition: all 0.3s ease;
+  font-size: 13px;
   font-family: ${({ theme }) => theme.fonts.sans};
+  position: relative;
+  overflow: hidden;
+
+  /* Gradient border effect using pseudo-element to preserve border-radius */
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 6px;
+    padding: 2px;
+    background: linear-gradient(45deg, 
+      rgba(137, 170, 248, 0.8) 0%,
+      rgba(183, 112, 252, 0.8) 25%,
+      rgba(210, 77, 195, 0.8) 50%,
+      rgba(232, 85, 96, 0.8) 75%,
+      rgba(245, 161, 147, 0.8) 100%
+    );
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: xor;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
 
   &:hover {
-    background: ${({ theme }) => theme.colors.bgSecondary};
-    border-color: ${({ theme }) => theme.colors.accentOrange};
+    color: ${({ theme }) => theme.colors.textPrimary};
+    background: transparent !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(183, 112, 252, 0.2);
+  }
+  
+  &:hover::before {
+    opacity: 1;
   }
 
   &:disabled {
@@ -184,7 +228,7 @@ export default function ExportFormatSelector({ onFormatSelect, disabled = false 
         onClick={handleButtonClick}
         disabled={disabled}
       >
-        <Send size={16} />
+        <FileExportIcon size={16} />
         Export
         <ChevronDown size={14} />
       </DownloadButton>
