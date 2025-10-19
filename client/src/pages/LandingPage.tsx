@@ -111,22 +111,22 @@ const HeroContent = styled.div`
 `;
 
 const HeroTitle = styled.h1`
-  font-size: clamp(1.8rem, 5vw, 3.2rem);
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
   font-weight: 480;
   margin-top: 1rem;
   margin-bottom: 1rem;
   color: rgba(211, 211, 211, 1);
   line-height: 1.2;
   letter-spacing: -0.03em;
-  max-width: 1200px;
+  max-width: 1000px;
   width: 100%;
 `;
 
 const HeroSubtitle = styled.p`
-  font-size: 1.1rem;
+  font-size: 1rem;
   color: #838383ff;
   margin-bottom: 1.6rem;
-  max-width: 1000px;
+  max-width: 800px;
   line-height: 1.6;
   font-weight: 200;
 `;
@@ -142,17 +142,8 @@ const HeroImage = styled.img`
   width: 100%;
   max-width: 98%;
   aspect-ratio: 16/9;
-  border-radius: 22px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
   object-fit: cover;
-  box-shadow: 0 0 32px rgba(255, 255, 255, 0.09);
-  transition: all 0.6s ease;
-  cursor: pointer;
-  
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.7);
-  }
 `;
 
 const HeroButtons = styled.div`
@@ -556,54 +547,46 @@ const SectionSubtitle = styled.p`
 `;
 
 const FeaturesGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 2rem;
-  margin: 0 2rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 4rem;
+  margin: 0 auto;
+  max-width: 1200px;
   
   @media (max-width: 768px) {
-    grid-template-columns: 1fr;
+    gap: 3rem;
   }
 `;
 
-const FeatureCard = styled.div`
-  background: rgba(26, 26, 26, 0.4);
-  border: 1px solid rgba(51, 51, 51, 0.6);
-  border-radius: 16px;
-  padding: 2.5rem 2rem;
+const FeatureItem = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
-  
-  &:hover {
-    transform: translateY(-2px);
-    background: rgba(26, 26, 26, 0.6);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-    border-color: rgba(85, 85, 85, 0.8);
-  }
 `;
 
 const FeatureImage = styled.img`
   width: 100%;
-  height: 200px;
+  aspect-ratio: 16/9;
   object-fit: cover;
-  border-radius: 12px;
+  border-radius: 8px;
   margin-bottom: 1.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
 `;
 
 const FeatureTitle = styled.h3`
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   font-weight: 500;
   margin-bottom: 1rem;
   color: #ffffff;
   line-height: 1.3;
+  max-width: 800px;
 `;
 
 const FeatureDescription = styled.p`
   color: #aaa;
   line-height: 1.6;
-  font-size: 0.88rem;
+  font-size: 1rem;
+  max-width: 800px;
 `;
 
 const Footer = styled.footer`
@@ -953,9 +936,9 @@ const LandingPage: React.FC = () => {
 
       <HeroSection>
         <HeroContent>
-          <HeroTitle>Bring Your DAW into the Collaboration Era</HeroTitle>
+          <HeroTitle>Reimagining Music Collaboration — Your Studio in the Cloud.</HeroTitle>
           <HeroSubtitle>
-            Say goodbye to file chaos and version conflicts. ColDAW enables musicians to quickly import DAW projects and achieve real-time collaboration, version tracking, and automatic merging for a seamless creative experience.
+            CoDAW connects your favorite DAWs to a cloud-based version control system. Built for music creators and multi-media teams.
           </HeroSubtitle>
           
           <HeroButtons>
@@ -1202,37 +1185,37 @@ const LandingPage: React.FC = () => {
         </SectionSubtitle>
         
         <FeaturesGrid>
-          <FeatureCard>
+          <FeatureItem>
             <FeatureImage src={daw1} alt="DAW-like Interface" />
             <FeatureTitle>Familiar DAW Experience</FeatureTitle>
             <FeatureDescription>
               Jump right in with an interface that feels just like your favorite DAW. Full-featured workspace with all the tools you know and love.
             </FeatureDescription>
-          </FeatureCard>
+          </FeatureItem>
           
-          <FeatureCard>
+          <FeatureItem>
             <FeatureImage src={daw2} alt="Cloud Project Management" />
             <FeatureTitle>Everything in the Cloud</FeatureTitle>
             <FeatureDescription>
               Say goodbye to scattered files and lost projects. Centralized cloud management keeps everything organized and accessible from anywhere.
             </FeatureDescription>
-          </FeatureCard>
+          </FeatureItem>
           
-          <FeatureCard>
+          <FeatureItem>
             <FeatureImage src={daw3} alt="Version Control Interface" />
             <FeatureTitle>Never Lose Your Progress</FeatureTitle>
             <FeatureDescription>
               Branch editing, version rollback, and collaborative workflows. Keep every draft safe while enabling seamless multi-user collaboration.
             </FeatureDescription>
-          </FeatureCard>
+          </FeatureItem>
           
-          <FeatureCard>
+          <FeatureItem>
             <FeatureImage src={daw4} alt="VST Plugin Integration" />
             <FeatureTitle>One-Click DAW Integration</FeatureTitle>
             <FeatureDescription>
               Native VST plugin for instant uploads and version syncing. Work in your DAW, sync to the cloud with a single click.
             </FeatureDescription>
-          </FeatureCard>
+          </FeatureItem>
         </FeaturesGrid>
       </FeaturesSection>
 
