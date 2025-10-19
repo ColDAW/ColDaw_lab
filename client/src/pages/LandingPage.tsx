@@ -2,10 +2,13 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { 
-  Play, Users, Music, Download,
-  Volume2, Layers, Sparkles
+  Play, Download
 } from 'lucide-react';
-import thumbnail_vid from '../img/thumbnail_vid.mp4';
+import thumbnail from '../img/landing_page/thumbnail.jpg';
+import daw1 from '../img/landing_page/1.jpg';
+import daw2 from '../img/landing_page/2.jpg';
+import daw3 from '../img/landing_page/3.jpg';
+import daw4 from '../img/landing_page/4.jpg';
 
 // Styled Components
 const PageContainer = styled.div`
@@ -135,7 +138,7 @@ const VideoContainer = styled.div`
   padding: 2rem;
 `;
 
-const HeroVideo = styled.video`
+const HeroImage = styled.img`
   width: 100%;
   max-width: 98%;
   aspect-ratio: 16/9;
@@ -144,6 +147,7 @@ const HeroVideo = styled.video`
   object-fit: cover;
   box-shadow: 0 0 32px rgba(255, 255, 255, 0.09);
   transition: all 0.6s ease;
+  cursor: pointer;
   
   &:hover {
     transform: translateY(-4px);
@@ -579,21 +583,13 @@ const FeatureCard = styled.div`
   }
 `;
 
-const FeatureIcon = styled.div`
-  width: 48px;
-  height: 48px;
-  border-radius: 8px;
-  background: #2a2a2a;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 1.5rem;
-  
-  svg {
-    width: 24px;
-    height: 24px;
-    color: #aaa;
-  }
+const FeatureImage = styled.img`
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 `;
 
 const FeatureTitle = styled.h3`
@@ -978,12 +974,9 @@ const LandingPage: React.FC = () => {
       </HeroSection>
 
       <VideoContainer>
-        <HeroVideo 
-          autoPlay 
-          muted 
-          loop 
-          playsInline
-          src={thumbnail_vid}
+        <HeroImage 
+          src={thumbnail}
+          alt="ColDAW Interface Preview"
         />
       </VideoContainer>
 
@@ -1205,57 +1198,39 @@ const LandingPage: React.FC = () => {
       <FeaturesSection id="features">
         <SectionTitle>Smart. Fast. Seamless.</SectionTitle>
         <SectionSubtitle>
-          From solo artists to full-scale teams, ColDAW streamlines how ideas evolve by connecting creativity, collaboration, and version control into one fluid workspace.
+          Break free from the chaos of file sharing and version conflicts. Experience the future of music collaboration with cloud-native project management designed for modern creators.
         </SectionSubtitle>
         
         <FeaturesGrid>
           <FeatureCard>
-            <FeatureIcon>
-              <Layers />
-            </FeatureIcon>
-            <FeatureTitle>Quick DAW Project Import</FeatureTitle>
+            <FeatureImage src={daw1} alt="DAW-like Interface" />
+            <FeatureTitle>Familiar DAW Experience</FeatureTitle>
             <FeatureDescription>
-              Support for mainstream DAW formats with one-click import of existing projects.
+              Jump right in with an interface that feels just like your favorite DAW. Full-featured workspace with all the tools you know and love.
             </FeatureDescription>
           </FeatureCard>
           
           <FeatureCard>
-            <FeatureIcon>
-              <Sparkles />
-            </FeatureIcon>
-            <FeatureTitle>Intelligent Version Control</FeatureTitle>
+            <FeatureImage src={daw2} alt="Cloud Project Management" />
+            <FeatureTitle>Everything in the Cloud</FeatureTitle>
             <FeatureDescription>
-              Automatically track every modification and intelligently merge conflicting versions.
+              Say goodbye to scattered files and lost projects. Centralized cloud management keeps everything organized and accessible from anywhere.
             </FeatureDescription>
           </FeatureCard>
           
           <FeatureCard>
-            <FeatureIcon>
-              <Users />
-            </FeatureIcon>
-            <FeatureTitle>Real-time Collaboration</FeatureTitle>
+            <FeatureImage src={daw3} alt="Version Control Interface" />
+            <FeatureTitle>Never Lose Your Progress</FeatureTitle>
             <FeatureDescription>
-              Multiple musicians can work on the same project simultaneously with live sync.
+              Branch editing, version rollback, and collaborative workflows. Keep every draft safe while enabling seamless multi-user collaboration.
             </FeatureDescription>
           </FeatureCard>
           
           <FeatureCard>
-            <FeatureIcon>
-              <Volume2 />
-            </FeatureIcon>
-            <FeatureTitle>Cross-Platform Compatibility</FeatureTitle>
+            <FeatureImage src={daw4} alt="VST Plugin Integration" />
+            <FeatureTitle>One-Click DAW Integration</FeatureTitle>
             <FeatureDescription>
-              Works seamlessly with Logic Pro, Ableton Live, Pro Tools, and other major DAWs.
-            </FeatureDescription>
-          </FeatureCard>
-          
-          <FeatureCard>
-            <FeatureIcon>
-              <Music />
-            </FeatureIcon>
-            <FeatureTitle>Project History & Backup</FeatureTitle>
-            <FeatureDescription>
-              Complete project history with automatic backups and rollback capabilities.
+              Native VST plugin for instant uploads and version syncing. Work in your DAW, sync to the cloud with a single click.
             </FeatureDescription>
           </FeatureCard>
         </FeaturesGrid>
