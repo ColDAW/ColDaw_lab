@@ -602,9 +602,110 @@ const Footer = styled.footer`
   }
 `;
 
+// 下载弹窗样式
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  backdrop-filter: blur(4px);
+`;
+
+const ModalContent = styled.div`
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: 2rem;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  position: relative;
+`;
+
+const ModalTitle = styled.h3`
+  color: #ffffff;
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+  font-weight: 500;
+`;
+
+const ModalDescription = styled.p`
+  color: #aaa;
+  margin-bottom: 2rem;
+  line-height: 1.5;
+`;
+
+const ModalButtons = styled.div`
+  display: flex;
+  gap: 1rem;
+  flex-direction: column;
+  
+  @media (min-width: 480px) {
+    flex-direction: row;
+  }
+`;
+
+const ModalButton = styled.button<{ $variant?: 'primary' | 'secondary' }>`
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex: 1;
+  
+  ${props => props.$variant === 'primary' ? `
+    background: #ffffff;
+    border: none;
+    color: #0a0a0a;
+    
+    &:hover {
+      background: #e0e0e0;
+      transform: translateY(-1px);
+    }
+  ` : `
+    background: transparent;
+    border: 1px solid #333;
+    color: #ffffff;
+    
+    &:hover {
+      background: #2a2a2a;
+      border-color: #555;
+    }
+  `}
+`;
+
+const CloseButton = styled.button`
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  color: #aaa;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  &:hover {
+    color: #ffffff;
+  }
+`;
+
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
   const [cardsVisible, setCardsVisible] = useState(false);
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
   const compositionRef = useRef<HTMLElement>(null);
   const cardsContainerRef = useRef<HTMLDivElement>(null);
 
@@ -800,6 +901,82 @@ const LandingPage: React.FC = () => {
     navigate('/editor');
   };
 
+  const handleDownloadVST = () => {
+    // 提示用户VST插件下载
+    const confirmDownload = window.confirm(
+      'ColDAW VST Plugin will be downloaded. Make sure to:\n\n' +
+      '1. Install the plugin in your DAW\'s VST3 folder\n' +
+      '2. Restart your DAW after installation\n' +
+      '3. Look for "ColDaw Export" in your plugins list\n\n' +
+      'Continue with download?'
+    );
+    
+    if (confirmDownload) {
+      // 创建下载链接
+      const link = document.createElement('a');
+      // 指向实际的VST文件路径（需要在public文件夹中或服务器上）
+      link.href = '/downloads/ColDaw-Export.vst3.zip'; 
+      link.download = 'ColDaw-Export-VST3.zip';
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // 显示安装指导
+      setTimeout(() => {
+        alert(
+          'VST Plugin downloaded!\n\n' +
+          'Installation Instructions:\n' +
+          '• Windows: Extract to C:\\Program Files\\Common Files\\VST3\\\n' +
+          '• macOS: Extract to /Library/Audio/Plug-Ins/VST3/\n' +
+          '• Or use your DAW\'s preferred VST3 folder\n\n' +
+          'Restart your DAW and look for "ColDaw Export" in your plugins.'
+        );
+      }, 500);
+    }
+  };
+
+  const handleInstallPWA = async () => {
+    setShowDownloadModal(false);
+    
+    try {
+      // 检查是否已经安装PWA
+      if (window.matchMedia('(display-mode: standalone)').matches) {
+        alert('ColDAW Editor is already installed on your device!');
+        return;
+      }
+
+      // 触发PWA安装提示
+      const beforeInstallPrompt = (window as any).deferredPrompt;
+      if (beforeInstallPrompt) {
+        beforeInstallPrompt.prompt();
+        const { outcome } = await beforeInstallPrompt.userChoice;
+        if (outcome === 'accepted') {
+          alert('ColDAW Editor installed successfully! Look for it on your desktop or app menu.');
+        } else {
+          alert('Installation cancelled. You can install it later from the browser menu.');
+        }
+        (window as any).deferredPrompt = null;
+      } else {
+        // 如果没有安装提示，显示手动安装指导
+        const browserName = navigator.userAgent.includes('Chrome') ? 'Chrome' : 
+                           navigator.userAgent.includes('Safari') ? 'Safari' : 
+                           navigator.userAgent.includes('Firefox') ? 'Firefox' : 'your browser';
+        
+        alert(
+          `To install ColDAW Editor on ${browserName}:\n\n` +
+          `• Chrome: Click the menu (⋮) → "Install ColDAW Editor"\n` +
+          `• Safari: Click Share → "Add to Home Screen"\n` +
+          `• Firefox: Look for the install icon in the address bar\n\n` +
+          `Or bookmark this page for quick access!`
+        );
+      }
+    } catch (error) {
+      console.error('PWA installation error:', error);
+      alert('Installation failed. Please try installing manually from your browser menu.');
+    }
+  };
+
   // 计算每个卡片的最终位置和初始位置
   const calculateCardPositions = (card: CardData) => {
     const rowHeight = 70;
@@ -919,6 +1096,20 @@ const LandingPage: React.FC = () => {
     };
   }, [cardsVisible]);
 
+  // PWA安装提示监听器
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      (window as any).deferredPrompt = e;
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
   return (
     <PageContainer>
       <Header>
@@ -927,7 +1118,15 @@ const LandingPage: React.FC = () => {
           <NavLinks>
             <NavLink href="#features">Features</NavLink>
             <NavLink href="#documentation">Documentation</NavLink>
-            <NavLink href="#downloads">Download</NavLink>
+            <NavLink 
+              href="#" 
+              onClick={(e) => {
+                e.preventDefault();
+                setShowDownloadModal(true);
+              }}
+            >
+              Download
+            </NavLink>
             
           </NavLinks>
           <CTAButton onClick={handleGetStarted}>Editor</CTAButton>
@@ -948,7 +1147,7 @@ const LandingPage: React.FC = () => {
               <Play size={18} />
               Start Creating
             </PrimaryButton>
-            <SecondaryButton>
+            <SecondaryButton onClick={handleDownloadVST}>
               <Download size={18} />
               Download Plugin
             </SecondaryButton>
@@ -1220,8 +1419,32 @@ const LandingPage: React.FC = () => {
       </FeaturesSection>
 
       <Footer>
-        <p>&copy; 2024 colDAW. Bringing collaborative music production to the modern age.</p>
+        <p>&copy; 2025 ColDAW. Design by Joe Deng. </p>
       </Footer>
+
+      {/* 下载选择弹窗 */}
+      {showDownloadModal && (
+        <ModalOverlay onClick={() => setShowDownloadModal(false)}>
+          <ModalContent onClick={(e) => e.stopPropagation()}>
+            <CloseButton onClick={() => setShowDownloadModal(false)}>×</CloseButton>
+            <ModalTitle>Choose Your Download</ModalTitle>
+            <ModalDescription>
+              Install ColDAW Editor as a PWA for the full web experience, or download the VST plugin to integrate with your favorite DAW.
+            </ModalDescription>
+            <ModalButtons>
+              <ModalButton $variant="primary" onClick={handleInstallPWA}>
+                Install Editor PWA
+              </ModalButton>
+              <ModalButton $variant="secondary" onClick={() => {
+                handleDownloadVST();
+                setShowDownloadModal(false);
+              }}>
+                Download VST Plugin
+              </ModalButton>
+            </ModalButtons>
+          </ModalContent>
+        </ModalOverlay>
+      )}
     </PageContainer>
   );
 };
