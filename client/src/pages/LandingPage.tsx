@@ -706,6 +706,8 @@ const LandingPage: React.FC = () => {
   const navigate = useNavigate();
   const [cardsVisible, setCardsVisible] = useState(false);
   const [showDownloadModal, setShowDownloadModal] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [pwaInstallable, setPwaInstallable] = useState(false);
   const compositionRef = useRef<HTMLElement>(null);
   const cardsContainerRef = useRef<HTMLDivElement>(null);
 
@@ -915,8 +917,8 @@ const LandingPage: React.FC = () => {
       // 创建下载链接
       const link = document.createElement('a');
       // 指向实际的VST文件路径（需要在public文件夹中或服务器上）
-      link.href = '/downloads/ColDaw-Export.vst3.zip'; 
-      link.download = 'ColDaw-Export-VST3.zip';
+      link.href = '/downloads/ColDaw_Export.vst3'; 
+      link.download = 'ColDaw_Export.vst3';
       link.style.display = 'none';
       document.body.appendChild(link);
       link.click();
@@ -946,29 +948,32 @@ const LandingPage: React.FC = () => {
         return;
       }
 
-      // 触发PWA安装提示
-      const beforeInstallPrompt = (window as any).deferredPrompt;
-      if (beforeInstallPrompt) {
-        beforeInstallPrompt.prompt();
-        const { outcome } = await beforeInstallPrompt.userChoice;
-        if (outcome === 'accepted') {
-          alert('ColDAW Editor installed successfully! Look for it on your desktop or app menu.');
-        } else {
-          alert('Installation cancelled. You can install it later from the browser menu.');
-        }
-        (window as any).deferredPrompt = null;
-      } else {
-        // 如果没有安装提示，显示手动安装指导
-        const browserName = navigator.userAgent.includes('Chrome') ? 'Chrome' : 
-                           navigator.userAgent.includes('Safari') ? 'Safari' : 
-                           navigator.userAgent.includes('Firefox') ? 'Firefox' : 'your browser';
+      // 使用保存的deferredPrompt
+      if (deferredPrompt) {
+        // 显示安装提示
+        deferredPrompt.prompt();
         
+        // 等待用户选择
+        const { outcome } = await deferredPrompt.userChoice;
+        
+        if (outcome === 'accepted') {
+          console.log('PWA installation accepted');
+          alert('ColDAW Editor installed successfully! You can now find it on your desktop or app menu.');
+        } else {
+          console.log('PWA installation declined');
+          alert('Installation cancelled. You can install ColDAW later from the browser menu.');
+        }
+        
+        // 清除deferredPrompt，因为它只能使用一次
+        setDeferredPrompt(null);
+      } else {
+        // 如果没有deferredPrompt，显示手动安装指导
         alert(
-          `To install ColDAW Editor on ${browserName}:\n\n` +
-          `• Chrome: Click the menu (⋮) → "Install ColDAW Editor"\n` +
-          `• Safari: Click Share → "Add to Home Screen"\n` +
-          `• Firefox: Look for the install icon in the address bar\n\n` +
-          `Or bookmark this page for quick access!`
+          'PWA installation is not available right now.\n\n' +
+          'You can install ColDAW manually:\n' +
+          '• Look for an "Install" icon in your browser\'s address bar\n' +
+          '• Or check your browser menu for "Install ColDAW" option\n' +
+          '• On mobile, use "Add to Home Screen" from the share menu'
         );
       }
     } catch (error) {
@@ -1099,14 +1104,31 @@ const LandingPage: React.FC = () => {
   // PWA安装提示监听器
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
+      // 阻止Chrome 67及更早版本自动显示提示
       e.preventDefault();
-      (window as any).deferredPrompt = e;
+      // 保存事件以便稍后触发
+      setDeferredPrompt(e);
+      setPwaInstallable(true);
+      console.log('PWA install prompt available');
     };
 
+    const handleAppInstalled = () => {
+      console.log('PWA was installed');
+      setDeferredPrompt(null);
+      setPwaInstallable(false);
+    };
+
+    // 检查是否已经安装
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      setPwaInstallable(false);
+    }
+
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
     };
   }, []);
 
@@ -1441,7 +1463,7 @@ const LandingPage: React.FC = () => {
             </ModalDescription>
             <ModalButtons>
               <ModalButton $variant="primary" onClick={handleInstallPWA}>
-                Install Editor PWA
+                {pwaInstallable ? 'Install Editor PWA' : 'PWA Not Available'}
               </ModalButton>
               <ModalButton $variant="secondary" onClick={() => {
                 handleDownloadVST();

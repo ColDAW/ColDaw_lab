@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { 
@@ -329,6 +329,22 @@ const ContactItem = styled.a`
 const DocumentationPage: React.FC = () => {
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState('getting-started');
+  const [pwaStatus, setPwaStatus] = useState<string>('Checking...');
+
+  useEffect(() => {
+    // 检查PWA状态
+    const checkPWAStatus = () => {
+      if (window.matchMedia('(display-mode: standalone)').matches) {
+        setPwaStatus('Already installed as PWA');
+      } else if ('serviceWorker' in navigator) {
+        setPwaStatus('PWA ready - can be installed');
+      } else {
+        setPwaStatus('PWA not supported');
+      }
+    };
+
+    checkPWAStatus();
+  }, []);
 
   const handleBack = () => {
     navigate('/');
@@ -488,6 +504,9 @@ const DocumentationPage: React.FC = () => {
               </Text>
 
               <SubsectionTitle>PWA Installation</SubsectionTitle>
+              <Text>
+                <strong>Current Status:</strong> {pwaStatus}
+              </Text>
               <Text>
                 Install ColDAW as a Progressive Web App (PWA) for a native app-like experience:
               </Text>

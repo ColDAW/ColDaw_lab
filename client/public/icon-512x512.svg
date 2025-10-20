@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none">
+  <rect width="512" height="512" rx="64" fill="#0a0a0a"/>
+  <rect x="40" y="40" width="432" height="432" rx="32" fill="#1a1a1a"/>
+  
+  <!-- Waveform tracks -->
+  <rect x="80" y="120" width="352" height="12" rx="6" fill="#4CAF50"/>
+  <rect x="80" y="150" width="280" height="12" rx="6" fill="#2196F3"/>
+  <rect x="80" y="180" width="320" height="12" rx="6" fill="#9C27B0"/>
+  <rect x="80" y="210" width="240" height="12" rx="6" fill="#FF9800"/>
+  
+  <!-- Transport controls -->
+  <circle cx="130" cy="320" r="24" fill="#ffffff"/>
+  <circle cx="380" cy="320" r="24" fill="#ffffff"/>
+  <rect x="154" y="296" width="200" height="48" rx="24" fill="#333"/>
+  
+  <!-- Play button -->
+  <polygon points="250,310 270,320 250,330" fill="#4CAF50"/>
+  
+  <!-- Brand text -->
+  <text x="256" y="400" font-family="Arial, sans-serif" font-size="36" font-weight="bold" text-anchor="middle" fill="#ffffff">ColDAW</text>
+  <text x="256" y="430" font-family="Arial, sans-serif" font-size="18" text-anchor="middle" fill="#aaa">Collaborative DAW</text>
+</svg>
