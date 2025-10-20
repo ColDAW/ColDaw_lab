@@ -1117,7 +1117,15 @@ const LandingPage: React.FC = () => {
           <Logo>ColDAW</Logo>
           <NavLinks>
             <NavLink href="#features">Features</NavLink>
-            <NavLink href="#documentation">Documentation</NavLink>
+            <NavLink 
+              href="#" 
+              onClick={(e) => {
+                e.preventDefault();
+                navigate('/documentation');
+              }}
+            >
+              Documentation
+            </NavLink>
             <NavLink 
               href="#" 
               onClick={(e) => {

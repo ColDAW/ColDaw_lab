@@ -3,6 +3,7 @@ import LandingPage from './pages/LandingPage';
 import EditorPage from './pages/EditorPage';
 import ProjectPage from './pages/ProjectPage';
 import AccountPage from './pages/AccountPage';
+import DocumentationPage from './pages/DocumentationPage';
 import { ThemeProvider } from 'styled-components';
 import { theme } from './styles/theme';
 import { AuthProvider } from './contexts/AuthContext';
@@ -17,6 +18,7 @@ function App() {
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<LandingPage />} />
+              <Route path="/documentation" element={<DocumentationPage />} />
               <Route path="/editor" element={<EditorPage />} />
               <Route 
                 path="/project/:projectId" 
