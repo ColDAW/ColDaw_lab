@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import thumbnail from '../img/landing_page/thumbnail.jpg';
 import daw1 from '../img/landing_page/1.jpg';
-import daw2 from '../img/landing_page/2.jpg';
+import daw2 from '../img/landing_page/2.mp4';
 import daw3 from '../img/landing_page/3.jpg';
 import daw4 from '../img/landing_page/4.jpg';
 
@@ -566,6 +566,14 @@ const FeatureItem = styled.div`
 `;
 
 const FeatureImage = styled.img`
+  width: 100%;
+  aspect-ratio: 16/9;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+`;
+
+const FeatureVideo = styled.video`
   width: 100%;
   aspect-ratio: 16/9;
   object-fit: cover;
@@ -1423,7 +1431,14 @@ const LandingPage: React.FC = () => {
           </FeatureItem>
           
           <FeatureItem>
-            <FeatureImage src={daw2} alt="Cloud Project Management" />
+            <FeatureVideo 
+              src={daw2} 
+              autoPlay 
+              loop 
+              muted 
+              playsInline
+              aria-label="Cloud Project Management"
+            />
             <FeatureTitle>Everything in the Cloud</FeatureTitle>
             <FeatureDescription>
               Say goodbye to scattered files and lost projects. Centralized cloud management keeps everything organized and accessible from anywhere.
