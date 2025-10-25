@@ -65,6 +65,7 @@ private:
     juce::TextButton loginButton;
     juce::TextButton logoutButton;
     juce::TextButton useDetectedButton;
+    juce::TextButton confirmUpdatesButton;
     juce::ToggleButton autoExportToggle;
     
     juce::Label statusLabel;

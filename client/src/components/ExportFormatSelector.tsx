@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
-import { ChevronDown, FileText, Box, Disc3 } from 'lucide-react';
+import { ChevronDown, FileText, Box, Disc3, Link2 } from 'lucide-react';
 
 // Import custom export icon
 import ExportIcon from '../img/lets-icons_export.svg';
 
-interface ExportFormat {
+export interface ExportFormat {
   id: string;
   name: string;
   extension: string;
@@ -19,6 +19,13 @@ interface ExportFormatSelectorProps {
 }
 
 const exportFormats: ExportFormat[] = [
+  {
+    id: 'vst-bridge',
+    name: 'VST Bridge',
+    extension: '',
+    icon: <Link2 size={16} />,
+    description: 'Send current version to VST plugin in DAW'
+  },
   {
     id: 'ableton',
     name: 'Ableton Live',
@@ -238,5 +245,3 @@ export default function ExportFormatSelector({ onFormatSelect, disabled = false 
     </Container>
   );
 }
-
-export type { ExportFormat };

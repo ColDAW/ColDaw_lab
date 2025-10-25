@@ -207,6 +207,15 @@ export const projectApi = {
     const response = await api.post(`/projects/${projectId}/push-pending/${pendingId}`);
     return response.data;
   },
+
+  // Notify VST plugin about new version (VST Bridge)
+  async notifyVSTBridge(projectId: string, userId: string, versionId: string) {
+    const response = await api.post(`/projects/${projectId}/notify-vst`, {
+      userId,
+      versionId,
+    });
+    return response.data;
+  },
 };
 
 export const versionApi = {

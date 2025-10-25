@@ -92,6 +92,12 @@ public:
     void setProjectPath(const juce::String& path) { projectPath = path; saveProjectMapping(); }
     void loadProjectMapping();
     void saveProjectMapping();
+    
+    // VST Bridge - check for updates from web
+    void checkForWebUpdates();
+    void confirmWebUpdate();
+    bool hasWebUpdate() const { return hasPendingWebUpdate; }
+    juce::String getWebUpdateInfo() const { return webUpdateInfo; }
 
 private:
     //==============================================================================
@@ -126,6 +132,12 @@ private:
     juce::File currentProjectFile;
     juce::Time lastModificationTime;
     bool fileWatcherActive;
+    
+    // VST Bridge - web to DAW updates
+    bool hasPendingWebUpdate;
+    juce::String webUpdateInfo;
+    juce::String webUpdateProjectId;
+    juce::String webUpdateVersionId;
     
     // HTTP
     std::unique_ptr<juce::URL::DownloadTask> currentUpload;

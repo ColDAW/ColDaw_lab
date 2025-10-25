@@ -25,6 +25,10 @@ ColDawExportProcessor::ColDawExportProcessor()
     username = "";
     authToken = "";
     currentUserId = "";
+    hasPendingWebUpdate = false;
+    webUpdateInfo = "";
+    webUpdateProjectId = "";
+    webUpdateVersionId = "";
     
     // Load saved project path mappings
     loadProjectMapping();
@@ -557,6 +561,12 @@ void ColDawExportProcessor::openProjectInBrowser(const juce::String& projectId, 
 
 void ColDawExportProcessor::timerCallback()
 {
+    // Check for web updates if logged in
+    if (isLoggedIn() && currentProjectFile.existsAsFile())
+    {
+        checkForWebUpdates();
+    }
+    
     if (!autoExport || exporting)
         return;
     
@@ -709,6 +719,140 @@ void ColDawExportProcessor::setCurrentProjectFile(const juce::File& file)
         currentProjectFile = file;
         lastModificationTime = file.getLastModificationTime();
         statusMessage = "File selected: " + file.getFileNameWithoutExtension();
+    }
+}
+
+//==============================================================================
+// VST Bridge - Web to DAW updates
+//==============================================================================
+
+void ColDawExportProcessor::checkForWebUpdates()
+{
+    if (!isLoggedIn() || projectPath.isEmpty() || currentUserId.isEmpty())
+        return;
+    
+    // Extract project ID from project path (format: /project/PROJECT_ID)
+    juce::String projectId;
+    if (projectPath.startsWith("/project/"))
+    {
+        projectId = projectPath.substring(9);  // Skip "/project/"
+        
+        // Remove any trailing path
+        int slashPos = projectId.indexOf("/");
+        if (slashPos > 0)
+            projectId = projectId.substring(0, slashPos);
+    }
+    else
+    {
+        return;  // Not a valid project path
+    }
+    
+    // Check for notification
+    juce::URL url(serverUrl + "/api/projects/" + projectId + "/check-vst-notification/" + currentUserId);
+    
+    juce::StringPairArray responseHeaders;
+    int statusCode = 0;
+    
+    juce::URL::InputStreamOptions options = juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress)
+        .withConnectionTimeoutMs(5000)
+        .withResponseHeaders(&responseHeaders)
+        .withStatusCode(&statusCode)
+        .withHttpRequestCmd("GET");
+    
+    std::unique_ptr<juce::InputStream> stream(url.createInputStream(options));
+    
+    if (stream != nullptr && statusCode == 200)
+    {
+        juce::String response = stream->readEntireStreamAsString();
+        auto json = juce::JSON::parse(response);
+        
+        if (auto* obj = json.getDynamicObject())
+        {
+            bool hasUpdate = obj->getProperty("hasUpdate");
+            
+            if (hasUpdate && !hasPendingWebUpdate)
+            {
+                // New update available!
+                auto* notification = obj->getProperty("notification").getDynamicObject();
+                if (notification)
+                {
+                    webUpdateProjectId = notification->getProperty("projectId").toString();
+                    webUpdateVersionId = notification->getProperty("versionId").toString();
+                    hasPendingWebUpdate = true;
+                    webUpdateInfo = "Web update available! Click 'Confirm Updates' to apply.";
+                    statusMessage = webUpdateInfo;
+                }
+            }
+        }
+    }
+}
+
+void ColDawExportProcessor::confirmWebUpdate()
+{
+    if (!hasPendingWebUpdate || webUpdateProjectId.isEmpty() || webUpdateVersionId.isEmpty())
+    {
+        statusMessage = "No web update available";
+        return;
+    }
+    
+    statusMessage = "Downloading web update...";
+    
+    // Request the update and download the file
+    juce::URL url(serverUrl + "/api/projects/" + webUpdateProjectId + "/confirm-vst-update/" + currentUserId);
+    
+    juce::StringPairArray responseHeaders;
+    int statusCode = 0;
+    
+    juce::URL::InputStreamOptions options = juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress)
+        .withConnectionTimeoutMs(30000)
+        .withResponseHeaders(&responseHeaders)
+        .withStatusCode(&statusCode)
+        .withHttpRequestCmd("POST");
+    
+    std::unique_ptr<juce::InputStream> stream(url.createInputStream(options));
+    
+    if (stream != nullptr && statusCode == 200)
+    {
+        // Save the downloaded file
+        juce::File updateFile = currentProjectFile.getSiblingFile(
+            currentProjectFile.getFileNameWithoutExtension() + "_web_update.als"
+        );
+        
+        juce::FileOutputStream output(updateFile);
+        if (output.openedOk())
+        {
+            output.writeFromInputStream(*stream, -1);
+            output.flush();
+            
+            // Replace current file with update
+            if (currentProjectFile.deleteFile())
+            {
+                if (updateFile.moveFileTo(currentProjectFile))
+                {
+                    statusMessage = "Web update applied successfully! Reopen your project in DAW.";
+                    hasPendingWebUpdate = false;
+                    webUpdateInfo = "";
+                    webUpdateProjectId = "";
+                    webUpdateVersionId = "";
+                }
+                else
+                {
+                    statusMessage = "Error: Failed to replace project file";
+                }
+            }
+            else
+            {
+                statusMessage = "Error: Failed to delete old project file";
+            }
+        }
+        else
+        {
+            statusMessage = "Error: Failed to save update file";
+        }
+    }
+    else
+    {
+        statusMessage = "Error: Failed to download update (Status: " + juce::String(statusCode) + ")";
     }
 }
 

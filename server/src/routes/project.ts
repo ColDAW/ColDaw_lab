@@ -273,6 +273,58 @@ router.get('/:projectId/pending-changes', requireAuth, async (req: any, res: any
 });
 
 /**
+ * POST /api/projects/:projectId/notify-vst
+ * Notify VST plugin about new version (VST Bridge)
+ * This creates a notification file that the VST plugin will poll for
+ * Requires authentication
+ */
+router.post('/:projectId/notify-vst', requireAuth, async (req: any, res: any) => {
+  try {
+    const { projectId } = req.params;
+    const { userId, versionId } = req.body;
+    const authUserId = req.user_id;
+    
+    // Verify authentication
+    if (authUserId !== userId) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+    
+    // Verify project ownership or collaboration
+    const project = await db.getProject(projectId);
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+    
+    // Get version file path
+    const versionFilePath = path.join(__dirname, '..', '..', 'projects', projectId, versionId + '.als');
+    if (!fs.existsSync(versionFilePath)) {
+      return res.status(404).json({ error: 'Version file not found' });
+    }
+    
+    // Create notification file that VST will poll
+    const notificationFile = path.join(__dirname, '..', '..', 'projects', projectId, `vst_notification_${userId}.json`);
+    const notification = {
+      projectId,
+      versionId,
+      timestamp: Date.now(),
+      userId,
+      action: 'update_available',
+    };
+    
+    fs.writeFileSync(notificationFile, JSON.stringify(notification, null, 2));
+    
+    res.json({ 
+      success: true, 
+      message: 'VST plugin notified successfully',
+      notification,
+    });
+  } catch (error: any) {
+    console.error('Error notifying VST:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
  * POST /api/projects/:projectId/push-pending/:pendingId
  * Push (commit) a pending change to the project
  * Requires authentication
@@ -296,6 +348,78 @@ router.post('/:projectId/push-pending/:pendingId', requireAuth, async (req: any,
     if (pendingChange.project_id !== projectId) {
       return res.status(400).json({ error: 'Project ID mismatch' });
     }
+
+/**
+ * GET /api/projects/:projectId/check-vst-notification/:userId
+ * Check if there's a pending VST notification for this user
+ * Used by VST plugin to poll for updates
+ */
+router.get('/:projectId/check-vst-notification/:userId', async (req: any, res: any) => {
+  try {
+    const { projectId, userId } = req.params;
+    
+    // Check for notification file
+    const notificationFile = path.join(__dirname, '..', '..', 'projects', projectId, `vst_notification_${userId}.json`);
+    
+    if (!fs.existsSync(notificationFile)) {
+      return res.json({ hasUpdate: false });
+    }
+    
+    // Read notification
+    const notification = JSON.parse(fs.readFileSync(notificationFile, 'utf8'));
+    
+    res.json({
+      hasUpdate: true,
+      notification,
+    });
+  } catch (error: any) {
+    console.error('Error checking VST notification:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * POST /api/projects/:projectId/confirm-vst-update/:userId
+ * Confirm VST update and download the new version
+ * Clears the notification and returns the .als file
+ */
+router.post('/:projectId/confirm-vst-update/:userId', async (req: any, res: any) => {
+  try {
+    const { projectId, userId } = req.params;
+    
+    // Check for notification file
+    const notificationFile = path.join(__dirname, '..', '..', 'projects', projectId, `vst_notification_${userId}.json`);
+    
+    if (!fs.existsSync(notificationFile)) {
+      return res.status(404).json({ error: 'No update notification found' });
+    }
+    
+    // Read notification to get version ID
+    const notification = JSON.parse(fs.readFileSync(notificationFile, 'utf8'));
+    const { versionId } = notification;
+    
+    // Get version file
+    const versionFilePath = path.join(__dirname, '..', '..', 'projects', projectId, versionId + '.als');
+    
+    if (!fs.existsSync(versionFilePath)) {
+      return res.status(404).json({ error: 'Version file not found' });
+    }
+    
+    // Delete notification file
+    fs.unlinkSync(notificationFile);
+    
+    // Send the file
+    res.download(versionFilePath, `${projectId}_${versionId}.als`, (err: any) => {
+      if (err) {
+        console.error('Error sending file:', err);
+        res.status(500).json({ error: 'Failed to send file' });
+      }
+    });
+  } catch (error: any) {
+    console.error('Error confirming VST update:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
     
     // Get project and branch
     const project = await db.getProject(projectId);

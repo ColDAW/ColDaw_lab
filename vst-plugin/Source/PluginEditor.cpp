@@ -170,6 +170,15 @@ ColDawExportEditor::ColDawExportEditor (ColDawExportProcessor& p)
     autoExportToggle.setColour(juce::ToggleButton::textColourId, textSecondary);
     autoExportToggle.setColour(juce::ToggleButton::tickColourId, accentPrimary);
     
+    // Confirm Updates button (initially hidden)
+    addAndMakeVisible(confirmUpdatesButton);
+    confirmUpdatesButton.setButtonText("CONFIRM UPDATES");
+    confirmUpdatesButton.addListener(this);
+    confirmUpdatesButton.setColour(juce::TextButton::buttonColourId, successColor);
+    confirmUpdatesButton.setColour(juce::TextButton::textColourOffId, textPrimary);
+    confirmUpdatesButton.setColour(juce::TextButton::buttonOnColourId, successColor.brighter(0.2f));
+    confirmUpdatesButton.setVisible(false);
+    
     // Status label with improved readability
     addAndMakeVisible(statusLabel);
     statusLabel.setText(audioProcessor.getStatusMessage(), juce::dontSendNotification);
@@ -309,6 +318,13 @@ void ColDawExportEditor::resized()
     exportButton.setBounds(area.removeFromTop(40));  // Taller primary button
     area.removeFromTop(margin);
     
+    // Confirm Updates button (conditionally shown)
+    if (confirmUpdatesButton.isVisible())
+    {
+        confirmUpdatesButton.setBounds(area.removeFromTop(40));
+        area.removeFromTop(margin);
+    }
+    
     autoExportToggle.setBounds(area.removeFromTop(28));
     area.removeFromTop(margin);
     
@@ -357,6 +373,14 @@ void ColDawExportEditor::timerCallback()
     
     // Update status message
     statusLabel.setText(audioProcessor.getStatusMessage(), juce::dontSendNotification);
+    
+    // Show/hide "Confirm Updates" button based on web update availability
+    bool hasWebUpdate = audioProcessor.hasWebUpdate();
+    if (confirmUpdatesButton.isVisible() != hasWebUpdate)
+    {
+        confirmUpdatesButton.setVisible(hasWebUpdate);
+        resized(); // Trigger layout update
+    }
     
     // Show/hide "Use Detected File" button
     juce::File detectedFile = audioProcessor.getDetectedFile();
@@ -429,6 +453,11 @@ void ColDawExportEditor::buttonClicked (juce::Button* button)
     {
         // Use the auto-detected file
         audioProcessor.useDetectedFile();
+    }
+    else if (button == &confirmUpdatesButton)
+    {
+        // Confirm and apply web updates
+        audioProcessor.confirmWebUpdate();
     }
     else if (button == &exportButton)
     {

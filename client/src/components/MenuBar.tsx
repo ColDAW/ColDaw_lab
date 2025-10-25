@@ -347,6 +347,9 @@ function MenuBar({ onToggleHistory, onVersionCommitted, currentVersionId, onFile
 
     try {
       switch (format.id) {
+        case 'vst-bridge':
+          await sendToVSTBridge();
+          break;
         case 'ableton':
           await downloadAbletonFormat();
           break;
@@ -366,6 +369,25 @@ function MenuBar({ onToggleHistory, onVersionCommitted, currentVersionId, onFile
     } catch (error) {
       console.error('Error downloading version:', error);
       await showAlert({ message: 'Failed to download version', type: 'error' });
+    }
+  };
+
+  const sendToVSTBridge = async () => {
+    if (!user) {
+      await showAlert({ message: 'Please login to use VST Bridge', type: 'warning' });
+      return;
+    }
+
+    try {
+      // Call API to notify VST plugin
+      await projectApi.notifyVSTBridge(currentProject!.id, user.id, currentVersionId!);
+      await showAlert({ 
+        message: 'Update sent to VST plugin! Please check your DAW for the "Confirm Updates" button.', 
+        type: 'success' 
+      });
+    } catch (error) {
+      console.error('Error sending to VST Bridge:', error);
+      await showAlert({ message: 'Failed to send update to VST plugin: ' + (error as Error).message, type: 'error' });
     }
   };
 
