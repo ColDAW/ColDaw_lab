@@ -436,14 +436,6 @@ void ColDawExportProcessor::uploadProjectFile(const juce::File& alsFile)
     // Get the complete multipart data
     juce::MemoryBlock completePostData = postData.getMemoryBlock();
     
-    // Save the project path mapping if projectPath is set
-    if (!projectPath.isEmpty() && alsFile.existsAsFile())
-    {
-        juce::String fileKey = alsFile.getFullPathName();
-        filePathMapping[fileKey] = projectPath;
-        saveProjectMapping();
-    }
-    
     // Prepare headers with authentication
     juce::String contentType = "multipart/form-data; boundary=" + boundary;
     juce::String extraHeaders = "Content-Type: " + contentType;
@@ -491,6 +483,15 @@ void ColDawExportProcessor::uploadProjectFile(const juce::File& alsFile)
                                        obj->getProperty("isNewProject").toString() == "true";
                     bool hasPendingChanges = obj->hasProperty("hasPendingChanges") &&
                                             obj->getProperty("hasPendingChanges");
+                    
+                    // Automatically set project path for this file
+                    projectPath = "/project/" + projectId;
+                    if (alsFile.existsAsFile())
+                    {
+                        juce::String fileKey = alsFile.getFullPathName();
+                        filePathMapping[fileKey] = projectPath;
+                        saveProjectMapping();
+                    }
                     
                     if (isNewProject)
                     {
