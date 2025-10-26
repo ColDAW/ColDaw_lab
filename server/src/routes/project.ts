@@ -348,6 +348,51 @@ router.post('/:projectId/push-pending/:pendingId', requireAuth, async (req: any,
     if (pendingChange.project_id !== projectId) {
       return res.status(400).json({ error: 'Project ID mismatch' });
     }
+    
+    // Get project and branch
+    const project = await db.getProject(projectId);
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+    
+    const branchData = await db.getBranch(projectId, 'main');
+    if (!branchData) {
+      return res.status(404).json({ error: 'Main branch not found' });
+    }
+    
+    // Get pending data from changes field
+    const pendingData = pendingChange.changes;
+    
+    // Create new version
+    const versionId = uuidv4();
+    
+    // Insert version with pending data
+    await db.insertVersion({
+      id: versionId,
+      project_id: projectId,
+      branch: 'main',
+      message: 'Committed from pending change',
+      user_id: pendingChange.user_id,
+      timestamp: Date.now(),
+      files: pendingData,
+    });
+    
+    // Update branch head and project
+    await db.updateProject(projectId, { updated_at: Date.now() });
+    
+    // Delete pending change
+    await db.deletePendingChange(pendingId);
+    
+    res.json({
+      success: true,
+      versionId,
+      message: 'Pending change pushed successfully',
+    });
+  } catch (error: any) {
+    console.error('Error pushing pending change:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 /**
  * GET /api/projects/:projectId/check-vst-notification/:userId
@@ -417,51 +462,6 @@ router.post('/:projectId/confirm-vst-update/:userId', async (req: any, res: any)
     });
   } catch (error: any) {
     console.error('Error confirming VST update:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-    
-    // Get project and branch
-    const project = await db.getProject(projectId);
-    if (!project) {
-      return res.status(404).json({ error: 'Project not found' });
-    }
-    
-    const branchData = await db.getBranch(projectId, 'main');
-    if (!branchData) {
-      return res.status(404).json({ error: 'Main branch not found' });
-    }
-    
-    // Get pending data from changes field
-    const pendingData = pendingChange.changes;
-    
-    // Create new version
-    const versionId = uuidv4();
-    
-    // Insert version with pending data
-    await db.insertVersion({
-      id: versionId,
-      project_id: projectId,
-      branch: 'main',
-      message: 'Committed from pending change',
-      user_id: pendingChange.user_id,
-      timestamp: Date.now(),
-      files: pendingData,
-    });
-    
-    // Update branch head and project
-    await db.updateProject(projectId, { updated_at: Date.now() });
-    
-    // Delete pending change
-    await db.deletePendingChange(pendingId);
-    
-    res.json({
-      success: true,
-      versionId,
-      message: 'Pending change pushed successfully',
-    });
-  } catch (error: any) {
-    console.error('Error pushing pending change:', error);
     res.status(500).json({ error: error.message });
   }
 });
