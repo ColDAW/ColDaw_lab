@@ -312,6 +312,13 @@ router.post('/:projectId/revert/:versionId', requireAuth, async (req: any, res: 
     const dataDir = path.join(__dirname, '..', '..', 'projects', projectId);
     const dataPath = path.join(dataDir, `${newVersionId}.json`);
     fs.writeFileSync(dataPath, JSON.stringify(targetData, null, 2));
+    
+    // Also copy the .als file if it exists (for VST Bridge compatibility)
+    const targetALSPath = path.join(dataDir, `${versionId}.als`);
+    const newALSPath = path.join(dataDir, `${newVersionId}.als`);
+    if (fs.existsSync(targetALSPath)) {
+      fs.copyFileSync(targetALSPath, newALSPath);
+    }
 
     const revertMessage = message || `Revert to version ${versionId.substring(0, 8)}`;
 
