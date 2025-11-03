@@ -86,9 +86,7 @@ const ConverterButton = styled.button`
   }
   
   &:hover {
-    border-color: rgba(183, 112, 252, 0.4);
     transform: translateY(-2px);
-    box-shadow: 0 8px 16px rgba(183, 112, 252, 0.15);
   }
   
   &:hover::after {
