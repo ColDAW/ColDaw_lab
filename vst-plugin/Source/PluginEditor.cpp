@@ -197,6 +197,15 @@ ColDawExportEditor::ColDawExportEditor (ColDawExportProcessor& p)
     currentFileValue.setFont(juce::FontOptions(13.0f)); // Better readability
     currentFileValue.setColour(juce::Label::textColourId, textPrimary);
     
+    // Update preview label
+    addAndMakeVisible(updatePreviewLabel);
+    updatePreviewLabel.setText("", juce::dontSendNotification);
+    updatePreviewLabel.setFont(juce::FontOptions(11.0f));
+    updatePreviewLabel.setColour(juce::Label::textColourId, textSecondary);
+    updatePreviewLabel.setColour(juce::Label::backgroundColourId, bgTertiary);
+    updatePreviewLabel.setJustificationType(juce::Justification::topLeft);
+    updatePreviewLabel.setVisible(false);
+    
     // Project Path with consistent styling
     addAndMakeVisible(projectPathLabel);
     projectPathLabel.setText("PROJECT PATH", juce::dontSendNotification);
@@ -323,6 +332,13 @@ void ColDawExportEditor::resized()
     {
         confirmUpdatesButton.setBounds(area.removeFromTop(40));
         area.removeFromTop(margin);
+        
+        // Show update preview if available
+        if (updatePreviewLabel.isVisible())
+        {
+            updatePreviewLabel.setBounds(area.removeFromTop(80));
+            area.removeFromTop(margin);
+        }
     }
     
     autoExportToggle.setBounds(area.removeFromTop(28));
@@ -374,12 +390,61 @@ void ColDawExportEditor::timerCallback()
     // Update status message
     statusLabel.setText(audioProcessor.getStatusMessage(), juce::dontSendNotification);
     
-    // Show/hide "Confirm Updates" button based on web update availability
-    bool hasWebUpdate = audioProcessor.hasWebUpdate();
-    if (confirmUpdatesButton.isVisible() != hasWebUpdate)
+    // Show Fetch/Confirm Updates button if user can fetch updates
+    bool canFetch = audioProcessor.canFetchUpdates();
+    bool hasPreviewed = audioProcessor.hasPreviewedUpdate();
+    
+    // Button should be visible if user can fetch OR has already previewed
+    bool shouldShowButton = canFetch || hasPreviewed;
+    
+    if (confirmUpdatesButton.isVisible() != shouldShowButton)
     {
-        confirmUpdatesButton.setVisible(hasWebUpdate);
+        confirmUpdatesButton.setVisible(shouldShowButton);
         resized(); // Trigger layout update
+    }
+    
+    // Update button text and color based on preview state
+    if (shouldShowButton)
+    {
+        if (hasPreviewed)
+        {
+            // User has fetched/previewed update - show CONFIRM button
+            confirmUpdatesButton.setButtonText("CONFIRM UPDATES");
+            confirmUpdatesButton.setColour(juce::TextButton::buttonColourId, successColor);
+            confirmUpdatesButton.setColour(juce::TextButton::buttonOnColourId, successColor.brighter(0.2f));
+            
+            // Show and update preview label
+            juce::String previewText = audioProcessor.getUpdatePreview();
+            updatePreviewLabel.setText(previewText, juce::dontSendNotification);
+            if (!updatePreviewLabel.isVisible())
+            {
+                updatePreviewLabel.setVisible(true);
+                resized();
+            }
+        }
+        else
+        {
+            // User can fetch updates - show FETCH button
+            confirmUpdatesButton.setButtonText("FETCH UPDATES");
+            confirmUpdatesButton.setColour(juce::TextButton::buttonColourId, juce::Colour(0xff4a90e2)); // Blue color
+            confirmUpdatesButton.setColour(juce::TextButton::buttonOnColourId, juce::Colour(0xff4a90e2).brighter(0.2f));
+            
+            // Hide preview label when not previewed
+            if (updatePreviewLabel.isVisible())
+            {
+                updatePreviewLabel.setVisible(false);
+                resized();
+            }
+        }
+    }
+    else
+    {
+        // Hide preview label when button not shown
+        if (updatePreviewLabel.isVisible())
+        {
+            updatePreviewLabel.setVisible(false);
+            resized();
+        }
     }
     
     // Show/hide "Use Detected File" button
@@ -389,10 +454,10 @@ void ColDawExportEditor::timerCallback()
                           audioProcessor.getCurrentProjectName() != "None";
     
     // Only show button if we have a detected file and no current file selected
-    bool shouldShowButton = hasDetectedFile && !hasCurrentFile;
-    if (useDetectedButton.isVisible() != shouldShowButton)
+    bool shouldShowDetectedButton = hasDetectedFile && !hasCurrentFile;
+    if (useDetectedButton.isVisible() != shouldShowDetectedButton)
     {
-        useDetectedButton.setVisible(shouldShowButton);
+        useDetectedButton.setVisible(shouldShowDetectedButton);
         resized(); // Trigger layout update
     }
     
@@ -456,8 +521,17 @@ void ColDawExportEditor::buttonClicked (juce::Button* button)
     }
     else if (button == &confirmUpdatesButton)
     {
-        // Confirm and apply web updates
-        audioProcessor.confirmWebUpdate();
+        // Check if we have a previewed update or need to fetch first
+        if (audioProcessor.hasPreviewedUpdate())
+        {
+            // Confirm and apply the previewed update
+            audioProcessor.confirmWebUpdate();
+        }
+        else
+        {
+            // Fetch the update for preview
+            audioProcessor.fetchWebUpdate();
+        }
     }
     else if (button == &exportButton)
     {

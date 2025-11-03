@@ -26,9 +26,11 @@ ColDawExportProcessor::ColDawExportProcessor()
     authToken = "";
     currentUserId = "";
     hasPendingWebUpdate = false;
+    updatePreviewed = false;
     webUpdateInfo = "";
     webUpdateProjectId = "";
     webUpdateVersionId = "";
+    updatePreview = "";
     
     // Load saved project path mappings
     loadProjectMapping();
@@ -773,23 +775,203 @@ void ColDawExportProcessor::checkForWebUpdates()
             
             if (hasUpdate && !hasPendingWebUpdate)
             {
-                // New update available!
+                // New update available from web push!
                 auto* notification = obj->getProperty("notification").getDynamicObject();
                 if (notification)
                 {
                     webUpdateProjectId = notification->getProperty("projectId").toString();
                     webUpdateVersionId = notification->getProperty("versionId").toString();
                     hasPendingWebUpdate = true;
-                    webUpdateInfo = "Web update available! Click 'Confirm Updates' to apply.";
-                    statusMessage = webUpdateInfo;
+                    
+                    // Automatically fetch and preview when notification is from web
+                    statusMessage = "New update pushed from web! Fetching...";
+                    fetchWebUpdate();
                 }
             }
         }
     }
 }
 
+void ColDawExportProcessor::fetchWebUpdate()
+{
+    // If no pending notification, fetch latest version from web
+    if (!hasPendingWebUpdate || webUpdateProjectId.isEmpty() || webUpdateVersionId.isEmpty())
+    {
+        if (!isLoggedIn() || projectPath.isEmpty() || currentUserId.isEmpty())
+        {
+            statusMessage = "Please login and select a project first";
+            return;
+        }
+        
+        // Extract project ID from project path
+        juce::String projectId;
+        if (projectPath.startsWith("/project/"))
+        {
+            projectId = projectPath.substring(9);
+            int slashPos = projectId.indexOf("/");
+            if (slashPos > 0)
+                projectId = projectId.substring(0, slashPos);
+        }
+        else
+        {
+            statusMessage = "Invalid project path";
+            return;
+        }
+        
+        statusMessage = "Checking for latest version...";
+        
+        // Get latest version info from server
+        juce::URL infoUrl(serverUrl + "/api/projects/" + projectId);
+        juce::StringPairArray infoHeaders;
+        int infoStatusCode = 0;
+        
+        juce::URL::InputStreamOptions infoOptions = juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress)
+            .withConnectionTimeoutMs(10000)
+            .withResponseHeaders(&infoHeaders)
+            .withStatusCode(&infoStatusCode)
+            .withHttpRequestCmd("GET");
+        
+        std::unique_ptr<juce::InputStream> infoStream(infoUrl.createInputStream(infoOptions));
+        
+        if (infoStream != nullptr && infoStatusCode == 200)
+        {
+            juce::String response = infoStream->readEntireStreamAsString();
+            auto json = juce::JSON::parse(response);
+            
+            if (auto* obj = json.getDynamicObject())
+            {
+                if (auto* versionsArray = obj->getProperty("versions").getArray())
+                {
+                    if (versionsArray->size() > 0)
+                    {
+                        // Get the latest version (first in array)
+                        auto* latestVersion = (*versionsArray)[0].getDynamicObject();
+                        if (latestVersion)
+                        {
+                            webUpdateProjectId = projectId;
+                            webUpdateVersionId = latestVersion->getProperty("id").toString();
+                            hasPendingWebUpdate = true;
+                        }
+                    }
+                }
+            }
+        }
+        
+        if (!hasPendingWebUpdate)
+        {
+            statusMessage = "No versions available on server";
+            return;
+        }
+    }
+    
+    statusMessage = "Fetching update preview...";
+    
+    // Download the update file to a temporary location
+    juce::URL url(serverUrl + "/api/versions/" + webUpdateProjectId + "/download/" + webUpdateVersionId);
+    
+    juce::StringPairArray responseHeaders;
+    int statusCode = 0;
+    
+    juce::URL::InputStreamOptions options = juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress)
+        .withConnectionTimeoutMs(30000)
+        .withResponseHeaders(&responseHeaders)
+        .withStatusCode(&statusCode)
+        .withHttpRequestCmd("GET");
+    
+    std::unique_ptr<juce::InputStream> stream(url.createInputStream(options));
+    
+    if (stream != nullptr && statusCode == 200)
+    {
+        // Save to temporary preview file
+        juce::File tempDir = juce::File::getSpecialLocation(juce::File::tempDirectory);
+        downloadedUpdateFile = tempDir.getChildFile("coldaw_preview_" + webUpdateVersionId + ".als");
+        
+        juce::FileOutputStream output(downloadedUpdateFile);
+        if (output.openedOk())
+        {
+            output.writeFromInputStream(*stream, -1);
+            output.flush();
+            
+            // Generate preview info
+            juce::int64 fileSize = downloadedUpdateFile.getSize();
+            juce::String sizeStr = juce::String(fileSize / 1024) + " KB";
+            
+            updatePreview = "Update Preview:\n";
+            updatePreview += "Version ID: " + webUpdateVersionId.substring(0, 8) + "...\n";
+            updatePreview += "File Size: " + sizeStr + "\n";
+            updatePreview += "Downloaded: " + juce::Time::getCurrentTime().toString(true, true) + "\n\n";
+            updatePreview += "Click 'Confirm Updates' to apply this version to your project.";
+            
+            updatePreviewed = true;
+            statusMessage = "Update fetched! Review and click 'Confirm Updates' to apply.";
+            webUpdateInfo = "Update ready to apply";
+        }
+        else
+        {
+            statusMessage = "Error: Failed to save preview file";
+        }
+    }
+    else
+    {
+        statusMessage = "Error: Failed to fetch update (Status: " + juce::String(statusCode) + ")";
+    }
+}
+
 void ColDawExportProcessor::confirmWebUpdate()
 {
+    // If we already have a previewed update, use that file
+    if (updatePreviewed && downloadedUpdateFile.existsAsFile())
+    {
+        statusMessage = "Applying previewed update...";
+        
+        // Create temporary file for the update
+        juce::File updateFile = currentProjectFile.getSiblingFile(
+            currentProjectFile.getFileNameWithoutExtension() + "_web_update.als"
+        );
+        
+        // Copy the previewed file to the update location
+        if (downloadedUpdateFile.copyFileTo(updateFile))
+        {
+            // Replace current file with update
+            if (currentProjectFile.deleteFile())
+            {
+                if (updateFile.moveFileTo(currentProjectFile))
+                {
+                    statusMessage = "Web update applied successfully! Reopen your project in DAW.";
+                    
+                    // Update last modification time to prevent auto-export
+                    lastModificationTime = currentProjectFile.getLastModificationTime();
+                    
+                    // Clean up preview file
+                    downloadedUpdateFile.deleteFile();
+                    
+                    // Reset all update states
+                    hasPendingWebUpdate = false;
+                    webUpdateInfo = "";
+                    webUpdateProjectId = "";
+                    webUpdateVersionId = "";
+                    updatePreviewed = false;
+                    updatePreview = "";
+                }
+                else
+                {
+                    statusMessage = "Error: Failed to replace project file";
+                }
+            }
+            else
+            {
+                statusMessage = "Error: Failed to delete old project file";
+            }
+        }
+        else
+        {
+            statusMessage = "Error: Failed to copy preview file";
+        }
+        
+        return;
+    }
+    
+    // If no preview exists, download directly
     if (!hasPendingWebUpdate || webUpdateProjectId.isEmpty() || webUpdateVersionId.isEmpty())
     {
         statusMessage = "No web update available";
@@ -831,6 +1013,10 @@ void ColDawExportProcessor::confirmWebUpdate()
                 if (updateFile.moveFileTo(currentProjectFile))
                 {
                     statusMessage = "Web update applied successfully! Reopen your project in DAW.";
+                    
+                    // Update last modification time to prevent auto-export
+                    lastModificationTime = currentProjectFile.getLastModificationTime();
+                    
                     hasPendingWebUpdate = false;
                     webUpdateInfo = "";
                     webUpdateProjectId = "";

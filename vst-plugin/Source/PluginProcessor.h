@@ -95,9 +95,13 @@ public:
     
     // VST Bridge - check for updates from web
     void checkForWebUpdates();
+    void fetchWebUpdate();  // Manually fetch and preview update
     void confirmWebUpdate();
     bool hasWebUpdate() const { return hasPendingWebUpdate; }
+    bool hasPreviewedUpdate() const { return updatePreviewed; }
+    bool canFetchUpdates() const { return isLoggedIn() && !projectPath.isEmpty(); }
     juce::String getWebUpdateInfo() const { return webUpdateInfo; }
+    juce::String getUpdatePreview() const { return updatePreview; }
 
 private:
     //==============================================================================
@@ -135,9 +139,12 @@ private:
     
     // VST Bridge - web to DAW updates
     bool hasPendingWebUpdate;
+    bool updatePreviewed;  // Whether user has previewed the update
     juce::String webUpdateInfo;
     juce::String webUpdateProjectId;
     juce::String webUpdateVersionId;
+    juce::String updatePreview;  // Preview information about the update
+    juce::File downloadedUpdateFile;  // Temporary file with downloaded update
     
     // HTTP
     std::unique_ptr<juce::URL::DownloadTask> currentUpload;

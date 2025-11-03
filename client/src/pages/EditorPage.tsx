@@ -7,6 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useModal } from '../contexts/ModalContext';
 import AuthModal from '../components/AuthModal';
 import ProjectThumbnailCanvas from '../components/ProjectThumbnail';
+import ConverterModule from '../components/ConverterModule';
 
 const Container = styled.div`
   width: 100vw;
@@ -1015,6 +1016,12 @@ function EditorPage() {
             <UploadText>Create New Project</UploadText>
             <UploadHint>Drop your .als file here or click to browse</UploadHint>
           </UploadArea>
+          
+          {/* Converter Module */}
+          <ConverterModule onConverterSelect={(converterType) => {
+            console.log(`Converter selected: ${converterType}`);
+            // TODO: Implement converter functionality
+          }} />
           
           {/* Projects Grid */}
           {projects.length > 0 && (

@@ -87,6 +87,8 @@ private:
     juce::Label currentFileLabel;
     juce::Label currentFileValue;
     
+    juce::Label updatePreviewLabel;
+    
     juce::Label projectPathLabel;
     juce::TextEditor projectPathEditor;
     
