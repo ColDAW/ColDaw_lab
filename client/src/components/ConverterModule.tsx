@@ -49,26 +49,7 @@ const ConverterButton = styled.button`
   overflow: hidden;
   transition: all 0.3s ease;
   
-  /* Edge gradient background - only bottom left corner and bottom */
-  &::before {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 60%;
-    height: 60%;
-    background: radial-gradient(
-      ellipse at bottom left,
-      rgba(210, 77, 195, 0.3) 0%,
-      rgba(183, 112, 252, 0.2) 35%,
-      rgba(137, 170, 248, 0.1) 70%,
-      transparent 100%
-    );
-    pointer-events: none;
-    z-index: 0;
-  }
-  
-  /* Hover effect - brighter gradient at bottom */
+  /* Hover effect - gradient from bottom up, blurred and transparent */
   &::after {
     content: '';
     position: absolute;
@@ -79,9 +60,11 @@ const ConverterButton = styled.button`
     background: linear-gradient(
       180deg,
       transparent 0%,
-      rgba(183, 112, 252, 0.15) 50%,
-      rgba(210, 77, 195, 0.2) 100%
+      rgba(183, 112, 252, 0.08) 30%,
+      rgba(210, 77, 195, 0.12) 60%,
+      rgba(137, 170, 248, 0.08) 100%
     );
+    filter: blur(25px);
     transition: height 0.3s ease;
     pointer-events: none;
     z-index: 0;
@@ -109,7 +92,7 @@ const ConverterButton = styled.button`
   }
   
   &:hover::after {
-    height: 40%;
+    height: 70%;
   }
   
   &:hover img {
