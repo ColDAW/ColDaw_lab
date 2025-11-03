@@ -33,11 +33,7 @@ const ButtonsContainer = styled.div`
 
 const ConverterButton = styled.button`
   padding: ${({ theme }) => theme.spacing.lg} ${({ theme }) => theme.spacing.md};
-  background: linear-gradient(135deg,
-    rgba(183, 112, 252, 0.15) 0%,
-    rgba(210, 77, 195, 0.15) 50%,
-    rgba(137, 170, 248, 0.15) 100%
-  );
+  background: transparent;
   border: 1px solid ${({ theme }) => theme.colors.borderColor};
   border-radius: 10px;
   color: ${({ theme }) => theme.colors.textPrimary};
@@ -53,21 +49,41 @@ const ConverterButton = styled.button`
   overflow: hidden;
   transition: all 0.3s ease;
   
-  /* Hover background effect */
+  /* Edge gradient background - only bottom left corner and bottom */
   &::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba(183, 112, 252, 0.15) 50%,
+    bottom: 0;
+    left: 0;
+    width: 60%;
+    height: 60%;
+    background: radial-gradient(
+      ellipse at bottom left,
+      rgba(210, 77, 195, 0.3) 0%,
+      rgba(183, 112, 252, 0.2) 35%,
+      rgba(137, 170, 248, 0.1) 70%,
       transparent 100%
     );
-    transition: left 0.5s ease;
+    pointer-events: none;
+    z-index: 0;
+  }
+  
+  /* Hover effect - brighter gradient at bottom */
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 0%;
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      rgba(183, 112, 252, 0.15) 50%,
+      rgba(210, 77, 195, 0.2) 100%
+    );
+    transition: height 0.3s ease;
+    pointer-events: none;
     z-index: 0;
   }
   
@@ -87,18 +103,13 @@ const ConverterButton = styled.button`
   }
   
   &:hover {
-    background: linear-gradient(135deg,
-      rgba(183, 112, 252, 0.25) 0%,
-      rgba(210, 77, 195, 0.25) 50%,
-      rgba(137, 170, 248, 0.25) 100%
-    );
     border-color: rgba(183, 112, 252, 0.4);
     transform: translateY(-2px);
     box-shadow: 0 8px 16px rgba(183, 112, 252, 0.15);
   }
   
-  &:hover::before {
-    left: 100%;
+  &:hover::after {
+    height: 40%;
   }
   
   &:hover img {
