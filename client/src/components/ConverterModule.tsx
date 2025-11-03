@@ -1,6 +1,10 @@
 import React from 'react';
 import styled from 'styled-components';
-import { Box, Music, Wand2 } from 'lucide-react';
+
+// Import icon images
+import TDIcon from '../img/td.svg';
+import MaxIcon from '../img/max.svg';
+import DAWIcon from '../img/daw.svg';
 
 interface ConverterModuleProps {
   onConverterSelect?: (converterType: string) => void;
@@ -29,7 +33,11 @@ const ButtonsContainer = styled.div`
 
 const ConverterButton = styled.button`
   padding: ${({ theme }) => theme.spacing.lg} ${({ theme }) => theme.spacing.md};
-  background: ${({ theme }) => theme.colors.bgSecondary};
+  background: linear-gradient(135deg,
+    rgba(183, 112, 252, 0.15) 0%,
+    rgba(210, 77, 195, 0.15) 50%,
+    rgba(137, 170, 248, 0.15) 100%
+  );
   border: 1px solid ${({ theme }) => theme.colors.borderColor};
   border-radius: 10px;
   color: ${({ theme }) => theme.colors.textPrimary};
@@ -56,7 +64,7 @@ const ConverterButton = styled.button`
     background: linear-gradient(
       90deg,
       transparent 0%,
-      rgba(183, 112, 252, 0.1) 50%,
+      rgba(183, 112, 252, 0.15) 50%,
       transparent 100%
     );
     transition: left 0.5s ease;
@@ -64,10 +72,10 @@ const ConverterButton = styled.button`
   }
   
   /* Icon and text positioning */
-  svg {
+  img {
     width: 24px;
     height: 24px;
-    color: ${({ theme }) => theme.colors.primary};
+    filter: brightness(1.2) saturate(1.1);
     transition: all 0.3s ease;
     position: relative;
     z-index: 1;
@@ -79,7 +87,11 @@ const ConverterButton = styled.button`
   }
   
   &:hover {
-    background: ${({ theme }) => theme.colors.bgTertiary};
+    background: linear-gradient(135deg,
+      rgba(183, 112, 252, 0.25) 0%,
+      rgba(210, 77, 195, 0.25) 50%,
+      rgba(137, 170, 248, 0.25) 100%
+    );
     border-color: rgba(183, 112, 252, 0.4);
     transform: translateY(-2px);
     box-shadow: 0 8px 16px rgba(183, 112, 252, 0.15);
@@ -89,9 +101,9 @@ const ConverterButton = styled.button`
     left: 100%;
   }
   
-  &:hover svg {
+  &:hover img {
     transform: scale(1.1);
-    filter: drop-shadow(0 2px 8px rgba(183, 112, 252, 0.3));
+    filter: brightness(1.3) saturate(1.2) drop-shadow(0 2px 8px rgba(183, 112, 252, 0.3));
   }
   
   &:active {
@@ -109,13 +121,13 @@ const ConverterModule: React.FC<ConverterModuleProps> = ({ onConverterSelect }) 
 
   return (
     <Container>
-      <Title>Converter</Title>
+      <Title>Quick Convert</Title>
       <ButtonsContainer>
         <ConverterButton
           onClick={() => handleConverterClick('daw-to-touchdesigner')}
           title="Convert DAW format to TouchDesigner"
         >
-          <Box size={24} />
+          <img src={TDIcon} alt="TouchDesigner" />
           <span>DAW to TouchDesigner</span>
         </ConverterButton>
         
@@ -123,7 +135,7 @@ const ConverterModule: React.FC<ConverterModuleProps> = ({ onConverterSelect }) 
           onClick={() => handleConverterClick('daw-to-maxmsp')}
           title="Convert DAW format to MaxMSP"
         >
-          <Wand2 size={24} />
+          <img src={MaxIcon} alt="MaxMSP" />
           <span>DAW to MaxMSP</span>
         </ConverterButton>
         
@@ -131,7 +143,7 @@ const ConverterModule: React.FC<ConverterModuleProps> = ({ onConverterSelect }) 
           onClick={() => handleConverterClick('daw-to-daw')}
           title="Convert between different DAW formats"
         >
-          <Music size={24} />
+          <img src={DAWIcon} alt="DAW" />
           <span>DAW to DAW</span>
         </ConverterButton>
       </ButtonsContainer>
