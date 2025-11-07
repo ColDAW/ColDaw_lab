@@ -11,33 +11,55 @@ export interface EmailConfig {
   };
 }
 
-// Mailgun API配置接口
-export interface MailgunConfig {
-  apiKey: string;
-  domain: string;
-  region?: 'us' | 'eu';
+// Zoho Mail API配置接口
+export interface ZohoConfig {
+  apiKey?: string;           // Access Token (短期使用)
+  accountId: string;
+  refreshToken?: string;     // Refresh Token (生产环境推荐)
+  clientId?: string;         // OAuth Client ID
+  clientSecret?: string;     // OAuth Client Secret
 }
 
 class EmailService {
   private transporter: nodemailer.Transporter | null = null;
-  private useMailgunAPI: boolean = false;
-  private mailgunConfig: MailgunConfig | null = null;
+  private useZohoAPI: boolean = false;
+  private zohoConfig: ZohoConfig | null = null;
+  private cachedAccessToken: string | null = null;  // 缓存的 Access Token
+  private tokenExpiresAt: number = 0;                // Token 过期时间戳
 
   async initialize(): Promise<void> {
     try {
-      // 检查是否使用Mailgun API
-      const mailgunApiKey = process.env.MAILGUN_API_KEY;
-      const mailgunDomain = process.env.MAILGUN_DOMAIN;
+      // 检查是否使用Zoho API（支持 Access Token 或 Refresh Token）
+      const zohoApiKey = process.env.ZOHO_API_KEY;
+      const zohoAccountId = process.env.ZOHO_ACCOUNT_ID;
+      const zohoRefreshToken = process.env.ZOHO_REFRESH_TOKEN;
+      const zohoClientId = process.env.ZOHO_CLIENT_ID;
+      const zohoClientSecret = process.env.ZOHO_CLIENT_SECRET;
       
-      if (mailgunApiKey && mailgunDomain) {
-        this.useMailgunAPI = true;
-        this.mailgunConfig = {
-          apiKey: mailgunApiKey,
-          domain: mailgunDomain,
-          region: (process.env.MAILGUN_REGION as 'us' | 'eu') || 'us'
+      // 方案 1: 使用 Refresh Token (生产环境推荐)
+      if (zohoRefreshToken && zohoClientId && zohoClientSecret && zohoAccountId) {
+        this.useZohoAPI = true;
+        this.zohoConfig = {
+          refreshToken: zohoRefreshToken,
+          clientId: zohoClientId,
+          clientSecret: zohoClientSecret,
+          accountId: zohoAccountId
         };
-        console.log('🔧 Using Mailgun API for email delivery');
-        console.log('✅ Email service initialized with Mailgun API');
+        console.log('🔧 Using Zoho Mail API with Refresh Token (auto-refresh enabled)');
+        console.log('✅ Email service initialized with Zoho Mail API (Production Mode)');
+        return;
+      }
+      
+      // 方案 2: 使用 Access Token (开发/测试)
+      if (zohoApiKey && zohoAccountId) {
+        this.useZohoAPI = true;
+        this.zohoConfig = {
+          apiKey: zohoApiKey,
+          accountId: zohoAccountId
+        };
+        console.log('🔧 Using Zoho Mail API with Access Token');
+        console.log('⚠️ Warning: Access Token expires in 1 hour. Consider using Refresh Token for production.');
+        console.log('✅ Email service initialized with Zoho Mail API');
         return;
       }
 
@@ -99,9 +121,9 @@ class EmailService {
   }
 
   async sendVerificationCode(email: string, code: string): Promise<void> {
-    // 优先使用Mailgun API
-    if (this.useMailgunAPI && this.mailgunConfig) {
-      return this.sendViaMailgunAPI(email, code);
+    // 优先使用Zoho API
+    if (this.useZohoAPI && this.zohoConfig) {
+      return this.sendViaZohoAPI(email, code);
     }
 
     // 后备SMTP方法
@@ -168,9 +190,151 @@ class EmailService {
     }
   }
 
-  // 新增：通过Mailgun API发送邮件
+  // 新增：获取有效的 Zoho Access Token（自动刷新）
+  private async getZohoAccessToken(): Promise<string> {
+    if (!this.zohoConfig) {
+      throw new Error('Zoho config not initialized');
+    }
+
+    // 方案 1: 如果直接配置了 Access Token
+    if (this.zohoConfig.apiKey) {
+      return this.zohoConfig.apiKey;
+    }
+
+    // 方案 2: 使用 Refresh Token 自动获取/刷新 Access Token
+    if (this.zohoConfig.refreshToken && this.zohoConfig.clientId && this.zohoConfig.clientSecret) {
+      // 检查缓存的 Token 是否还有效（提前 5 分钟刷新）
+      const now = Date.now();
+      if (this.cachedAccessToken && this.tokenExpiresAt > now + 5 * 60 * 1000) {
+        return this.cachedAccessToken;
+      }
+
+      // 使用 Refresh Token 获取新的 Access Token
+      try {
+        console.log('🔄 Refreshing Zoho Access Token...');
+        
+        const formData = new URLSearchParams({
+          refresh_token: this.zohoConfig.refreshToken,
+          client_id: this.zohoConfig.clientId,
+          client_secret: this.zohoConfig.clientSecret,
+          grant_type: 'refresh_token',
+        });
+
+        const response = await fetch('https://accounts.zoho.com/oauth/v2/token', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: formData.toString(),
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Failed to refresh token: ${response.status} - ${errorText}`);
+        }
+
+        const data = await response.json() as { 
+          access_token: string; 
+          expires_in: number;
+        };
+        
+        // 缓存新的 Access Token
+        this.cachedAccessToken = data.access_token;
+        this.tokenExpiresAt = Date.now() + (data.expires_in || 3600) * 1000;
+
+        console.log('✅ Zoho Access Token refreshed successfully');
+        console.log(`Token expires in: ${data.expires_in || 3600} seconds`);
+        
+        return data.access_token;
+      } catch (error: any) {
+        console.error('❌ Failed to refresh Zoho Access Token:', error);
+        throw new Error(`Token refresh failed: ${error.message}`);
+      }
+    }
+
+    throw new Error('No valid Zoho authentication configured');
+  }
+
+  // 新增：通过Zoho Mail API发送邮件
+  private async sendViaZohoAPI(email: string, code: string): Promise<void> {
+    if (!this.zohoConfig) {
+      throw new Error('Zoho Mail API not configured');
+    }
+
+    const htmlTemplate = this.generateVerificationEmailHTML(code);
+    const textTemplate = `Your ColDAW verification code is: ${code}. This code will expire in 10 minutes.`;
+
+    try {
+      console.log(`📧 Sending verification email via Zoho Mail API to: ${email}`);
+      
+      // 获取有效的 Access Token（自动刷新）
+      const accessToken = await this.getZohoAccessToken();
+
+      const payload = {
+        fromAddress: process.env.ZOHO_FROM_EMAIL || 'noreply@coldaw.app',
+        toAddress: email,
+        subject: 'ColDAW - Email Verification Code',
+        htmlBody: htmlTemplate,
+        textBody: textTemplate
+      };
+
+      const url = `https://mail.zoho.com/api/accounts/${this.zohoConfig.accountId}/messages`;
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Zoho-oauthtoken ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        
+        // 如果是 Token 过期错误，清除缓存并重试一次
+        if (response.status === 401) {
+          console.warn('⚠️ Zoho token may be expired, clearing cache and retrying...');
+          this.cachedAccessToken = null;
+          this.tokenExpiresAt = 0;
+          
+          // 重新获取 Token 并重试
+          const newAccessToken = await this.getZohoAccessToken();
+          const retryResponse = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Zoho-oauthtoken ${newAccessToken}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+          });
+
+          if (!retryResponse.ok) {
+            const retryErrorText = await retryResponse.text();
+            throw new Error(`Zoho Mail API error (retry): ${retryResponse.status} - ${retryErrorText}`);
+          }
+
+          const retryResult = await retryResponse.json() as { data: { messageId: string } };
+          console.log(`✅ Verification email sent successfully via Zoho Mail API to: ${email} (after retry)`);
+          console.log('Message ID:', retryResult.data.messageId);
+          return;
+        }
+
+        throw new Error(`Zoho Mail API error: ${response.status} - ${errorText}`);
+      }
+
+      const result = await response.json() as { data: { messageId: string } };
+      console.log(`✅ Verification email sent successfully via Zoho Mail API to: ${email}`);
+      console.log('Message ID:', result.data.messageId);
+    } catch (error: any) {
+      console.error('❌ Failed to send verification email via Zoho Mail API:', error);
+      throw new Error(`邮件发送失败: ${error.message}`);
+    }
+  }
+
+  // 新增：通过Mailgun API发送邮件（保留用于兼容性）
   private async sendViaMailgunAPI(email: string, code: string): Promise<void> {
-    if (!this.mailgunConfig) {
+    if (!this.zohoConfig) {
       throw new Error('Mailgun API not configured');
     }
 
@@ -184,11 +348,11 @@ class EmailService {
     formData.append('html', htmlTemplate);
     formData.append('text', textTemplate);
 
-    const baseUrl = this.mailgunConfig.region === 'eu' 
+    const baseUrl = process.env.MAILGUN_REGION === 'eu' 
       ? 'https://api.eu.mailgun.net/v3' 
       : 'https://api.mailgun.net/v3';
     
-    const url = `${baseUrl}/${this.mailgunConfig.domain}/messages`;
+    const url = `${baseUrl}/${process.env.MAILGUN_DOMAIN}/messages`;
 
     try {
       console.log(`📧 Sending verification email via Mailgun API to: ${email}`);
@@ -196,7 +360,7 @@ class EmailService {
       const response = await fetch(url, {
         method: 'POST',
         headers: {
-          'Authorization': `Basic ${Buffer.from(`api:${this.mailgunConfig.apiKey}`).toString('base64')}`
+          'Authorization': `Basic ${Buffer.from(`api:${process.env.MAILGUN_API_KEY}`).toString('base64')}`
         },
         body: formData
       });
