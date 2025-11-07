@@ -255,7 +255,7 @@ class EmailService {
     throw new Error('No valid Zoho authentication configured');
   }
 
-  // 新增：通过Zoho Mail API发送邮件
+    // 新增:通过Zoho Mail API发送邮件
   private async sendViaZohoAPI(email: string, code: string): Promise<void> {
     if (!this.zohoConfig) {
       throw new Error('Zoho Mail API not configured');
@@ -270,22 +270,32 @@ class EmailService {
       // 获取有效的 Access Token（自动刷新）
       const accessToken = await this.getZohoAccessToken();
 
-      // Zoho Mail API 正确的 payload 格式
+      // Zoho Transactional Email API 正确的 payload 格式
       const payload = {
-        fromAddress: process.env.ZOHO_FROM_EMAIL || 'noreply@coldaw.app',
-        toAddress: email,
+        from: {
+          address: process.env.ZOHO_FROM_EMAIL || 'noreply@coldaw.app'
+        },
+        to: [
+          {
+            email_address: {
+              address: email
+            }
+          }
+        ],
         subject: 'ColDAW - Email Verification Code',
-        content: htmlTemplate,  // 使用 content 而不是 htmlBody
-        mailFormat: 'html'       // 指定格式为 html
+        htmlbody: htmlTemplate,
+        textbody: textTemplate
       };
 
-      const url = `https://mail.zoho.com/api/accounts/${this.zohoConfig.accountId}/messages`;
+      // 使用 Zoho Transactional Email API (ZeptoMail)
+      const url = `https://api.zeptomail.com/v1.1/email`;
       
       const response = await fetch(url, {
         method: 'POST',
         headers: {
-          'Authorization': `Zoho-oauthtoken ${accessToken}`,
-          'Content-Type': 'application/json'
+          'Authorization': `Zoho-enczapikey ${accessToken}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
         body: JSON.stringify(payload)
       });
@@ -304,8 +314,9 @@ class EmailService {
           const retryResponse = await fetch(url, {
             method: 'POST',
             headers: {
-              'Authorization': `Zoho-oauthtoken ${newAccessToken}`,
-              'Content-Type': 'application/json'
+              'Authorization': `Zoho-enczapikey ${newAccessToken}`,
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
             },
             body: JSON.stringify(payload)
           });
@@ -315,18 +326,22 @@ class EmailService {
             throw new Error(`Zoho Mail API error (retry): ${retryResponse.status} - ${retryErrorText}`);
           }
 
-          const retryResult = await retryResponse.json() as { data: { messageId: string } };
+          const retryResult = await retryResponse.json() as { data: { message_id?: string }, message?: string };
           console.log(`✅ Verification email sent successfully via Zoho Mail API to: ${email} (after retry)`);
-          console.log('Message ID:', retryResult.data.messageId);
+          if (retryResult.data?.message_id) {
+            console.log('Message ID:', retryResult.data.message_id);
+          }
           return;
         }
 
         throw new Error(`Zoho Mail API error: ${response.status} - ${errorText}`);
       }
 
-      const result = await response.json() as { data: { messageId: string } };
+      const result = await response.json() as { data: { message_id?: string }, message?: string };
       console.log(`✅ Verification email sent successfully via Zoho Mail API to: ${email}`);
-      console.log('Message ID:', result.data.messageId);
+      if (result.data?.message_id) {
+        console.log('Message ID:', result.data.message_id);
+      }
     } catch (error: any) {
       console.error('❌ Failed to send verification email via Zoho Mail API:', error);
       throw new Error(`邮件发送失败: ${error.message}`);
