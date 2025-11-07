@@ -199,6 +199,15 @@ class EmailService {
     // ZeptoMail Send Mail Token 不会过期，可以直接使用
     if (this.zohoConfig.apiKey) {
       console.log('🔑 Using ZeptoMail Send Mail Token / Zoho API Key');
+      
+      // 如果 token 已经包含 "Zoho-enczapikey" 前缀，直接返回
+      if (this.zohoConfig.apiKey.startsWith('Zoho-enczapikey')) {
+        console.log('Token already has Zoho-enczapikey prefix');
+        return this.zohoConfig.apiKey;
+      }
+      
+      // 否则，返回纯 token（header 中会添加前缀）
+      console.log('Token is raw, will add prefix in header');
       return this.zohoConfig.apiKey;
     }
 
@@ -292,10 +301,18 @@ class EmailService {
       // 使用 Zoho Transactional Email API (ZeptoMail)
       const url = `https://api.zeptomail.com/v1.1/email`;
       
+      // 构建 Authorization header
+      // 如果 token 已包含前缀，直接使用；否则添加 "Zoho-enczapikey " 前缀
+      const authHeader = accessToken.startsWith('Zoho-enczapikey') 
+        ? accessToken 
+        : `Zoho-enczapikey ${accessToken}`;
+      
+      console.log('Authorization header format:', authHeader.substring(0, 20) + '...');
+      
       const response = await fetch(url, {
         method: 'POST',
         headers: {
-          'Authorization': `Zoho-enczapikey ${accessToken}`,
+          'Authorization': authHeader,
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
@@ -313,10 +330,16 @@ class EmailService {
           
           // 重新获取 Token 并重试
           const newAccessToken = await this.getZohoAccessToken();
+          
+          // 构建重试的 Authorization header
+          const retryAuthHeader = newAccessToken.startsWith('Zoho-enczapikey') 
+            ? newAccessToken 
+            : `Zoho-enczapikey ${newAccessToken}`;
+          
           const retryResponse = await fetch(url, {
             method: 'POST',
             headers: {
-              'Authorization': `Zoho-enczapikey ${newAccessToken}`,
+              'Authorization': retryAuthHeader,
               'Content-Type': 'application/json',
               'Accept': 'application/json'
             },

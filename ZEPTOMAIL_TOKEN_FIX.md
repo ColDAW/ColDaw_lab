@@ -31,7 +31,9 @@ Error: Invalid API Token found (SERR_157)
 2. 选择你的项目 → "server" 服务
 3. 点击 "Variables" 标签
 4. 找到或添加 `ZOHO_API_KEY`
-5. 粘贴你刚才复制的 Send Mail Token
+5. **重要**: 只粘贴 **Token 本身**，不包含 `Zoho-enczapikey` 前缀
+   - ✅ 正确: `wSsVR60g+kL5W60uzWerIbw7z1lSB1ikFUwv21f0v3OoT6/Bpcc/lU2Y...`
+   - ❌ 错误: `Zoho-enczapikey wSsVR60g+kL5W60uzWerIbw7z1lSB1ikFUwv...`
 6. **删除以下变量** (如果存在):
    - `ZOHO_ACCOUNT_ID` (不再需要)
    - `ZOHO_REFRESH_TOKEN` (如果你选择使用 Send Mail Token)
@@ -52,9 +54,15 @@ Error: Invalid API Token found (SERR_157)
 
 ### ✅ 最简配置 (推荐)
 ```env
-ZOHO_API_KEY=Zoho-enczapikey_xxxxxxxxxxxxxxxxxxxxx
+# 只需要 Token 本身，不包含 "Zoho-enczapikey" 前缀
+ZOHO_API_KEY=wSsVR60g+kL5W60uzWerIbw7z1lSB1ikFUwv21f0v3OoT6/Bpcc/lU2YBgf2FKQaETZpFWcXob4qmhwC0zUO3d4lwl8CDiiF9mqRe1U4J3x17qnvhDzPWWhYkBGJLY8JzgtqkmVmGs0r+g==
 ZOHO_FROM_EMAIL=noreply@yourdomain.com
 ```
+
+**重要提示**: 
+- ✅ 环境变量中只保存 **Token 本身**
+- ✅ 代码会自动添加 `Zoho-enczapikey ` 前缀到 HTTP header
+- ❌ 不要在环境变量中包含 `Zoho-enczapikey` 前缀
 
 ### ❌ 常见错误配置
 
