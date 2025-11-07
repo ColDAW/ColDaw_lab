@@ -270,12 +270,13 @@ class EmailService {
       // 获取有效的 Access Token（自动刷新）
       const accessToken = await this.getZohoAccessToken();
 
+      // Zoho Mail API 正确的 payload 格式
       const payload = {
         fromAddress: process.env.ZOHO_FROM_EMAIL || 'noreply@coldaw.app',
         toAddress: email,
         subject: 'ColDAW - Email Verification Code',
-        htmlBody: htmlTemplate,
-        textBody: textTemplate
+        content: htmlTemplate,  // 使用 content 而不是 htmlBody
+        mailFormat: 'html'       // 指定格式为 html
       };
 
       const url = `https://mail.zoho.com/api/accounts/${this.zohoConfig.accountId}/messages`;
