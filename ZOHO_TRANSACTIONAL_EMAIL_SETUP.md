@@ -23,7 +23,9 @@ URL_RULE_NOT_CONFIGURED
 
 ## 配置步骤
 
-### 方式 1: 使用 Refresh Token (生产环境推荐)
+### 方式 1: 使用 Send Mail Token (ZeptoMail 推荐) ⭐
+
+这是 ZeptoMail 最简单的配置方式，不需要 OAuth，Token 永不过期。
 
 #### 1. 创建 ZeptoMail 账户
 
@@ -31,7 +33,50 @@ URL_RULE_NOT_CONFIGURED
 2. 点击 "Sign Up" 注册账户
 3. 验证你的邮箱地址
 
-#### 2. 获取 OAuth 凭证
+#### 2. 添加发送域名 (可选但推荐)
+
+1. 登录 ZeptoMail: https://mailadmin.zoho.com/zeptomail/
+2. 进入 "Mail Agents" → "Add Mail Agent"
+3. 选择 "Send using REST API"
+4. 添加你的域名并验证 DNS 记录
+5. 或使用 ZeptoMail 提供的默认发送域名
+
+#### 3. 获取 Send Mail Token
+
+1. 在 ZeptoMail Dashboard 中找到你的 Mail Agent
+2. 点击 Mail Agent 名称
+3. 找到 "Send Mail Token" 部分
+4. 点击 "Copy Token" 或 "Show Token"
+5. 保存这个 Token（以 `Zoho-enczapikey_` 开头）
+
+#### 4. 配置环境变量
+
+只需要配置两个环境变量：
+
+```env
+# ZeptoMail Send Mail Token 方式 (推荐)
+ZOHO_API_KEY=your_send_mail_token_here
+ZOHO_FROM_EMAIL=noreply@yourdomain.com
+```
+
+**示例:**
+```env
+ZOHO_API_KEY=Zoho-enczapikey_xxxxxxxxxxxxxxxxxxxx
+ZOHO_FROM_EMAIL=noreply@coldaw.app
+```
+
+⚠️ **重要**: 
+- Send Mail Token 以 `Zoho-enczapikey_` 开头
+- 不需要设置 `ZOHO_ACCOUNT_ID`
+- Token 永不过期，无需刷新
+
+---
+
+### 方式 2: 使用 OAuth Refresh Token (高级用户)
+
+如果你需要使用 OAuth 方式，可以按以下步骤配置：
+
+#### 1. 获取 OAuth 凭证
 
 1. 访问: https://api-console.zoho.com/
 2. 点击 "Add Client"
@@ -44,7 +89,7 @@ URL_RULE_NOT_CONFIGURED
    - `Client ID`
    - `Client Secret`
 
-#### 3. 生成 Refresh Token
+#### 2. 生成 Refresh Token
 
 在浏览器中访问以下 URL (替换 CLIENT_ID):
 
@@ -66,53 +111,62 @@ curl -X POST https://accounts.zoho.com/oauth/v2/token \
 
 3. 响应中包含 `refresh_token`,保存它
 
-#### 4. 配置环境变量
+#### 3. 配置环境变量
 
 ```env
-# Zoho ZeptoMail - OAuth 方式 (推荐)
+# ZeptoMail OAuth 方式
 ZOHO_REFRESH_TOKEN=your_refresh_token_here
 ZOHO_CLIENT_ID=your_client_id_here
 ZOHO_CLIENT_SECRET=your_client_secret_here
-ZOHO_ACCOUNT_ID=your_account_id_here
 ZOHO_FROM_EMAIL=noreply@yourdomain.com
 ```
 
-### 方式 2: 使用 API Key (开发/测试)
-
-#### 1. 获取 Send Mail Token
-
-1. 登录 ZeptoMail: https://mailadmin.zoho.com/zeptomail/
-2. 进入 "Settings" → "Mail Agents"
-3. 创建一个新的 Mail Agent
-4. 获取 "Send Mail Token"
-
-#### 2. 配置环境变量
-
-```env
-# Zoho ZeptoMail - API Key 方式
-ZOHO_API_KEY=your_send_mail_token_here
-ZOHO_ACCOUNT_ID=your_account_id_here
-ZOHO_FROM_EMAIL=noreply@yourdomain.com
-```
-
-⚠️ **注意**: API Key 方式的 Token 通常不会过期,但建议在生产环境使用 Refresh Token 方式。
+---
 
 ## 验证配置
 
 启动服务后,应该看到以下日志:
 
-### 使用 Refresh Token:
+### 使用 Send Mail Token (推荐):
 ```
-🔧 Using Zoho Mail API with Refresh Token (auto-refresh enabled)
-✅ Email service initialized with Zoho Mail API (Production Mode)
+🔧 Using ZeptoMail with Send Mail Token (recommended for ZeptoMail)
+✅ Email service initialized with ZeptoMail API
 ```
 
-### 使用 API Key:
+### 使用 OAuth Refresh Token:
 ```
-🔧 Using Zoho Mail API with Access Token
-⚠️ Warning: Access Token expires in 1 hour. Consider using Refresh Token for production.
-✅ Email service initialized with Zoho Mail API
+🔧 Using ZeptoMail/Zoho with OAuth Refresh Token (auto-refresh enabled)
+✅ Email service initialized with ZeptoMail API (Production Mode - OAuth)
 ```
+
+## 常见问题
+
+### Q: 遇到 "Invalid API Token found" 错误
+**A**: Token 格式或值不正确:
+
+1. **检查 Token 格式**: Send Mail Token 应该以 `Zoho-enczapikey_` 开头
+2. **确认 Token 来源**: 
+   - 登录 https://mailadmin.zoho.com/zeptomail/
+   - 进入 Mail Agents → 你的 Mail Agent
+   - 重新复制 Send Mail Token
+3. **检查环境变量**: 确保 `ZOHO_API_KEY` 完整复制,没有多余的空格或换行
+4. **重新部署**: 在 Railway Dashboard 中更新环境变量后,点击 "Redeploy"
+
+**正确的 Token 格式:**
+```
+ZOHO_API_KEY=Zoho-enczapikey_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+```
+
+### Q: 我应该使用哪种方式?
+**A**: 推荐使用方式:
+
+| 场景 | 推荐方式 | 原因 |
+|------|---------|------|
+| 🎯 **大多数用户** | Send Mail Token | 简单、永不过期、配置最少 |
+| 🏢 **企业用户** | OAuth Refresh Token | 更安全、可审计、可撤销 |
+| 🧪 **开发测试** | Send Mail Token | 快速开始、易于调试 |
+
+**建议: 优先使用 Send Mail Token,除非有特殊的安全或审计需求。**
 
 ## API 端点变更
 
@@ -206,7 +260,13 @@ curl -X POST https://your-railway-url/api/auth/send-verification \
 
 在 Railway Dashboard 中配置以下环境变量:
 
-**使用 Refresh Token (推荐):**
+### 推荐配置 (Send Mail Token):
+```
+ZOHO_API_KEY=Zoho-enczapikey_xxxxxxxxxxxxxxxxxxxxx
+ZOHO_FROM_EMAIL=noreply@yourdomain.com
+```
+
+### 或使用 OAuth (高级):
 ```
 ZOHO_REFRESH_TOKEN=1000.xxx
 ZOHO_CLIENT_ID=1000.XXX.YYY
@@ -214,13 +274,10 @@ ZOHO_CLIENT_SECRET=xxx
 ZOHO_FROM_EMAIL=noreply@yourdomain.com
 ```
 
-**或使用 API Key:**
-```
-ZOHO_API_KEY=your_send_mail_token
-ZOHO_FROM_EMAIL=noreply@yourdomain.com
-```
-
-⚠️ 建议将 Token 相关变量标记为 "Secret"
+⚠️ **重要**:
+- 建议将 `ZOHO_API_KEY`、`ZOHO_CLIENT_SECRET` 标记为 "Secret"
+- 不需要设置 `ZOHO_ACCOUNT_ID` (ZeptoMail 不需要)
+- 如果之前设置了 `ZOHO_ACCOUNT_ID`,可以删除它
 
 ## 迁移检查清单
 

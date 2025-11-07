@@ -29,37 +29,36 @@ class EmailService {
 
   async initialize(): Promise<void> {
     try {
-      // 检查是否使用Zoho API（支持 Access Token 或 Refresh Token）
+      // 检查是否使用 ZeptoMail/Zoho API（支持 Send Mail Token 或 OAuth Refresh Token）
       const zohoApiKey = process.env.ZOHO_API_KEY;
       const zohoAccountId = process.env.ZOHO_ACCOUNT_ID;
       const zohoRefreshToken = process.env.ZOHO_REFRESH_TOKEN;
       const zohoClientId = process.env.ZOHO_CLIENT_ID;
       const zohoClientSecret = process.env.ZOHO_CLIENT_SECRET;
       
-      // 方案 1: 使用 Refresh Token (生产环境推荐)
-      if (zohoRefreshToken && zohoClientId && zohoClientSecret && zohoAccountId) {
+      // 方案 1: 使用 Refresh Token (OAuth 方式 - 生产环境推荐)
+      if (zohoRefreshToken && zohoClientId && zohoClientSecret) {
         this.useZohoAPI = true;
         this.zohoConfig = {
           refreshToken: zohoRefreshToken,
           clientId: zohoClientId,
           clientSecret: zohoClientSecret,
-          accountId: zohoAccountId
+          accountId: zohoAccountId || '' // accountId 对 ZeptoMail 是可选的
         };
-        console.log('🔧 Using Zoho Mail API with Refresh Token (auto-refresh enabled)');
-        console.log('✅ Email service initialized with Zoho Mail API (Production Mode)');
+        console.log('🔧 Using ZeptoMail/Zoho with OAuth Refresh Token (auto-refresh enabled)');
+        console.log('✅ Email service initialized with ZeptoMail API (Production Mode - OAuth)');
         return;
       }
       
-      // 方案 2: 使用 Access Token (开发/测试)
-      if (zohoApiKey && zohoAccountId) {
+      // 方案 2: 使用 Send Mail Token / API Key (ZeptoMail 推荐方式)
+      if (zohoApiKey) {
         this.useZohoAPI = true;
         this.zohoConfig = {
           apiKey: zohoApiKey,
-          accountId: zohoAccountId
+          accountId: zohoAccountId || '' // accountId 对 ZeptoMail 是可选的
         };
-        console.log('🔧 Using Zoho Mail API with Access Token');
-        console.log('⚠️ Warning: Access Token expires in 1 hour. Consider using Refresh Token for production.');
-        console.log('✅ Email service initialized with Zoho Mail API');
+        console.log('🔧 Using ZeptoMail with Send Mail Token (recommended for ZeptoMail)');
+        console.log('✅ Email service initialized with ZeptoMail API');
         return;
       }
 
@@ -190,28 +189,31 @@ class EmailService {
     }
   }
 
-  // 新增：获取有效的 Zoho Access Token（自动刷新）
+  // 新增：获取有效的 Zoho/ZeptoMail Token
   private async getZohoAccessToken(): Promise<string> {
     if (!this.zohoConfig) {
       throw new Error('Zoho config not initialized');
     }
 
-    // 方案 1: 如果直接配置了 Access Token
+    // 方案 1: 如果直接配置了 API Key (ZeptoMail Send Mail Token 或 Access Token)
+    // ZeptoMail Send Mail Token 不会过期，可以直接使用
     if (this.zohoConfig.apiKey) {
+      console.log('🔑 Using ZeptoMail Send Mail Token / Zoho API Key');
       return this.zohoConfig.apiKey;
     }
 
-    // 方案 2: 使用 Refresh Token 自动获取/刷新 Access Token
+    // 方案 2: 使用 Refresh Token 自动获取/刷新 Access Token (OAuth 方式)
     if (this.zohoConfig.refreshToken && this.zohoConfig.clientId && this.zohoConfig.clientSecret) {
       // 检查缓存的 Token 是否还有效（提前 5 分钟刷新）
       const now = Date.now();
       if (this.cachedAccessToken && this.tokenExpiresAt > now + 5 * 60 * 1000) {
+        console.log('✅ Using cached OAuth Access Token');
         return this.cachedAccessToken;
       }
 
       // 使用 Refresh Token 获取新的 Access Token
       try {
-        console.log('🔄 Refreshing Zoho Access Token...');
+        console.log('🔄 Refreshing Zoho OAuth Access Token...');
         
         const formData = new URLSearchParams({
           refresh_token: this.zohoConfig.refreshToken,
@@ -242,17 +244,17 @@ class EmailService {
         this.cachedAccessToken = data.access_token;
         this.tokenExpiresAt = Date.now() + (data.expires_in || 3600) * 1000;
 
-        console.log('✅ Zoho Access Token refreshed successfully');
+        console.log('✅ Zoho OAuth Access Token refreshed successfully');
         console.log(`Token expires in: ${data.expires_in || 3600} seconds`);
         
         return data.access_token;
       } catch (error: any) {
-        console.error('❌ Failed to refresh Zoho Access Token:', error);
+        console.error('❌ Failed to refresh Zoho OAuth Access Token:', error);
         throw new Error(`Token refresh failed: ${error.message}`);
       }
     }
 
-    throw new Error('No valid Zoho authentication configured');
+    throw new Error('No valid Zoho authentication configured. Please set either ZOHO_API_KEY (Send Mail Token) or ZOHO_REFRESH_TOKEN with Client credentials.');
   }
 
     // 新增:通过Zoho Mail API发送邮件
