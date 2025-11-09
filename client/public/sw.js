@@ -6,7 +6,7 @@ const urlsToCache = [
   '/manifest.json'
 ];
 
-// 安装Service Worker
+// Install Service Worker
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -17,22 +17,22 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// 拦截网络请求
+// Intercept network requests
 self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
-        // 如果有缓存，返回缓存
+        // If cached, return cache
         if (response) {
           return response;
         }
-        // 否则获取网络资源
+        // Otherwise fetch from network
         return fetch(event.request);
       })
   );
 });
 
-// 激活Service Worker
+// Activate Service Worker
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {

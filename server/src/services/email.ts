@@ -11,11 +11,11 @@ export interface EmailConfig {
   };
 }
 
-// Zoho Mail API配置接口
+// Zoho Mail API configuration interface
 export interface ZohoConfig {
-  apiKey?: string;           // Access Token (短期使用)
+  apiKey?: string;           // Access Token (for short-term use)
   accountId: string;
-  refreshToken?: string;     // Refresh Token (生产环境推荐)
+  refreshToken?: string;     // Refresh Token (recommended for production)
   clientId?: string;         // OAuth Client ID
   clientSecret?: string;     // OAuth Client Secret
 }
@@ -24,45 +24,45 @@ class EmailService {
   private transporter: nodemailer.Transporter | null = null;
   private useZohoAPI: boolean = false;
   private zohoConfig: ZohoConfig | null = null;
-  private cachedAccessToken: string | null = null;  // 缓存的 Access Token
-  private tokenExpiresAt: number = 0;                // Token 过期时间戳
+  private cachedAccessToken: string | null = null;  // Cached Access Token
+  private tokenExpiresAt: number = 0;                // Token expiration timestamp
 
   async initialize(): Promise<void> {
     try {
-      // 检查是否使用 ZeptoMail/Zoho API（支持 Send Mail Token 或 OAuth Refresh Token）
+      // Check if using ZeptoMail/Zoho API (supports Send Mail Token or OAuth Refresh Token)
       const zohoApiKey = process.env.ZOHO_API_KEY;
       const zohoAccountId = process.env.ZOHO_ACCOUNT_ID;
       const zohoRefreshToken = process.env.ZOHO_REFRESH_TOKEN;
       const zohoClientId = process.env.ZOHO_CLIENT_ID;
       const zohoClientSecret = process.env.ZOHO_CLIENT_SECRET;
       
-      // 方案 1: 使用 Refresh Token (OAuth 方式 - 生产环境推荐)
+      // Option 1: Using Refresh Token (OAuth method - recommended for production)
       if (zohoRefreshToken && zohoClientId && zohoClientSecret) {
         this.useZohoAPI = true;
         this.zohoConfig = {
           refreshToken: zohoRefreshToken,
           clientId: zohoClientId,
           clientSecret: zohoClientSecret,
-          accountId: zohoAccountId || '' // accountId 对 ZeptoMail 是可选的
+          accountId: zohoAccountId || '' // accountId is optional for ZeptoMail
         };
         console.log('🔧 Using ZeptoMail/Zoho with OAuth Refresh Token (auto-refresh enabled)');
         console.log('✅ Email service initialized with ZeptoMail API (Production Mode - OAuth)');
         return;
       }
       
-      // 方案 2: 使用 Send Mail Token / API Key (ZeptoMail 推荐方式)
+      // Option 2: Using Send Mail Token / API Key (recommended for ZeptoMail)
       if (zohoApiKey) {
         this.useZohoAPI = true;
         this.zohoConfig = {
           apiKey: zohoApiKey,
-          accountId: zohoAccountId || '' // accountId 对 ZeptoMail 是可选的
+          accountId: zohoAccountId || '' // accountId is optional for ZeptoMail
         };
         console.log('🔧 Using ZeptoMail with Send Mail Token (recommended for ZeptoMail)');
         console.log('✅ Email service initialized with ZeptoMail API');
         return;
       }
 
-      // 调试：打印环境变量检查结果
+      // Debug: Print environment variable check results
       console.log('🔍 Email service initialization - Environment variables check:');
       console.log('SMTP_HOST:', process.env.SMTP_HOST || 'NOT SET');
       console.log('SMTP_PORT:', process.env.SMTP_PORT || 'NOT SET');
@@ -70,17 +70,17 @@ class EmailService {
       console.log('SMTP_USER:', process.env.SMTP_USER ? 'SET (***@***)' : 'NOT SET');
       console.log('SMTP_PASS:', process.env.SMTP_PASS ? 'SET (length: ' + process.env.SMTP_PASS.length + ')' : 'NOT SET');
       
-      // 检查必要的环境变量
+      // [Comment removed]
       if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
         console.warn('❌ SMTP credentials not configured. Email service will be disabled.');
         console.warn('Missing:', !process.env.SMTP_USER ? 'SMTP_USER' : '', !process.env.SMTP_PASS ? 'SMTP_PASS' : '');
         return;
       }
 
-      // Railway平台优化的SMTP配置
+      // RailwayofSMTP
       const emailConfig: EmailConfig = {
         host: process.env.SMTP_HOST || 'smtp.mailgun.org',
-        port: parseInt(process.env.SMTP_PORT || '2525'), // 使用2525端口，Railway更友好
+        port: parseInt(process.env.SMTP_PORT || '2525'), // [Comment removed]
         secure: process.env.SMTP_SECURE === 'true',
         auth: {
           user: process.env.SMTP_USER,
@@ -90,47 +90,47 @@ class EmailService {
 
       console.log(`🔧 Initializing email service with ${emailConfig.host}:${emailConfig.port} (secure: ${emailConfig.secure})`);
 
-      // Railway平台优化的连接选项
+      // Railwayof
       const transporterOptions = {
         ...emailConfig,
         connectionTimeout: 30000,     // 30 seconds
         greetingTimeout: 30000,       // 30 seconds  
         socketTimeout: 60000,         // 60 seconds
-        pool: false,                  // 禁用连接池
+        pool: false,                  // [Comment removed]
         maxConnections: 1,
-        maxMessages: 1,               // 每个连接只发送一封邮件
-        requireTLS: false,            // 不强制TLS
+        maxMessages: 1,               // [Comment removed]
+        requireTLS: false,            // [Comment removed]
         ignoreTLS: false,
         tls: {
-          rejectUnauthorized: false   // Railway环境可能需要这个
+          rejectUnauthorized: false   // Railway
         }
       };
 
       this.transporter = nodemailer.createTransport(transporterOptions);
 
-      // 跳过初始验证，改为延迟验证
+      // [Comment removed]
       console.log('⚡ Email service transporter created (skipping initial verification)');
       console.log('✅ Email service initialized');
       
     } catch (error) {
       console.error('❌ Failed to initialize email service:', error);
-      // 不抛出错误，让服务器继续启动
+      // [Comment removed]
       this.transporter = null;
     }
   }
 
   async sendVerificationCode(email: string, code: string): Promise<void> {
-    // 优先使用Zoho API
+    // [Comment removed]
     if (this.useZohoAPI && this.zohoConfig) {
       return this.sendViaZohoAPI(email, code);
     }
 
-    // 后备SMTP方法
+    // [Comment removed]
     if (!this.transporter) {
       throw new Error('Email service not available - SMTP not configured');
     }
 
-    // 在Railway生产环境跳过预验证
+    // [Comment removed]
     if (process.env.NODE_ENV !== 'production') {
       try {
         console.log('🔍 Verifying SMTP connection before sending...');
@@ -143,10 +143,10 @@ class EmailService {
         console.log('✅ SMTP connection verified successfully');
       } catch (verifyError: any) {
         console.error('❌ SMTP verification failed:', verifyError.message);
-        console.warn('⚠️ 开发环境验证失败，但继续尝试发送邮件...');
+        console.warn('⚠️ ，...');
       }
     } else {
-      console.log('🚀 Production mode: 跳过SMTP预验证，直接发送邮件');
+      // console.log removed;
     }
 
     const htmlTemplate = this.generateVerificationEmailHTML(code);
@@ -164,7 +164,7 @@ class EmailService {
 
     try {
       console.log(`📧 Sending verification email to: ${email}`);
-      // 增加发送超时时间
+      // [Comment removed]
       const sendPromise = this.transporter.sendMail(mailOptions);
       const timeoutPromise = new Promise((_, reject) => {
         setTimeout(() => reject(new Error('Email send timeout')), 60000); // 60 seconds
@@ -176,51 +176,51 @@ class EmailService {
     } catch (error: any) {
       console.error('❌ Failed to send verification email:', error);
       
-      // 提供更具体的错误信息
+      // [Comment removed]
       if (error.code === 'ETIMEDOUT' || error.code === 'ECONNABORTED') {
-        throw new Error('邮件服务器连接超时 - 请稍后重试');
+        throw new Error("Error");
       } else if (error.code === 'EAUTH') {
-        throw new Error('邮箱认证失败 - 请检查SMTP凭据');
+        throw new Error("Error");
       } else if (error.message === 'Email send timeout') {
-        throw new Error('邮件发送超时 - 请重新尝试');
+        throw new Error("Error");
       } else {
-        throw new Error(`邮件发送失败: ${error.message}`);
+        throw new Error("Error");
       }
     }
   }
 
-  // 新增：获取有效的 Zoho/ZeptoMail Token
+  // [Comment removed]
   private async getZohoAccessToken(): Promise<string> {
     if (!this.zohoConfig) {
       throw new Error('Zoho config not initialized');
     }
 
-    // 方案 1: 如果直接配置了 API Key (ZeptoMail Send Mail Token 或 Access Token)
-    // ZeptoMail Send Mail Token 不会过期，可以直接使用
+    // [Comment removed]
+    // ZeptoMail Send Mail Token ，
     if (this.zohoConfig.apiKey) {
       console.log('🔑 Using ZeptoMail Send Mail Token / Zoho API Key');
       
-      // 如果 token 已经包含 "Zoho-enczapikey" 前缀，直接返回
+      // [Comment removed]
       if (this.zohoConfig.apiKey.startsWith('Zoho-enczapikey')) {
         console.log('Token already has Zoho-enczapikey prefix');
         return this.zohoConfig.apiKey;
       }
       
-      // 否则，返回纯 token（header 中会添加前缀）
+      // [Comment removed]
       console.log('Token is raw, will add prefix in header');
       return this.zohoConfig.apiKey;
     }
 
-    // 方案 2: 使用 Refresh Token 自动获取/刷新 Access Token (OAuth 方式)
+    // [Comment removed]
     if (this.zohoConfig.refreshToken && this.zohoConfig.clientId && this.zohoConfig.clientSecret) {
-      // 检查缓存的 Token 是否还有效（提前 5 分钟刷新）
+      // [Comment removed]
       const now = Date.now();
       if (this.cachedAccessToken && this.tokenExpiresAt > now + 5 * 60 * 1000) {
         console.log('✅ Using cached OAuth Access Token');
         return this.cachedAccessToken;
       }
 
-      // 使用 Refresh Token 获取新的 Access Token
+      // [Comment removed]
       try {
         console.log('🔄 Refreshing Zoho OAuth Access Token...');
         
@@ -249,7 +249,7 @@ class EmailService {
           expires_in: number;
         };
         
-        // 缓存新的 Access Token
+        // [Comment removed]
         this.cachedAccessToken = data.access_token;
         this.tokenExpiresAt = Date.now() + (data.expires_in || 3600) * 1000;
 
@@ -266,7 +266,7 @@ class EmailService {
     throw new Error('No valid Zoho authentication configured. Please set either ZOHO_API_KEY (Send Mail Token) or ZOHO_REFRESH_TOKEN with Client credentials.');
   }
 
-    // 新增:通过Zoho Mail API发送邮件
+    // [Comment removed]
   private async sendViaZohoAPI(email: string, code: string): Promise<void> {
     if (!this.zohoConfig) {
       throw new Error('Zoho Mail API not configured');
@@ -278,10 +278,10 @@ class EmailService {
     try {
       console.log(`📧 Sending verification email via Zoho Mail API to: ${email}`);
       
-      // 获取有效的 Access Token（自动刷新）
+      // [Comment removed]
       const accessToken = await this.getZohoAccessToken();
 
-      // Zoho Transactional Email API 正确的 payload 格式
+      // Zoho Transactional Email API of payload 
       const payload = {
         from: {
           address: process.env.ZOHO_FROM_EMAIL || 'noreply@coldaw.app'
@@ -298,11 +298,11 @@ class EmailService {
         textbody: textTemplate
       };
 
-      // 使用 Zoho Transactional Email API (ZeptoMail)
+      // [Comment removed]
       const url = `https://api.zeptomail.com/v1.1/email`;
       
-      // 构建 Authorization header
-      // 如果 token 已包含前缀，直接使用；否则添加 "Zoho-enczapikey " 前缀
+      // [Comment removed]
+      // [Comment removed]
       const authHeader = accessToken.startsWith('Zoho-enczapikey') 
         ? accessToken 
         : `Zoho-enczapikey ${accessToken}`;
@@ -322,16 +322,16 @@ class EmailService {
       if (!response.ok) {
         const errorText = await response.text();
         
-        // 如果是 Token 过期错误，清除缓存并重试一次
+        // [Comment removed]
         if (response.status === 401) {
           console.warn('⚠️ Zoho token may be expired, clearing cache and retrying...');
           this.cachedAccessToken = null;
           this.tokenExpiresAt = 0;
           
-          // 重新获取 Token 并重试
+          // [Comment removed]
           const newAccessToken = await this.getZohoAccessToken();
           
-          // 构建重试的 Authorization header
+          // [Comment removed]
           const retryAuthHeader = newAccessToken.startsWith('Zoho-enczapikey') 
             ? newAccessToken 
             : `Zoho-enczapikey ${newAccessToken}`;
@@ -369,11 +369,11 @@ class EmailService {
       }
     } catch (error: any) {
       console.error('❌ Failed to send verification email via Zoho Mail API:', error);
-      throw new Error(`邮件发送失败: ${error.message}`);
+      throw new Error("Error");
     }
   }
 
-  // 新增：通过Mailgun API发送邮件（保留用于兼容性）
+  // [Comment removed]
   private async sendViaMailgunAPI(email: string, code: string): Promise<void> {
     if (!this.zohoConfig) {
       throw new Error('Mailgun API not configured');
@@ -416,7 +416,7 @@ class EmailService {
       console.log('Message ID:', result.id);
     } catch (error: any) {
       console.error('❌ Failed to send verification email via Mailgun API:', error);
-      throw new Error(`邮件发送失败: ${error.message}`);
+      throw new Error("Error");
     }
   }
 
@@ -692,15 +692,15 @@ class EmailService {
       return false;
     }
 
-    // 生产环境中，如果transporter已创建且有必要的配置，就认为是健康的
+    // [Comment removed]
     if (process.env.NODE_ENV === 'production') {
       const hasCredentials = !!(process.env.SMTP_USER && process.env.SMTP_PASS);
-      console.log('🚀 Production mode: SMTP健康检查基于配置完整性判断');
+      // console.log removed;
       return hasCredentials;
     }
 
     try {
-      // 开发环境进行实际验证
+      // [Comment removed]
       const verifyPromise = this.transporter.verify();
       const timeoutPromise = new Promise((_, reject) => {
         setTimeout(() => reject(new Error('Health check timeout')), 5000);
@@ -710,32 +710,32 @@ class EmailService {
       return true;
     } catch (error) {
       console.error('Email service health check failed:', error);
-      // 即使验证失败，也返回true，让实际发送来测试
+      // [Comment removed]
       return true;
     }
   }
 }
 
-// 验证码管理类
+// Verification code
 export class VerificationCodeService {
   private static readonly CODE_PREFIX = 'verification_code:';
   private static readonly CODE_EXPIRY = 600; // 10 minutes in seconds
   
-  // 内存备份存储（当Redis不可用时）
+  // [Comment removed]
   private static memoryStore = new Map<string, { code: string; expiry: number }>();
 
   static async generateAndStore(email: string): Promise<string> {
-    // 生成6位数字验证码
+    // [Comment removed]
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     const key = this.CODE_PREFIX + email.toLowerCase();
 
     try {
-      // 优先尝试存储到Redis
+      // [Comment removed]
       if (redisService.isHealthy()) {
         await redisService.set(key, code, this.CODE_EXPIRY);
         console.log(`✅ Generated verification code for ${email}: ${code} (stored in Redis)`);
       } else {
-        // Redis不可用时，使用内存存储作为备选
+        // Redis，
         const expiry = Date.now() + (this.CODE_EXPIRY * 1000);
         this.memoryStore.set(key, { code, expiry });
         console.log(`⚠️ Generated verification code for ${email}: ${code} (stored in memory - Redis unavailable)`);
@@ -743,7 +743,7 @@ export class VerificationCodeService {
       return code;
     } catch (error) {
       console.error('❌ Failed to store verification code in Redis, falling back to memory:', error);
-      // 即使Redis失败，也使用内存存储
+      // [Comment removed]
       const expiry = Date.now() + (this.CODE_EXPIRY * 1000);
       this.memoryStore.set(key, { code, expiry });
       console.log(`⚠️ Generated verification code for ${email}: ${code} (fallback to memory storage)`);
@@ -757,20 +757,20 @@ export class VerificationCodeService {
     try {
       let storedCode: string | null = null;
       
-      // 优先从Redis获取
+      // [Comment removed]
       if (redisService.isHealthy()) {
         storedCode = await redisService.get(key);
       }
       
-      // 如果Redis中没有或Redis不可用，尝试内存存储
+      // [Comment removed]
       if (!storedCode) {
         const memoryData = this.memoryStore.get(key);
         if (memoryData) {
-          // 检查是否过期
+          // [Comment removed]
           if (Date.now() < memoryData.expiry) {
             storedCode = memoryData.code;
           } else {
-            // 过期则删除
+            // [Comment removed]
             this.memoryStore.delete(key);
           }
         }
@@ -784,7 +784,7 @@ export class VerificationCodeService {
       const isValid = storedCode === code;
       
       if (isValid) {
-        // 验证成功后删除验证码
+        // [Comment removed]
         try {
           if (redisService.isHealthy()) {
             await redisService.delete(key);
@@ -792,7 +792,7 @@ export class VerificationCodeService {
         } catch (redisError) {
           console.warn('Failed to delete code from Redis:', redisError);
         }
-        this.memoryStore.delete(key); // 同时清理内存存储
+        this.memoryStore.delete(key); // [Comment removed]
         console.log(`✅ Verification successful for ${email}`);
       } else {
         console.log(`❌ Invalid verification code for ${email}`);
@@ -811,13 +811,13 @@ export class VerificationCodeService {
       if (redisService.isHealthy()) {
         return await redisService.exists(key);
       } else {
-        // 检查内存存储
+        // [Comment removed]
         const memoryData = this.memoryStore.get(key);
         return memoryData !== undefined && Date.now() < memoryData.expiry;
       }
     } catch (error) {
       console.error('Failed to check code existence:', error);
-      // 检查内存存储作为备选
+      // [Comment removed]
       const memoryData = this.memoryStore.get(key);
       return memoryData !== undefined && Date.now() < memoryData.expiry;
     }
@@ -829,7 +829,7 @@ export class VerificationCodeService {
       if (redisService.isHealthy()) {
         return await redisService.getTTL(key);
       } else {
-        // 计算内存存储的TTL
+        // [Comment removed]
         const memoryData = this.memoryStore.get(key);
         if (memoryData) {
           const remainingTime = Math.max(0, Math.floor((memoryData.expiry - Date.now()) / 1000));
@@ -839,7 +839,7 @@ export class VerificationCodeService {
       }
     } catch (error) {
       console.error('Failed to get code TTL:', error);
-      // 检查内存存储作为备选
+      // [Comment removed]
       const memoryData = this.memoryStore.get(key);
       if (memoryData) {
         const remainingTime = Math.max(0, Math.floor((memoryData.expiry - Date.now()) / 1000));
@@ -850,5 +850,5 @@ export class VerificationCodeService {
   }
 }
 
-// 创建单例实例
+// [Comment removed]
 export const emailService = new EmailService();

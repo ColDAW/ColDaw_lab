@@ -186,7 +186,7 @@ export class ALSParser {
       // Collect clips from both sources
       const allClips: any[] = [];
       
-      // Method 1: 从 DeviceChain -> MainSequencer -> Sample -> ArrangerAutomation -> Events -> AudioClip/MidiClip (主要用于Audio clips)
+      // Method 1: From DeviceChain -> MainSequencer -> Sample -> ArrangerAutomation -> Events -> AudioClip/MidiClip (mainly for Audio clips)
       const mainSequencer = trackData.DeviceChain?.[0]?.MainSequencer?.[0];
       const sample = mainSequencer?.Sample?.[0];
       const arrangerAutomation = sample?.ArrangerAutomation?.[0];
@@ -211,7 +211,7 @@ export class ALSParser {
         }
       }
       
-      // Method 2: 从 TakeLanes -> TakeLane -> ClipAutomation -> Events -> MidiClip (主要用于MIDI clips)
+      // Method 2: From TakeLanes -> TakeLane -> ClipAutomation -> Events -> MidiClip (mainly for MIDI clips)
       const takeLanes = trackData.TakeLanes?.[0]?.TakeLanes?.[0];
       if (takeLanes && Array.isArray(takeLanes.TakeLane)) {
         // Process all TakeLanes
@@ -254,14 +254,14 @@ export class ALSParser {
         try {
           const clipType = clip.type; // 'audio' or 'midi'
           
-          // 使用 $ 对象访问属性(xml2js 的标准方式)
+          // Access properties using $ object (xml2js standard way)
           const startTime = parseFloat(clip.$?.Time || '0');
           
-          // CurrentEnd 包含结束时间
+          // CurrentEnd contains end time
           const currentEnd = clip.CurrentEnd?.[0];
           const endTime = parseFloat(currentEnd?.$?.Value || '0');
           
-          // 获取 clip 名称
+          // Get clip name
           const nameData = clip.Name?.[0];
           const name = nameData?.$?.Value || `${clipType === 'midi' ? 'MIDI' : 'Audio'} Clip ${index + 1}`;
           

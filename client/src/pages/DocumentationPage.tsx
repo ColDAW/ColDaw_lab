@@ -332,7 +332,7 @@ const DocumentationPage: React.FC = () => {
   const [pwaStatus, setPwaStatus] = useState<string>('Checking...');
 
   useEffect(() => {
-    // 检查PWA状态
+    // Check PWA status
     const checkPWAStatus = () => {
       if (window.matchMedia('(display-mode: standalone)').matches) {
         setPwaStatus('Already installed as PWA');

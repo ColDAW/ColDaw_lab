@@ -74,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       setToken(response.token);
     } catch (error: any) {
-      const message = error.response?.data?.error || '登录失败';
+      const message = error.response?.data?.error || 'Login failed';
       throw new Error(message);
     }
   };
@@ -104,7 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       setToken(response.token);
     } catch (error: any) {
-      const message = error.response?.data?.error || '注册失败';
+      const message = error.response?.data?.error || 'Registration failed';
       throw new Error(message);
     }
   };

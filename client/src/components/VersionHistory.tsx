@@ -212,22 +212,22 @@ function VersionHistory({
   const { showConfirm, showPrompt } = useModal();
   const collaborators = useStore(state => state.collaborators);
 
-  // 根据 user_id 获取用户名
+  // Get username by user_id
   const getUserName = (version: Version): string => {
-    // 优先使用 user_name
+    // Prefer using user_name
     if (version.user_name) return version.user_name;
-    // 如果有 author 就用 author
+    // If author exists, use author
     if (version.author) return version.author;
-    // 否则尝试从 collaborators 中查找
+    // Otherwise try to find in collaborators
     if (version.user_id) {
       const collaborator = collaborators.find(c => c.id === version.user_id);
       if (collaborator) return collaborator.userName;
     }
-    // 最后返回默认值
+    // Finally return default value
     return 'Unknown';
   };
 
-  // 按分支过滤版本
+  // Filter versions by branch
   const filteredVersions = versions
     .filter(v => v.branch === selectedBranch)
     .sort((a, b) => {

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import { useStore, type Clip, type Track } from '../store/useStore';
 
-// 渐变调色板 - 每个轨道按顺序使用一种颜色
+// Gradient color palette - each track uses one color in sequence
 const TRACK_COLORS = [
   '#C9A511',
   '#53A21F', 
@@ -283,7 +283,7 @@ function ArrangementView({ tracks, zoom = 1, onZoomChange }: ArrangementViewProp
   const pixelsPerBeat = 20 * zoom; // Apply zoom to base pixels per beat
   const [maxBeat, setMaxBeat] = useState(128);
   
-  // 计算clip的diff类型
+  // Calculate diff type for clip
   type DiffType = 'added' | 'removed' | 'modified' | null;
   
   interface ClipWithDiff extends Clip {
@@ -296,17 +296,17 @@ function ArrangementView({ tracks, zoom = 1, onZoomChange }: ArrangementViewProp
   
   const calculateDiff = (): TrackWithDiff[] => {
     if (!hasPendingChanges || !pendingData) {
-      // 没有pending changes，正常显示
+      // No pending changes, display normally
       return tracks.map(track => ({
         ...track,
         allClips: track.clips.map(clip => ({ ...clip, diffType: null as DiffType }))
       }));
     }
     
-    // 有pending changes，计算diff
+    // Has pending changes, calculate diff
     const result: TrackWithDiff[] = [];
     
-    // 遍历所有track（原始的和pending的）
+    // Iterate all tracks (original and pending)
     const allTrackIds = new Set([
       ...tracks.map(t => t.id),
       ...pendingData.tracks.map(t => t.id)
@@ -317,30 +317,30 @@ function ArrangementView({ tracks, zoom = 1, onZoomChange }: ArrangementViewProp
       const pendingTrack = pendingData.tracks.find(t => t.id === trackId);
       
       if (!originalTrack && pendingTrack) {
-        // 新track，所有clips都是added
+        // New track, all clips are added
         result.push({
           ...pendingTrack,
           allClips: pendingTrack.clips.map(clip => ({ ...clip, diffType: 'added' as DiffType }))
         });
       } else if (originalTrack && !pendingTrack) {
-        // Track被删除，所有clips都是removed
+        // Track deleted, all clips are removed
         result.push({
           ...originalTrack,
           allClips: originalTrack.clips.map(clip => ({ ...clip, diffType: 'removed' as DiffType }))
         });
       } else if (originalTrack && pendingTrack) {
-        // Track存在于两边，比较clips
+        // Track exists on both sides, compare clips
         const allClips: ClipWithDiff[] = [];
         
-        // 检查原始clips（removed或unchanged）
+        // Check original clips (removed or unchanged)
         originalTrack.clips.forEach(originalClip => {
           const pendingClip = pendingTrack.clips.find(pc => pc.id === originalClip.id);
           
           if (!pendingClip) {
-            // Clip被删除
+            // Clip deleted
             allClips.push({ ...originalClip, diffType: 'removed' });
           } else {
-            // 检查是否被修改
+            // Check if modified
             const isModified = 
               pendingClip.startTime !== originalClip.startTime ||
               pendingClip.endTime !== originalClip.endTime ||
@@ -348,21 +348,21 @@ function ArrangementView({ tracks, zoom = 1, onZoomChange }: ArrangementViewProp
               pendingClip.color !== originalClip.color;
             
             if (isModified) {
-              // 显示原始版本（透明）和修改后的版本
+              // Show original version (transparent) and modified version
               allClips.push({ ...originalClip, diffType: 'removed' });
               allClips.push({ ...pendingClip, diffType: 'modified' });
             } else {
-              // 未修改
+              // Unchanged
               allClips.push({ ...pendingClip, diffType: null });
             }
           }
         });
         
-        // 检查新增的clips
+        // Check added clips
         pendingTrack.clips.forEach(pendingClip => {
           const originalClip = originalTrack.clips.find(oc => oc.id === pendingClip.id);
           if (!originalClip) {
-            // 新增的clip
+            // Added clip
             allClips.push({ ...pendingClip, diffType: 'added' });
           }
         });
@@ -379,7 +379,7 @@ function ArrangementView({ tracks, zoom = 1, onZoomChange }: ArrangementViewProp
   
   const displayTracksWithDiff = calculateDiff();
   
-  // 同步时间标尺和内容的横向滚动
+  // Sync horizontal scroll of time ruler and content
   const handleScroll = () => {
     if (scrollRef.current && timeRulerRef.current) {
       timeRulerRef.current.scrollLeft = scrollRef.current.scrollLeft;
@@ -400,7 +400,7 @@ function ArrangementView({ tracks, zoom = 1, onZoomChange }: ArrangementViewProp
   };
   
   useEffect(() => {
-    // 计算最大 beat 数
+    // Calculate maximum number of beats
     let max = 128;
     displayTracksWithDiff.forEach(track => {
       track.allClips.forEach(clip => {
@@ -416,7 +416,7 @@ function ArrangementView({ tracks, zoom = 1, onZoomChange }: ArrangementViewProp
 
   const totalWidth = maxBeat * pixelsPerBeat;
   
-  // 生成时间标尺
+  // Generate time ruler
   const beatMarks = [];
   for (let beat = 0; beat <= maxBeat; beat += 4) {
     beatMarks.push(
@@ -454,12 +454,12 @@ function ArrangementView({ tracks, zoom = 1, onZoomChange }: ArrangementViewProp
               <ClipLane>
                 {track.allClips.map((clip, idx) => {
                   const left = clip.startTime * pixelsPerBeat;
-                  const width = Math.max((clip.endTime - clip.startTime) * pixelsPerBeat, 2); // 最小宽度 2px
+                  const width = Math.max((clip.endTime - clip.startTime) * pixelsPerBeat, 2); // Minimum width 2px
                   console.log(`Rendering clip "${clip.name}": left=${left}px, width=${width}px, diffType=${clip.diffType}`);
                   
-                  const diffLabel = clip.diffType === 'added' ? '(新增)' : 
-                                   clip.diffType === 'removed' ? '(删除)' : 
-                                   clip.diffType === 'modified' ? '(修改)' : '';
+                  const diffLabel = clip.diffType === 'added' ? '(Added)' : 
+                                   clip.diffType === 'removed' ? '(Removed)' : 
+                                   clip.diffType === 'modified' ? '(Modified)' : '';
                   
                   return (
                     <ClipBox

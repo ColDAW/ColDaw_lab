@@ -13,12 +13,12 @@ class RedisService {
       // Railway Redis URL format: redis://default:password@host:port
       const redisUrl = process.env.REDIS_URL || process.env.REDISCLOUD_URL || 'redis://localhost:6379';
       
-      console.log('🔍 Redis connection attempt to:', redisUrl.replace(/\/\/.*@/, '//***:***@')); // 隐藏密码
+      console.log('🔍 Redis connection attempt to:', redisUrl.replace(/\/\/.*@/, '//***:***@')); // [Comment removed]
       
       this.client = createClient({
         url: redisUrl,
         socket: {
-          connectTimeout: 15000,  // 增加连接超时时间
+          connectTimeout: 15000,  // [Comment removed]
           reconnectStrategy: (retries) => {
             if (retries > 5) {
               console.error('❌ Redis reconnection failed after 5 attempts');
@@ -57,12 +57,12 @@ class RedisService {
       console.error('❌ Failed to connect to Redis:', error.message);
       this.isConnected = false;
       
-      // 在开发环境中，如果Redis连接失败，给出启动建议
+      // [Comment removed]
       if (process.env.NODE_ENV === 'development') {
-        console.log('💡 本地开发环境Redis连接失败解决方案:');
-        console.log('1. 安装Redis: brew install redis');
-        console.log('2. 启动Redis: brew services start redis');
-        console.log('3. 或使用Docker: docker run -d -p 6379:6379 redis:alpine');
+        // console.log removed;
+        // console.log removed;
+        // console.log removed;
+        // console.log removed;
       }
       
       throw error;
@@ -127,10 +127,10 @@ class RedisService {
   }
 }
 
-// 创建单例实例
+// [Comment removed]
 export const redisService = new RedisService();
 
-// 优雅关闭处理
+// [Comment removed]
 process.on('SIGINT', async () => {
   console.log('Shutting down Redis connection...');
   await redisService.disconnect();

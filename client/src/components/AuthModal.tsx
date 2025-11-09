@@ -203,7 +203,7 @@ function AuthModal({ onClose }: AuthModalProps) {
 
   const { login, sendVerificationCode, register } = useAuth();
 
-  // 倒计时效果
+  // Countdown effect
   React.useEffect(() => {
     if (resendCountdown > 0) {
       const timer = setTimeout(() => {
@@ -220,23 +220,23 @@ function AuthModal({ onClose }: AuthModalProps) {
 
     try {
       if (isLogin) {
-        // 登录使用 email
+        // Login uses email
         await login(email, password);
         if (onClose) {
           onClose();
         }
       } else {
         if (!isVerificationStep) {
-          // 第一步：发送验证码
+          // Step 1: Send verification code
           if (!email || !name || !password) {
             throw new Error('Please enter all required fields');
           }
           await sendVerificationCode(email);
           setIsVerificationStep(true);
-          setResendCountdown(60); // 60秒倒计时
+          setResendCountdown(60); // 60 second countdown
 
         } else {
-          // 第二步：验证码验证并注册
+          // Step 2: Verify code and register
           if (!verificationCode) {
             throw new Error('Please enter verification code');
           }

@@ -9,7 +9,7 @@ import { redisService } from '../services/redis';
 const router = Router();
 
 const JWT_SECRET = process.env.JWT_SECRET || 'coldaw-secret-key-change-in-production';
-const JWT_EXPIRES_IN = '7d'; // Token 有效期 7 天
+const JWT_EXPIRES_IN = '7d'; // Token  7 
 const SALT_ROUNDS = 10;
 
 // Generate JWT token
@@ -46,7 +46,7 @@ router.post('/send-verification', async (req, res) => {
       return res.status(409).json({ error: 'User with this email already exists' });
     }
 
-    // 注释掉频繁操作限制，允许用户随时重新发送验证码
+    // [Comment removed]
     // Check if verification code already exists and is still valid
     // const existingCodeTTL = await VerificationCodeService.getTTL(email);
     // if (existingCodeTTL > 0) {
@@ -65,7 +65,7 @@ router.post('/send-verification', async (req, res) => {
       res.json({ message: 'Verification code sent successfully' });
     } catch (emailError) {
       console.error('Email sending failed:', emailError);
-      // 如果邮件发送失败，在开发环境中仍然可以在控制台看到验证码
+      // [Comment removed]
       if (process.env.NODE_ENV === 'development') {
         console.log(`Development mode - Verification code for ${email}: ${code}`);
         res.json({ message: 'Verification code generated (check console in development mode)' });

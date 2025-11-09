@@ -10,7 +10,7 @@ export const theme = {
     textTertiary: '#707070',
     
     primary: '#EB5A72',
-    primarySolid: '#EB5A72', // 纯色版本用于边框等
+    primarySolid: '#EB5A72', // Solid color version for borders etc
     accentOrange: '#EB5A72',
     accentRed: '#EB5A72',
     accentGreen: '#EB5A72',

@@ -341,7 +341,7 @@ const SecondaryButton = styled.button`
   }
 `;
 
-// Composition Section (卡片区域)
+// Composition Section (cards area)
 const CompositionSection = styled.section`
   padding: 4rem 2rem 1rem;
   background: #0a0a0a;
@@ -417,7 +417,7 @@ const ClipCard = styled.div<{
   align-items: center;
   will-change: transform, opacity;
   
-  /* 初始状态和移除状态 */
+  /* Initial state and removal state */
   left: ${props => props.$finalX}px;
   top: ${props => props.$finalY}px;
   transform: ${props => {
@@ -436,7 +436,7 @@ const ClipCard = styled.div<{
     opacity: 1 !important;
   }
   
-  /* 动画过渡 - 慢速吸附效果（无弹跳） */
+  /* Animation transition - slow snap effect (no bounce) */
   transition: 
     left 0.6s cubic-bezier(0.23, 1, 0.32, 1),
     top 0.6s cubic-bezier(0.23, 1, 0.32, 1),
@@ -446,14 +446,14 @@ const ClipCard = styled.div<{
   
   &:hover {
   transform: translate(0, -4px) scale(1.02) !important;
-  /* box-shadow 在 style 属性中动态设置 */
+  /* box-shadow dynamically set in style attribute */
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), 
         box-shadow 0.3s ease !important;
   z-index: 10;
   }
 `;
 
-// 卡片角标
+// Card badge
 const CardBadge = styled.div<{ $type: 'add' | 'remove' | 'modify' }>`
   position: absolute;
   top: -8px;
@@ -610,7 +610,7 @@ const Footer = styled.footer`
   }
 `;
 
-// 下载弹窗样式
+// Download modal styles
 const ModalOverlay = styled.div`
   position: fixed;
   top: 0;
@@ -719,7 +719,7 @@ const LandingPage: React.FC = () => {
   const compositionRef = useRef<HTMLElement>(null);
   const cardsContainerRef = useRef<HTMLDivElement>(null);
 
-  // 定义卡片类型
+  // Define card type
   type CardData = {
     id: string;
     title: string;
@@ -731,26 +731,26 @@ const LandingPage: React.FC = () => {
     waveformSeed?: number;
   };
 
-  // 初始卡片数据
+  // Initial card data
   const initialCardsData: CardData[] = [
-    // Piano 轨道
+    // Piano track
     { id: 'p0', title: "piano", color: "#4CAF50", width: 320, row: 0, col: 0, waveformSeed: 1234 },
     { id: 'p1', title: "piano", color: "#4CAF50", width: 260, row: 0, col: 1, waveformSeed: 5678 },
     { id: 'p2', title: "piano", color: "#4CAF50", width: 380, row: 0, col: 2, waveformSeed: 9012 },
     { id: 'p3', title: "piano", color: "#4CAF50", width: 290, row: 0, col: 3, waveformSeed: 3421 },
     
-    // Vocal 轨道
+    // Vocal track
     { id: 'v0', title: "Vocal", color: "#2196F3", width: 400, row: 1, col: 0, waveformSeed: 3456 },
     { id: 'v1', title: "Vocal", color: "#2196F3", width: 330, row: 1, col: 1, waveformSeed: 7890 },
     { id: 'v2', title: "Vocal", color: "#2196F3", width: 280, row: 1, col: 2, waveformSeed: 5432 },
     
-    // Texture 轨道
+    // Texture track
     { id: 't0', title: "Texture", color: "#9C27B0", width: 270, row: 2, col: 0, waveformSeed: 2345 },
     { id: 't1', title: "Texture", color: "#9C27B0", width: 350, row: 2, col: 1, waveformSeed: 6789 },
     { id: 't2', title: "Texture", color: "#9C27B0", width: 310, row: 2, col: 2, waveformSeed: 1357 },
     { id: 't3', title: "Texture", color: "#9C27B0", width: 340, row: 2, col: 3, waveformSeed: 8765 },
     
-    // Bass 轨道
+    // Bass track
     { id: 'b0', title: "Bass", color: "#FF9800", width: 300, row: 3, col: 0, waveformSeed: 2468 },
     { id: 'b1', title: "Bass", color: "#FF9800", width: 360, row: 3, col: 1, waveformSeed: 8024 },
     { id: 'b2', title: "Bass", color: "#FF9800", width: 320, row: 3, col: 2, waveformSeed: 4567 },
@@ -760,7 +760,7 @@ const LandingPage: React.FC = () => {
   const [removingCards, setRemovingCards] = useState<Set<string>>(new Set());
   const animationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // 动态修改卡片的函数
+  // Function to dynamically modify cards
   useEffect(() => {
     if (!cardsVisible) return;
 
@@ -772,12 +772,12 @@ const LandingPage: React.FC = () => {
         const newCards = [...prevCards];
         
         if (action === 'add') {
-          // 随机选择一行添加卡片
+          // Randomly select a row to add card
           const targetRow = Math.floor(Math.random() * 4);
           const rowCards = newCards.filter(c => c.row === targetRow).sort((a, b) => a.col - b.col);
           const insertCol = Math.floor(Math.random() * (rowCards.length + 1));
           
-          // 获取该行的颜色和标题
+          // Get row color and title
           const rowColors = {
             0: { title: 'piano', color: '#4CAF50' },
             1: { title: 'Vocal', color: '#2196F3' },
@@ -797,7 +797,7 @@ const LandingPage: React.FC = () => {
             waveformSeed: Math.floor(Math.random() * 10000)
           };
           
-          // 重新分配该行所有卡片的col值，确保连续且无重叠
+          // Reassign col values for all cards in the row to ensure continuity
           newCards.forEach(card => {
             if (card.row === targetRow && card.col >= insertCol) {
               card.col += 1;
@@ -806,7 +806,7 @@ const LandingPage: React.FC = () => {
           
           newCards.push(newCard);
           
-          // 2秒后移除角标
+          // Remove badge after 2 seconds
           setTimeout(() => {
             setClipCardsData(cards => 
               cards.map(c => c.id === newCard.id ? { ...c, badge: undefined } : c)
@@ -814,36 +814,36 @@ const LandingPage: React.FC = () => {
           }, 2000);
           
         } else if (action === 'remove') {
-          // 检查每行至少保留1个卡片
+          // Ensure each row keeps at least 1 card
           const removableCards = newCards.filter(c => {
-            if (c.badge) return false; // 有角标的不删
+            if (c.badge) return false; // Don't remove cards with badges
             const rowCards = newCards.filter(card => card.row === c.row);
-            return rowCards.length > 1; // 该行有多于1个卡片才可删
+            return rowCards.length > 1; // Can only remove if row has more than 1 card
           });
           
           if (removableCards.length > 0) {
             const cardToRemove = removableCards[Math.floor(Math.random() * removableCards.length)];
             
-            // 标记为删除
+            // Mark as removed
             const index = newCards.findIndex(c => c.id === cardToRemove.id);
             if (index !== -1) {
               newCards[index] = { ...newCards[index], badge: 'remove' };
               
-              // 添加到移除列表
+              // Add to removal list
               setRemovingCards(prev => new Set(prev).add(cardToRemove.id));
               
-              // 1秒后真正删除
+              // Actually remove after 1 second
               setTimeout(() => {
                 setClipCardsData(cards => {
                   const filtered = cards.filter(c => c.id !== cardToRemove.id);
                   
-                  // 重新分配该行所有卡片的col值，确保连续且无间隙
+                  // Reassign col values for all cards in the row to ensure continuity
                   const targetRow = cardToRemove.row;
                   const rowCardsAfterRemoval = filtered
                     .filter(c => c.row === targetRow)
                     .sort((a, b) => a.col - b.col);
                   
-                  // 重新分配col值，从0开始连续分配
+                  // Reassign col values starting from 0
                   rowCardsAfterRemoval.forEach((c, idx) => {
                     c.col = idx;
                   });
@@ -860,14 +860,14 @@ const LandingPage: React.FC = () => {
           }
           
         } else if (action === 'modify') {
-          // 随机修改一个卡片的波形
+          // Randomly modify a card's waveform
           const modifiableCards = newCards.filter(c => !c.badge);
           if (modifiableCards.length > 0) {
             const cardToModify = modifiableCards[Math.floor(Math.random() * modifiableCards.length)];
             const index = newCards.findIndex(c => c.id === cardToModify.id);
             
             if (index !== -1) {
-              // 生成一个与原来不同的随机种子
+              // Generate a different random seed
               let newSeed;
               do {
                 newSeed = Math.floor(Math.random() * 10000);
@@ -879,7 +879,7 @@ const LandingPage: React.FC = () => {
                 waveformSeed: newSeed
               };
               
-              // 2秒后移除角标
+              // Remove badge after 2 seconds
               setTimeout(() => {
                 setClipCardsData(cards =>
                   cards.map(c => c.id === cardToModify.id ? { ...c, badge: undefined } : c)
@@ -892,12 +892,12 @@ const LandingPage: React.FC = () => {
         return newCards;
       });
       
-      // 随机间隔1-2秒执行下一次操作 (更频繁)
+      // Random interval 1-2 seconds for next operation (more frequent)
       const nextDelay = 1000 + Math.random() * 1000;
       animationTimerRef.current = setTimeout(performRandomAction, nextDelay);
     };
     
-    // 首次延迟2秒后开始
+    // Start after initial 2 second delay
     animationTimerRef.current = setTimeout(performRandomAction, 2000);
     
     return () => {
@@ -912,7 +912,7 @@ const LandingPage: React.FC = () => {
   };
 
   const handleDownloadVST = () => {
-    // 提示用户VST插件下载
+    // Prompt user for VST plugin download
     const confirmDownload = window.confirm(
       'ColDAW VST Plugin will be downloaded. Make sure to:\n\n' +
       '1. Install the plugin in your DAW\'s VST3 folder\n' +
@@ -922,9 +922,9 @@ const LandingPage: React.FC = () => {
     );
     
     if (confirmDownload) {
-      // 创建下载链接
+      // Create download link
       const link = document.createElement('a');
-      // 指向实际的VST文件路径（需要在public文件夹中或服务器上）
+      // Point to actual VST file path (should be in public folder or on server)
       link.href = '/downloads/ColDaw_Export.vst3'; 
       link.download = 'ColDaw_Export.vst3';
       link.style.display = 'none';
@@ -932,7 +932,7 @@ const LandingPage: React.FC = () => {
       link.click();
       document.body.removeChild(link);
       
-      // 显示安装指导
+      // Show installation guide
       setTimeout(() => {
         alert(
           'VST Plugin downloaded!\n\n' +
@@ -950,18 +950,18 @@ const LandingPage: React.FC = () => {
     setShowDownloadModal(false);
     
     try {
-      // 检查是否已经安装PWA
+      // Check if PWA is already installed
       if (window.matchMedia('(display-mode: standalone)').matches) {
         alert('ColDAW Editor is already installed on your device!');
         return;
       }
 
-      // 使用保存的deferredPrompt
+      // Use saved deferredPrompt
       if (deferredPrompt) {
-        // 显示安装提示
+        // Show installation prompt
         deferredPrompt.prompt();
         
-        // 等待用户选择
+        // Wait for user choice
         const { outcome } = await deferredPrompt.userChoice;
         
         if (outcome === 'accepted') {
@@ -972,10 +972,10 @@ const LandingPage: React.FC = () => {
           alert('Installation cancelled. You can install ColDAW later from the browser menu.');
         }
         
-        // 清除deferredPrompt，因为它只能使用一次
+        // Clear deferredPrompt as it can only be used once
         setDeferredPrompt(null);
       } else {
-        // 如果没有deferredPrompt，显示手动安装指导
+        // If no deferredPrompt, show manual installation guide
         alert(
           'PWA installation is not available right now.\n\n' +
           'You can install ColDAW manually:\n' +
@@ -990,29 +990,29 @@ const LandingPage: React.FC = () => {
     }
   };
 
-  // 计算每个卡片的最终位置和初始位置
+  // Calculate final and initial position for each card
   const calculateCardPositions = (card: CardData) => {
     const rowHeight = 70;
     const rowGap = 16;
     const colGap = 16;
     const containerWidth = 1600;
     
-    // 计算该行所有卡片，按col排序
+    // Calculate all cards in the row, sorted by col
     const rowCards = clipCardsData
       .filter(c => c.row === card.row)
       .sort((a, b) => a.col - b.col);
     
     const totalWidth = rowCards.reduce((sum, c) => sum + c.width, 0) + colGap * (rowCards.length - 1);
     
-    // 行起始X位置（居中）
+    // Row starting X position (centered)
     let rowStartX = (containerWidth - totalWidth) / 2;
     
-    // 根据行数偏移，让每行有不同的起始位置
+    // Offset by row number for varied starting positions
     if (card.row === 0) rowStartX -= 100;
     if (card.row === 1) rowStartX += 150;
     if (card.row === 2) rowStartX -= 50;
     
-    // 计算当前卡片的最终X位置 - 严格按照col顺序累加
+    // Calculate current card's final X position - strictly accumulate by col order
     let finalX = rowStartX;
     const cardIndex = rowCards.findIndex(c => c.id === card.id);
     
@@ -1022,53 +1022,53 @@ const LandingPage: React.FC = () => {
     
     const finalY = 50 + card.row * (rowHeight + rowGap);
     
-    // 计算初始位置偏移 - 从目标位置的方向进入
-    // 根据卡片在容器中的相对位置决定进入方向
+    // Calculate initial position offset - enter from target position direction
+    // Determine entry direction based on card's relative position in container
     const centerX = containerWidth / 2;
-    const centerY = 300; // 容器中心Y
+    const centerY = 300; // Container center Y
     
     let offsetX: number;
     let offsetY: number;
     
-    // 根据卡片相对于中心的位置，从对应方向进入
+    // Enter from corresponding direction based on card's position relative to center
     const isLeft = finalX < centerX - 200;
     const isRight = finalX > centerX + 200;
     const isTop = finalY < centerY - 100;
     const isBottom = finalY > centerY + 100;
     
-    // 计算偏移距离（从目标位置偏移）
-    const distance = 400; // 增加距离让动画更明显
+    // Calculate offset distance (offset from target position)
+    const distance = 400; // Increase distance for more visible animation
     
     if (isLeft && isTop) {
-      // 左上区域 - 从左上方向进入
+      // Top-left area - enter from top-left
       offsetX = -distance * 0.8;
       offsetY = -distance * 0.6;
     } else if (isRight && isTop) {
-      // 右上区域 - 从右上方向进入
+      // top-rightarea - fromtop-rightdirectionenter
       offsetX = distance * 0.8;
       offsetY = -distance * 0.6;
     } else if (isLeft && isBottom) {
-      // 左下区域 - 从左下方向进入
+      // bottom-leftarea - frombottom-leftdirectionenter
       offsetX = -distance * 0.8;
       offsetY = distance * 0.6;
     } else if (isRight && isBottom) {
-      // 右下区域 - 从右下方向进入
+      // bottom-rightarea - frombottom-rightdirectionenter
       offsetX = distance * 0.8;
       offsetY = distance * 0.6;
     } else if (isLeft) {
-      // 左边 - 从左边进入
+      // [Comment removed]
       offsetX = -distance;
       offsetY = 0;
     } else if (isRight) {
-      // 右边 - 从右边进入
+      // [Comment removed]
       offsetX = distance;
       offsetY = 0;
     } else if (isTop) {
-      // 上边 - 从上边进入
+      // [Comment removed]
       offsetX = 0;
       offsetY = -distance;
     } else {
-      // 下边 - 从下边进入
+      // [Comment removed]
       offsetX = 0;
       offsetY = distance;
     }
@@ -1076,13 +1076,13 @@ const LandingPage: React.FC = () => {
     const initialX = finalX + offsetX;
     const initialY = finalY + offsetY;
     
-    // 计算延迟 - 更慢的递进效果
+    // [Comment removed]
     const delay = card.row * 0.12 + card.col * 0.1;
     
     return { finalX, finalY, initialX, initialY, delay };
   };
 
-  // 使用 IntersectionObserver 检测卡片容器是否进入视口
+  // [Comment removed]
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -1109,12 +1109,12 @@ const LandingPage: React.FC = () => {
     };
   }, [cardsVisible]);
 
-  // PWA安装提示监听器
+  // PWA installation handlers
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
-      // 阻止Chrome 67及更早版本自动显示提示
+      // [Comment removed]
       e.preventDefault();
-      // 保存事件以便稍后触发
+      // [Comment removed]
       setDeferredPrompt(e);
       setPwaInstallable(true);
       console.log('PWA install prompt available');
@@ -1126,7 +1126,7 @@ const LandingPage: React.FC = () => {
       setPwaInstallable(false);
     };
 
-    // 检查是否已经安装
+    // [Comment removed]
     if (window.matchMedia('(display-mode: standalone)').matches) {
       setPwaInstallable(false);
     }
@@ -1253,7 +1253,7 @@ const LandingPage: React.FC = () => {
                         width: '100%'
                       }}>
                         {Array.from({length: Math.max(15, Math.floor(Math.min(card.width * 0.7, 180) / 2.8))}, (_, i) => {
-                          // 移动端波形渲染，缩小卡片后调整波形密度和数量
+                          // [Comment removed]
                           const baseSeed = card.waveformSeed || Math.abs(card.id.charCodeAt(0) * 1000 + card.id.charCodeAt(1) * 100);
                           const time = i * 2;
                           const envelope = Math.sin((baseSeed + time) * 0.02) * 0.7 + 0.8;
@@ -1273,7 +1273,7 @@ const LandingPage: React.FC = () => {
                           const compressed = Math.pow(Math.max(0, Math.min(1, normalized)), 0.45);
                           const silenceThreshold = 0.05;
                           const finalAmplitude = compressed < silenceThreshold ? compressed * 0.2 : compressed;
-                          const height = Math.max(2, 1 + finalAmplitude * 16); // 移动端更小的波形高度
+                          const height = Math.max(2, 1 + finalAmplitude * 16); // [Comment removed]
                           return (
                             <div
                               key={i}
@@ -1335,7 +1335,7 @@ const LandingPage: React.FC = () => {
                       width: '100%'
                     }}>
                       {Array.from({length: Math.max(30, Math.floor(card.width / 3.2))}, (_, i) => {
-                        // 桌面端波形渲染，至少显示30个波形条
+                        // [Comment removed]
                         const baseSeed = card.waveformSeed || Math.abs(card.id.charCodeAt(0) * 1000 + card.id.charCodeAt(1) * 100);
                         const time = i * 2;
                         const envelope = Math.sin((baseSeed + time) * 0.02) * 0.7 + 0.8;
@@ -1355,7 +1355,7 @@ const LandingPage: React.FC = () => {
                         const compressed = Math.pow(Math.max(0, Math.min(1, normalized)), 0.45);
                         const silenceThreshold = 0.05;
                         const finalAmplitude = compressed < silenceThreshold ? compressed * 0.2 : compressed;
-                        const height = Math.max(3, 2 + finalAmplitude * 24); // 确保最小高度为3px
+                        const height = Math.max(3, 2 + finalAmplitude * 24); // [Comment removed]
                         return (
                           <div
                             key={i}
@@ -1377,7 +1377,7 @@ const LandingPage: React.FC = () => {
             })}
           </div>
         </ClipCardsContainer>
-        {/* 响应式样式：移动端分轨横排，桌面端隐藏分轨行，移动端隐藏桌面绝对定位卡片 */}
+        {/* responsive */}
         <style>{`
           @media (max-width: 768px) {
             .daw-track-row {
@@ -1467,7 +1467,7 @@ const LandingPage: React.FC = () => {
         <p>&copy; 2025 ColDAW. Design by Joe Deng. </p>
       </Footer>
 
-      {/* 下载选择弹窗 */}
+      {/* download window */}
       {showDownloadModal && (
         <ModalOverlay onClick={() => setShowDownloadModal(false)}>
           <ModalContent onClick={(e) => e.stopPropagation()}>
