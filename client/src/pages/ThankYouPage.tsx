@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
-import { CheckCircle, ArrowRight } from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
 
 const PageContainer = styled.div`
   min-height: 100vh;
@@ -172,12 +172,6 @@ const ThankYouPage: React.FC = () => {
     }
   }, [location.state, navigate]);
 
-  const betaLink = `${window.location.origin}/editor`;
-
-  const handleGoToEditor = () => {
-    navigate('/editor');
-  };
-
   const handleBackToHome = () => {
     navigate('/');
   };
@@ -197,22 +191,13 @@ const ThankYouPage: React.FC = () => {
         </Message>
 
         <InfoBox>
-          <InfoTitle>✉️ Check Your Inbox</InfoTitle>
+          <InfoTitle>Check Your Inbox</InfoTitle>
           <InfoText>
             We've sent a confirmation email to <Highlight>{email}</Highlight> with your beta access details and getting started guide.
           </InfoText>
         </InfoBox>
 
-        <Message style={{ fontSize: '0.95rem', marginTop: '1.5rem' }}>
-          Your Beta Access Link:
-        </Message>
-        <BetaLink>{betaLink}</BetaLink>
-
         <ButtonGroup>
-          <PrimaryButton onClick={handleGoToEditor}>
-            Start Creating Now
-            <ArrowRight size={18} />
-          </PrimaryButton>
           <SecondaryButton onClick={handleBackToHome}>
             Back to Home
           </SecondaryButton>

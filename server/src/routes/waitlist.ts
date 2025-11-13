@@ -79,7 +79,7 @@ router.post('/join', async (req: Request, res: Response) => {
       });
     }
 
-    const betaLink = `${process.env.CLIENT_URL || 'http://localhost:5173'}/editor`;
+    const betaLink = `${process.env.CLIENT_URL || 'https://www.coldaw.app'}/editor`;
 
     // Admin email HTML
     const adminEmailHtml = `
@@ -141,9 +141,9 @@ router.post('/join', async (req: Request, res: Response) => {
         <style>
           body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
           .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background: #0a0a0a; color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+          .header { background: #0a0a0a; color: white; padding: 30px 15px; text-align: center; border-radius: 8px 8px 0 0; }
           .header h1 { margin: 0; font-size: 28px; }
-          .content { background: #f9f9f9; padding: 30px; }
+          .content { background: #f9f9f9; padding: 30px 15px; }
           .welcome-text { font-size: 18px; margin-bottom: 20px; }
           .beta-link { 
             display: block; 
