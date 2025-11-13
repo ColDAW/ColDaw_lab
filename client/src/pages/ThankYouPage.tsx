@@ -102,44 +102,11 @@ const InfoText = styled.p`
   margin: 0;
 `;
 
-const BetaLink = styled.div`
-  background: rgba(40, 40, 40, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  padding: 1rem 1.5rem;
-  margin: 1.5rem 0;
-  font-family: 'Courier New', monospace;
-  font-size: 0.9rem;
-  color: #22c55e;
-  word-break: break-all;
-`;
-
 const ButtonGroup = styled.div`
   display: flex;
   flex-direction: column;
   gap: 1rem;
   margin-top: 2rem;
-`;
-
-const PrimaryButton = styled.button`
-  background: rgba(211, 211, 211, 1);
-  border: none;
-  padding: 1rem 2rem;
-  border-radius: 8px;
-  color: #0a0a0a;
-  font-weight: 600;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-
-  &:hover {
-    background: #e0e0e0;
-    transform: translateY(-2px);
-  }
 `;
 
 const SecondaryButton = styled.button`
