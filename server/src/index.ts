@@ -9,6 +9,7 @@ import fs from 'fs';
 import projectRoutes from './routes/project';
 import versionRoutes from './routes/version';
 import authRoutes from './routes/auth';
+import waitlistRoutes from './routes/waitlist';
 import { initDatabase } from './database/init';
 import { setupSocketHandlers } from './socket/handlers';
 import { redisService } from './services/redis';
@@ -41,6 +42,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/versions', versionRoutes);
+app.use('/api/waitlist', waitlistRoutes);
 
 // Health check endpoints
 app.get('/api/health', async (req, res) => {

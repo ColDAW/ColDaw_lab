@@ -908,7 +908,7 @@ const LandingPage: React.FC = () => {
   }, [cardsVisible]);
 
   const handleGetStarted = () => {
-    navigate('/editor');
+    navigate('/waitlist');
   };
 
   const handleDownloadVST = () => {
@@ -1167,7 +1167,7 @@ const LandingPage: React.FC = () => {
             </NavLink>
             
           </NavLinks>
-          <CTAButton onClick={handleGetStarted}>Editor</CTAButton>
+          <CTAButton onClick={handleGetStarted}>Join Waitlist</CTAButton>
         </Nav>
       </Header>
 
@@ -1183,7 +1183,7 @@ const LandingPage: React.FC = () => {
               <ButtonGradientLayer3 />
               <ButtonGradientLayer4 />
               <Play size={18} />
-              Start Creating
+              Join Waitlist
             </PrimaryButton>
             <SecondaryButton onClick={handleDownloadVST}>
               <Download size={18} />
