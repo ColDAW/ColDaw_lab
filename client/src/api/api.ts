@@ -300,4 +300,12 @@ export const versionApi = {
   },
 };
 
+export const waitlistApi = {
+  // Join waitlist
+  async joinWaitlist(formData: { name: string; email: string; role?: string; experience?: string; expectations?: string }) {
+    const response = await api.post('/waitlist/join', formData);
+    return response.data;
+  },
+};
+
 export default api;

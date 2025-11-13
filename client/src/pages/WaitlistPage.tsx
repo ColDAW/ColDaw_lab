@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import axios from 'axios';
+import { waitlistApi } from '../api/api';
 
 const PageContainer = styled.div`
   min-height: 100vh;
@@ -202,8 +202,7 @@ const WaitlistPage: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-      await axios.post(`${apiUrl}/api/waitlist/join`, formData);
+      await waitlistApi.joinWaitlist(formData);
       
       // Navigate to thank you page with user data
       navigate('/waitlist/thank-you', { 
