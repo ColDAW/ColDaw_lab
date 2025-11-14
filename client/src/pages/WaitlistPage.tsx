@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { waitlistApi } from '../api/api';
+import closeIcon from '../img/close.svg';
 
 const PageContainer = styled.div`
   min-height: 100vh;
@@ -24,6 +25,33 @@ const FormContainer = styled.div`
   border-radius: 12px;
   padding: 3rem;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  position: relative;
+`;
+
+const CloseButton = styled.button`
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.6;
+  transition: opacity 0.3s ease, transform 0.2s ease;
+  
+  &:hover {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  
+  img {
+    width: 20px;
+    height: 20px;
+    filter: invert(1);
+  }
 `;
 
 const Logo = styled.div`
@@ -148,21 +176,6 @@ const ErrorMessage = styled.div`
   text-align: center;
 `;
 
-const BackButton = styled.button`
-  background: transparent;
-  border: none;
-  color: #aaa;
-  font-size: 0.9rem;
-  cursor: pointer;
-  margin-top: 1rem;
-  text-align: center;
-  transition: color 0.3s ease;
-
-  &:hover {
-    color: rgba(211, 211, 211, 1);
-  }
-`;
-
 const WaitlistPage: React.FC = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -224,6 +237,9 @@ const WaitlistPage: React.FC = () => {
   return (
     <PageContainer>
       <FormContainer>
+        <CloseButton onClick={() => navigate('/')} aria-label="Close">
+          <img src={closeIcon} alt="Close" />
+        </CloseButton>
         <Logo>ColDaw</Logo>
         <Title>Join Beta</Title>
         <Subtitle>
@@ -286,10 +302,6 @@ const WaitlistPage: React.FC = () => {
             {isSubmitting ? 'Joining...' : 'Join Beta'}
           </SubmitButton>
         </Form>
-
-        <BackButton onClick={() => navigate('/')}>
-          ← Back to Home
-        </BackButton>
       </FormContainer>
     </PageContainer>
   );

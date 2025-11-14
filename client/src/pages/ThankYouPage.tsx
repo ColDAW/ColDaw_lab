@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 import { CheckCircle } from 'lucide-react';
+import closeIcon from '../img/close.svg';
 
 const PageContainer = styled.div`
   min-height: 100vh;
@@ -25,6 +26,33 @@ const ContentContainer = styled.div`
   padding: 3rem;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   text-align: center;
+  position: relative;
+`;
+
+const CloseButton = styled.button`
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.6;
+  transition: opacity 0.3s ease, transform 0.2s ease;
+  
+  &:hover {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  
+  img {
+    width: 20px;
+    height: 20px;
+    filter: invert(1);
+  }
 `;
 
 const IconWrapper = styled.div`
@@ -102,31 +130,6 @@ const InfoText = styled.p`
   margin: 0;
 `;
 
-const ButtonGroup = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  margin-top: 2rem;
-`;
-
-const SecondaryButton = styled.button`
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  padding: 1rem 2rem;
-  border-radius: 8px;
-  color: #aaa;
-  font-weight: 500;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(255, 255, 255, 0.3);
-    color: rgba(211, 211, 211, 1);
-  }
-`;
-
 const ThankYouPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -146,6 +149,9 @@ const ThankYouPage: React.FC = () => {
   return (
     <PageContainer>
       <ContentContainer>
+        <CloseButton onClick={handleBackToHome} aria-label="Close">
+          <img src={closeIcon} alt="Close" />
+        </CloseButton>
         <IconWrapper>
           <CheckCircle size={64} />
         </IconWrapper>
@@ -163,12 +169,6 @@ const ThankYouPage: React.FC = () => {
             We've sent a confirmation email to <Highlight>{email}</Highlight> with your beta access details and getting started guide.
           </InfoText>
         </InfoBox>
-
-        <ButtonGroup>
-          <SecondaryButton onClick={handleBackToHome}>
-            Back to Home
-          </SecondaryButton>
-        </ButtonGroup>
 
         <Message style={{ fontSize: '0.85rem', marginTop: '2rem', color: '#666' }}>
           Need help? Contact us at joe.deng@coldaw.app
