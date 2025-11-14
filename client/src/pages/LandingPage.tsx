@@ -9,6 +9,7 @@ import daw1 from '../img/landing_page/1.jpg';
 import daw2 from '../img/landing_page/2.mp4';
 import daw3 from '../img/landing_page/3.jpg';
 import daw4 from '../img/landing_page/4.jpg';
+import GradientLoadingEffect from '../components/GradientLoadingEffect';
 
 // Styled Components
 const PageContainer = styled.div`
@@ -17,6 +18,61 @@ const PageContainer = styled.div`
   color: white;
   font-family: 'Poppins', sans-serif;
   margin: 0;
+`;
+
+const MobileSimplifiedView = styled.div`
+  display: none;
+  
+  @media (max-width: 768px) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: #0a0a0a;
+    position: relative;
+    overflow: hidden;
+    padding: 2rem;
+  }
+`;
+
+const MobileTitle = styled.h1`
+  font-size: 3rem;
+  font-weight: 600;
+  color: rgba(211, 211, 211, 1);
+  margin-bottom: 3rem;
+  text-align: center;
+  position: relative;
+  z-index: 2;
+  letter-spacing: -0.02em;
+`;
+
+const MobileCTAButton = styled.button`
+  background: rgba(211, 211, 211, 1);
+  border: none;
+  padding: 1.25rem 3rem;
+  border-radius: 8px;
+  color: #0a0a0a;
+  font-weight: 600;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 2;
+  
+  &:hover {
+    background: #e0e0e0;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(211, 211, 211, 0.3);
+  }
+`;
+
+const DesktopView = styled.div`
+  display: block;
+  
+  @media (max-width: 768px) {
+    display: none;
+  }
 `;
 
 const Header = styled.header`
@@ -79,6 +135,10 @@ const CTAButton = styled.button`
   font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.3s ease;
+  
+  @media (max-width: 768px) {
+    display: none;
+  }
   
   &:hover {
     background: #e0e0e0;
@@ -1142,6 +1202,15 @@ const LandingPage: React.FC = () => {
 
   return (
     <PageContainer>
+      {/* Mobile Simplified View */}
+      <MobileSimplifiedView>
+        <GradientLoadingEffect isActive={true} fullscreen={false} />
+        <MobileTitle>ColDAW</MobileTitle>
+        <MobileCTAButton onClick={handleGetStarted}>Try Beta</MobileCTAButton>
+      </MobileSimplifiedView>
+
+      {/* Desktop View */}
+      <DesktopView>
       <Header>
         <Nav>
           <Logo>ColDAW</Logo>
@@ -1167,7 +1236,7 @@ const LandingPage: React.FC = () => {
             </NavLink>
             
           </NavLinks>
-          <CTAButton onClick={handleGetStarted}>Join Waitlist</CTAButton>
+          <CTAButton onClick={handleGetStarted}>Join Beta</CTAButton>
         </Nav>
       </Header>
 
@@ -1183,7 +1252,7 @@ const LandingPage: React.FC = () => {
               <ButtonGradientLayer3 />
               <ButtonGradientLayer4 />
               <Play size={18} />
-              Join Waitlist
+              Join Beta
             </PrimaryButton>
             <SecondaryButton onClick={handleDownloadVST}>
               <Download size={18} />
@@ -1490,6 +1559,7 @@ const LandingPage: React.FC = () => {
           </ModalContent>
         </ModalOverlay>
       )}
+      </DesktopView>
     </PageContainer>
   );
 };

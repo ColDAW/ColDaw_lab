@@ -225,7 +225,7 @@ const WaitlistPage: React.FC = () => {
     <PageContainer>
       <FormContainer>
         <Logo>ColDaw</Logo>
-        <Title>Join the Beta Waitlist</Title>
+        <Title>Join Beta</Title>
         <Subtitle>
           Be among the first to experience the future of collaborative music production
         </Subtitle>
@@ -283,7 +283,7 @@ const WaitlistPage: React.FC = () => {
           </FormGroup>
 
           <SubmitButton type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Joining...' : 'Join Waitlist'}
+            {isSubmitting ? 'Joining...' : 'Join Beta'}
           </SubmitButton>
         </Form>
 
