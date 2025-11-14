@@ -9,9 +9,12 @@ import { requireAuth } from './auth';
 
 const router = Router();
 
+// Use DATA_DIR for persistent storage
+const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, '..', '..');
+
 const storage = multer.diskStorage({
   destination: (req: any, file: any, cb: any) => {
-    const uploadDir = path.join(__dirname, '..', '..', 'uploads');
+    const uploadDir = path.join(DATA_DIR, 'uploads');
     cb(null, uploadDir);
   },
   filename: (req: any, file: any, cb: any) => {
@@ -36,7 +39,7 @@ router.post('/:projectId/commit', upload.single('alsFile'), async (req: any, res
     // Check if this is a VST import commit
     if (fromVST === 'true' && tempFileName) {
       // Use temp file from VST import
-      const dataDir = path.join(__dirname, '..', '..', 'projects', projectId);
+      const dataDir = path.join(DATA_DIR, 'projects', projectId);
       const tempFilePath = path.join(dataDir, tempFileName);
       
       if (!fs.existsSync(tempFilePath)) {
@@ -98,7 +101,7 @@ router.post('/:projectId/commit', upload.single('alsFile'), async (req: any, res
     }
 
     const alsData = await ALSParser.parseFile(req.file.path);
-    const dataDir = path.join(__dirname, '..', '..', 'projects', projectId);
+    const dataDir = path.join(DATA_DIR, 'projects', projectId);
     const versionId = uuidv4();
     
     // Save both JSON and original ALS file
@@ -309,7 +312,7 @@ router.post('/:projectId/revert/:versionId', requireAuth, async (req: any, res: 
     // Create new version with the reverted data
     const newVersionId = uuidv4();
     const now = Date.now();
-    const dataDir = path.join(__dirname, '..', '..', 'projects', projectId);
+    const dataDir = path.join(DATA_DIR, 'projects', projectId);
     const dataPath = path.join(dataDir, `${newVersionId}.json`);
     fs.writeFileSync(dataPath, JSON.stringify(targetData, null, 2));
     

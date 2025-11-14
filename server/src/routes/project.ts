@@ -9,10 +9,13 @@ import { requireAuth } from './auth';
 
 const router = Router();
 
+// Use DATA_DIR for persistent storage
+const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, '..', '..');
+
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: (req: any, file: any, cb: any) => {
-    const uploadDir = path.join(__dirname, '..', '..', 'uploads');
+    const uploadDir = path.join(DATA_DIR, 'uploads');
     cb(null, uploadDir);
   },
   filename: (req: any, file: any, cb: any) => {
@@ -87,7 +90,7 @@ router.post('/smart-import', requireAuth, upload.single('alsFile'), async (req: 
       console.log(`Project "${finalProjectName}" exists, saving file temporarily...`);
       
       const projectId = existingProject.id;
-      const dataDir = path.join(__dirname, '..', '..', 'projects', projectId);
+      const dataDir = path.join(DATA_DIR, 'projects', projectId);
       
       // Save to temp location with user-specific name
       const tempFileName = `vst_import_${userId}_${Date.now()}.als`;
@@ -115,7 +118,7 @@ router.post('/smart-import', requireAuth, upload.single('alsFile'), async (req: 
       console.log(`Creating new project "${finalProjectName}"...`);
       
       const projectId = uuidv4();
-      const dataDir = path.join(__dirname, '..', '..', 'projects', projectId);
+      const dataDir = path.join(DATA_DIR, 'projects', projectId);
       if (!fs.existsSync(dataDir)) {
         fs.mkdirSync(dataDir, { recursive: true });
       }
@@ -199,7 +202,7 @@ router.get('/:projectId/vst-import', requireAuth, async (req: any, res: any) => 
     }
     
     // Find the most recent temp file for this user
-    const dataDir = path.join(__dirname, '..', '..', 'projects', projectId);
+    const dataDir = path.join(DATA_DIR, 'projects', projectId);
     if (!fs.existsSync(dataDir)) {
       return res.status(404).json({ error: 'No VST import data found' });
     }
@@ -296,13 +299,13 @@ router.post('/:projectId/notify-vst', requireAuth, async (req: any, res: any) =>
     }
     
     // Get version file path
-    const versionFilePath = path.join(__dirname, '..', '..', 'projects', projectId, versionId + '.als');
+    const versionFilePath = path.join(DATA_DIR, 'projects', projectId, versionId + '.als');
     if (!fs.existsSync(versionFilePath)) {
       return res.status(404).json({ error: 'Version file not found' });
     }
     
     // Create notification file that VST will poll
-    const notificationFile = path.join(__dirname, '..', '..', 'projects', projectId, `vst_notification_${userId}.json`);
+    const notificationFile = path.join(DATA_DIR, 'projects', projectId, `vst_notification_${userId}.json`);
     const notification = {
       projectId,
       versionId,
@@ -404,7 +407,7 @@ router.get('/:projectId/check-vst-notification/:userId', async (req: any, res: a
     const { projectId, userId } = req.params;
     
     // Check for notification file
-    const notificationFile = path.join(__dirname, '..', '..', 'projects', projectId, `vst_notification_${userId}.json`);
+    const notificationFile = path.join(DATA_DIR, 'projects', projectId, `vst_notification_${userId}.json`);
     
     if (!fs.existsSync(notificationFile)) {
       return res.json({ hasUpdate: false });
@@ -433,7 +436,7 @@ router.post('/:projectId/confirm-vst-update/:userId', async (req: any, res: any)
     const { projectId, userId } = req.params;
     
     // Check for notification file
-    const notificationFile = path.join(__dirname, '..', '..', 'projects', projectId, `vst_notification_${userId}.json`);
+    const notificationFile = path.join(DATA_DIR, 'projects', projectId, `vst_notification_${userId}.json`);
     
     if (!fs.existsSync(notificationFile)) {
       return res.status(404).json({ error: 'No update notification found' });
@@ -444,7 +447,7 @@ router.post('/:projectId/confirm-vst-update/:userId', async (req: any, res: any)
     const { versionId } = notification;
     
     // Get version file
-    const versionFilePath = path.join(__dirname, '..', '..', 'projects', projectId, versionId + '.als');
+    const versionFilePath = path.join(DATA_DIR, 'projects', projectId, versionId + '.als');
     
     if (!fs.existsSync(versionFilePath)) {
       return res.status(404).json({ error: 'Version file not found' });
@@ -487,7 +490,7 @@ router.post('/init', requireAuth, upload.single('alsFile'), async (req: any, res
     const alsData = await ALSParser.parseFile(req.file.path);
     
     // Save parsed data
-    const dataDir = path.join(__dirname, '..', '..', 'projects', projectId);
+    const dataDir = path.join(DATA_DIR, 'projects', projectId);
     if (!fs.existsSync(dataDir)) {
       fs.mkdirSync(dataDir, { recursive: true });
     }
@@ -742,8 +745,8 @@ router.post('/:projectId/duplicate', requireAuth, async (req: any, res: any) => 
     const now = Date.now();
 
     // Copy project directory
-    const sourceDir = path.join(__dirname, '..', '..', 'projects', projectId);
-    const destDir = path.join(__dirname, '..', '..', 'projects', newProjectId);
+    const sourceDir = path.join(DATA_DIR, 'projects', projectId);
+    const destDir = path.join(DATA_DIR, 'projects', newProjectId);
     
     if (fs.existsSync(sourceDir)) {
       fs.cpSync(sourceDir, destDir, { recursive: true });
@@ -822,7 +825,7 @@ router.delete('/:projectId', async (req: any, res: any) => {
     }
 
     // Delete project directory
-    const projectDir = path.join(__dirname, '..', '..', 'projects', projectId);
+    const projectDir = path.join(DATA_DIR, 'projects', projectId);
     if (fs.existsSync(projectDir)) {
       fs.rmSync(projectDir, { recursive: true, force: true });
     }

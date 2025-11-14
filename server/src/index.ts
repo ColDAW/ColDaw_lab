@@ -104,10 +104,24 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // Ensure directories exist
-const uploadDir = path.join(__dirname, '..', 'uploads');
-const projectsDir = path.join(__dirname, '..', 'projects');
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-if (!fs.existsSync(projectsDir)) fs.mkdirSync(projectsDir, { recursive: true });
+// Use DATA_DIR environment variable for persistent storage (e.g., Railway volumes)
+// Default to local directories for development
+const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, '..');
+const uploadDir = path.join(DATA_DIR, 'uploads');
+const projectsDir = path.join(DATA_DIR, 'projects');
+
+console.log('📁 Data directory:', DATA_DIR);
+console.log('📤 Upload directory:', uploadDir);
+console.log('📦 Projects directory:', projectsDir);
+
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+  console.log('✅ Created uploads directory');
+}
+if (!fs.existsSync(projectsDir)) {
+  fs.mkdirSync(projectsDir, { recursive: true });
+  console.log('✅ Created projects directory');
+}
 
 // Initialize services
 async function initializeServices() {

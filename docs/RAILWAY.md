@@ -1,5 +1,28 @@
 # Railway Deployment
 
+## ⚠️ IMPORTANT: Persistent Storage Required
+
+Railway containers are **ephemeral** - they reset on every deployment. To prevent losing user projects and uploads, you **MUST** configure persistent storage.
+
+### Quick Setup (Railway Volumes)
+
+1. **In Railway Dashboard:**
+   - Go to your service → Settings → Volumes
+   - Click "New Volume"
+   - Mount Path: `/app/data`
+   - Size: 10GB (adjust as needed)
+
+2. **Add Environment Variable:**
+   ```env
+   DATA_DIR=/app/data
+   ```
+
+3. **Deploy** - your data will now persist across deployments!
+
+**See [PERSISTENT_STORAGE.md](./PERSISTENT_STORAGE.md) for detailed setup and S3 migration guide.**
+
+---
+
 ## Setup
 
 1. **Create Account**: https://railway.app
@@ -14,6 +37,7 @@
 ```env
 DATABASE_URL=postgresql://...    # Auto-provided by Railway
 REDIS_URL=redis://...            # Auto-provided by Railway
+DATA_DIR=/app/data               # Required for persistent storage!
 JWT_SECRET=your_secret_key
 ZOHO_API_KEY=Zoho-enczapikey_token
 ZOHO_FROM_EMAIL=noreply@yourdomain.com
