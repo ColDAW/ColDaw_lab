@@ -14,24 +14,20 @@ const PageContainer = styled.div`
   align-items: center;
   justify-content: center;
   padding: 2rem;
+  position: relative;
 `;
 
 const FormContainer = styled.div`
   max-width: 500px;
   width: 100%;
-  background: rgba(20, 20, 20, 0.8);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 3rem;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  padding: 2rem 0;
   position: relative;
 `;
 
 const CloseButton = styled.button`
-  position: absolute;
-  top: 1.5rem;
-  right: 1.5rem;
+  position: fixed;
+  top: 2rem;
+  right: 2rem;
   background: transparent;
   border: none;
   cursor: pointer;
@@ -39,8 +35,9 @@ const CloseButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0.6;
+  opacity: 0.7;
   transition: opacity 0.3s ease, transform 0.2s ease;
+  z-index: 100;
   
   &:hover {
     opacity: 1;
@@ -48,9 +45,9 @@ const CloseButton = styled.button`
   }
   
   img {
-    width: 20px;
-    height: 20px;
-    filter: invert(1);
+    width: 24px;
+    height: 24px;
+    filter: brightness(0) invert(1);
   }
 `;
 
@@ -63,7 +60,7 @@ const Logo = styled.div`
 `;
 
 const Title = styled.h1`
-  font-size: 2rem;
+  font-size: 2.5rem;
   font-weight: 600;
   color: rgba(211, 211, 211, 1);
   margin-bottom: 0.5rem;
